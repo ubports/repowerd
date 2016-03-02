@@ -16,30 +16,30 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "default_state_machine.h"
 
-#include <memory>
+#include "display_power_control.h"
 
-namespace repowerd
+repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
+    : display_power_control{config.the_display_power_control()},
+      is_display_on{false}
 {
+}
 
-class DisplayPowerControl;
-class PowerButton;
-class StateMachine;
-
-class DaemonConfig
+void repowerd::DefaultStateMachine::handle_power_key_press()
 {
-public:
-    virtual ~DaemonConfig() = default;
+    if (is_display_on)
+    {
+        display_power_control->turn_off();
+        is_display_on = false;
+    }
+    else
+    {
+        display_power_control->turn_on();
+        is_display_on = true;
+    }
+}
 
-    virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
-    virtual std::shared_ptr<PowerButton> the_power_button() = 0;
-    virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
-
-protected:
-    DaemonConfig() = default;
-    DaemonConfig(DaemonConfig const&) = delete;
-    DaemonConfig& operator=(DaemonConfig const&) = delete;
-};
-
+void repowerd::DefaultStateMachine::handle_power_key_release()
+{
 }

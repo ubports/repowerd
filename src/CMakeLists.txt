@@ -17,6 +17,8 @@
 set(
     REPOWERD_SRCS
     daemon.cpp
+    default_daemon_config.cpp
+    default_state_machine.cpp
 )
 
 add_library(

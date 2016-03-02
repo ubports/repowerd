@@ -36,7 +36,6 @@ target_link_libraries(
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_test(repowerd-acceptance-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-acceptance-tests)

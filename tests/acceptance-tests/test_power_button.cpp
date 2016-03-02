@@ -26,7 +26,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <functional>
 #include <thread>
 
 namespace rt = repowerd::test;
@@ -68,9 +67,18 @@ struct APowerButton : testing::Test
 
 }
 
-TEST_F(APowerButton, press_turns_on_screen)
+TEST_F(APowerButton, press_turns_screen_on)
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
 
+    press_power_button();
+}
+
+TEST_F(APowerButton, press_turns_screen_off_if_already_on)
+{
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+
+    press_power_button();
     press_power_button();
 }

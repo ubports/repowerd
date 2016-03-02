@@ -18,28 +18,23 @@
 
 #pragma once
 
-#include <memory>
+#include "daemon_config.h"
 
 namespace repowerd
 {
 
-class DisplayPowerControl;
-class PowerButton;
-class StateMachine;
-
-class DaemonConfig
+class DefaultDaemonConfig : public DaemonConfig
 {
 public:
-    virtual ~DaemonConfig() = default;
+    std::shared_ptr<StateMachine> the_state_machine() override;
+    std::shared_ptr<PowerButton> the_power_button() override;
+    std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
 
-    virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
-    virtual std::shared_ptr<PowerButton> the_power_button() = 0;
-    virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
-
-protected:
-    DaemonConfig() = default;
-    DaemonConfig(DaemonConfig const&) = delete;
-    DaemonConfig& operator=(DaemonConfig const&) = delete;
+private:
+    std::shared_ptr<StateMachine> state_machine;
+    std::shared_ptr<PowerButton> power_button;
+    std::shared_ptr<DisplayPowerControl> display_power_control;
 };
 
 }
+

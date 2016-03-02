@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/daemon_config.h"
+#include "src/default_daemon_config.h"
 
 namespace repowerd
 {
@@ -28,18 +28,18 @@ namespace test
 class FakePowerButton;
 class MockDisplayPowerControl;
 
-class DaemonConfig : public repowerd::DaemonConfig
+class DaemonConfig : public repowerd::DefaultDaemonConfig
 {
 public:
-    std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
+    std::shared_ptr<PowerButton> the_power_button() override;
 
-    std::shared_ptr<FakePowerButton> the_fake_power_button();
     std::shared_ptr<MockDisplayPowerControl> the_mock_display_power_control();
+    std::shared_ptr<FakePowerButton> the_fake_power_button();
 
 private:
-    std::shared_ptr<FakePowerButton> fake_power_button;
     std::shared_ptr<MockDisplayPowerControl> mock_display_power_control;
+    std::shared_ptr<FakePowerButton> fake_power_button;
 };
 
 }

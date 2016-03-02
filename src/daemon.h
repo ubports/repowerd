@@ -22,6 +22,11 @@
 
 #include <memory>
 #include <future>
+#include <vector>
+#include <deque>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
 namespace repowerd
 {
@@ -30,16 +35,27 @@ class Daemon
 {
 public:
     Daemon(DaemonConfig& config);
+    void run();
     void run(std::promise<void>& started);
     void stop();
 
 private:
-    std::shared_ptr<PowerButton> const power_button;
-    std::shared_ptr<DisplayPowerControl> const display_power_control;
+    struct EventHandlerRegistration;
+    using Event = std::function<void()>;
 
-    std::promise<void> done_promise;
-    std::future<void> done_future;
-    bool is_display_on;
+    std::vector<EventHandlerRegistration> register_event_handlers();
+    void enqueue_event(Event const& event);
+    Event dequeue_event();
+
+    std::shared_ptr<DisplayPowerControl> const display_power_control;
+    std::shared_ptr<PowerButton> const power_button;
+    std::shared_ptr<StateMachine> const state_machine;
+
+    bool running;
+
+    std::mutex event_queue_mutex;
+    std::condition_variable event_queue_cv;
+    std::deque<Event> event_queue;
 };
 
 }
