@@ -1,0 +1,17 @@
+Source: repowerd
+Priority: optional
+Section: admin
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9),
+               cmake
+Standards-Version: 3.9.4
+Homepage: https://launchpad.net/repowerd
+Vcs-Git: https://code.launchpad.net/repowerd
+
+Package: repowerd
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Power daemon to monitor and control system power state
+ This daemon monitors and controls system power states for Ubuntu
+ phone and tablet. It provides a dbus interface for system services to request
+ a power state, essentially allowing services to block suspend.
