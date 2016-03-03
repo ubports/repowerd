@@ -33,8 +33,12 @@ public:
     void handle_power_key_release() override;
 
 private:
+    enum class DisplayPowerMode {unknown, on, off};
+
     std::shared_ptr<DisplayPowerControl> const display_power_control;
-    bool is_display_on;
+
+    DisplayPowerMode display_power_mode;
+    DisplayPowerMode display_power_mode_at_power_key_press;
 };
 
 }

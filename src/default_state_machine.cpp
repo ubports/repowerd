@@ -22,24 +22,29 @@
 
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
     : display_power_control{config.the_display_power_control()},
-      is_display_on{false}
+      display_power_mode{DisplayPowerMode::off},
+      display_power_mode_at_power_key_press{DisplayPowerMode::unknown}
 {
 }
 
 void repowerd::DefaultStateMachine::handle_power_key_press()
 {
-    if (is_display_on)
-    {
-        display_power_control->turn_off();
-        is_display_on = false;
-    }
-    else
+    display_power_mode_at_power_key_press = display_power_mode;
+
+    if (display_power_mode == DisplayPowerMode::off)
     {
         display_power_control->turn_on();
-        is_display_on = true;
+        display_power_mode = DisplayPowerMode::on;
     }
 }
 
 void repowerd::DefaultStateMachine::handle_power_key_release()
 {
+    if (display_power_mode_at_power_key_press == DisplayPowerMode::on)
+    {
+        display_power_control->turn_off();
+        display_power_mode = DisplayPowerMode::off;
+    }
+
+    display_power_mode_at_power_key_press = DisplayPowerMode::unknown;
 }

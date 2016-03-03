@@ -22,6 +22,8 @@
 #include "power_button.h"
 #include "state_machine.h"
 
+#include <future>
+
 struct repowerd::Daemon::EventHandlerRegistration
 {
     EventHandlerRegistration(std::function<void()> const& unregister)
@@ -48,15 +50,8 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
 
 void repowerd::Daemon::run()
 {
-    std::promise<void> started;
-    run(started);
-}
-
-void repowerd::Daemon::run(std::promise<void>& started)
-{
     auto const registrations = register_event_handlers();
 
-    started.set_value();
     running = true;
 
     while (running)
@@ -68,7 +63,17 @@ void repowerd::Daemon::run(std::promise<void>& started)
 
 void repowerd::Daemon::stop()
 {
-    enqueue_event([this] { running = false; });
+    enqueue_priority_event([this] { running = false; });
+}
+
+void repowerd::Daemon::flush()
+{
+    std::promise<void> flushed_promise;
+    auto flushed_future = flushed_promise.get_future();
+
+    enqueue_event([&flushed_promise] { flushed_promise.set_value(); });
+
+    flushed_future.wait();
 }
 
 std::vector<repowerd::Daemon::EventHandlerRegistration>
@@ -97,6 +102,14 @@ void repowerd::Daemon::enqueue_event(Event const& event)
     std::lock_guard<std::mutex> lock{event_queue_mutex};
 
     event_queue.push_back(event);
+    event_queue_cv.notify_one();
+}
+
+void repowerd::Daemon::enqueue_priority_event(Event const& event)
+{
+    std::lock_guard<std::mutex> lock{event_queue_mutex};
+
+    event_queue.push_front(event);
     event_queue_cv.notify_one();
 }
 

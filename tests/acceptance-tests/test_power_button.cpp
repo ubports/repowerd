@@ -37,48 +37,105 @@ struct APowerButton : testing::Test
 {
     rt::DaemonConfig config;
     repowerd::Daemon daemon{config};
-    std::promise<void> daemon_started_promise;
     std::thread daemon_thread;
 
     APowerButton()
     {
-        auto daemon_started_future = daemon_started_promise.get_future();
-
-        daemon_thread = std::thread{
-            [this]
-            {
-                daemon.run(daemon_started_promise);
-            }};
-
-        daemon_started_future.wait();
+        daemon_thread = std::thread{ [this] { daemon.run(); }};
+        daemon.flush();
     }
 
     ~APowerButton()
     {
+        daemon.flush();
         daemon.stop();
         daemon_thread.join();
+    }
+
+    void turn_on_display()
+    {
+        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+        press_power_button();
+        release_power_button();
+        daemon.flush();
+        testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
     }
 
     void press_power_button()
     {
         config.the_fake_power_button()->press();
     }
+
+    void release_power_button()
+    {
+        config.the_fake_power_button()->release();
+    }
+
+    void expect_display_turns_on()
+    {
+        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    }
+
+    void expect_display_turns_off()
+    {
+        EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    }
+
+    void expect_no_display_power_change()
+    {
+        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
+        EXPECT_CALL(*config.the_mock_display_power_control(), turn_off()).Times(0);
+    }
 };
 
 }
 
-TEST_F(APowerButton, press_turns_screen_on)
+TEST_F(APowerButton, press_turns_on_display)
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    expect_display_turns_on();
 
     press_power_button();
 }
 
-TEST_F(APowerButton, press_turns_screen_off_if_already_on)
+TEST_F(APowerButton, release_after_press_does_not_affect_display)
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    expect_display_turns_on();
 
     press_power_button();
+    release_power_button();
+}
+
+TEST_F(APowerButton, stray_release_is_ignored_when_display_is_off)
+{
+    expect_no_display_power_change();
+
+    release_power_button();
+}
+
+TEST_F(APowerButton, stray_release_is_ignored_when_display_is_on)
+{
+    turn_on_display();
+
+    expect_no_display_power_change();
+
+    release_power_button();
+}
+
+TEST_F(APowerButton, press_does_nothing_if_display_is_already_on)
+{
+    turn_on_display();
+
+    expect_no_display_power_change();
+
     press_power_button();
+}
+
+TEST_F(APowerButton, release_soon_after_press_turns_off_display_it_is_already_on)
+{
+    turn_on_display();
+
+    expect_display_turns_off();
+
+    press_power_button();
+    release_power_button();
 }

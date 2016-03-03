@@ -21,7 +21,6 @@
 #include "daemon_config.h"
 
 #include <memory>
-#include <future>
 #include <vector>
 #include <deque>
 #include <mutex>
@@ -35,9 +34,10 @@ class Daemon
 {
 public:
     Daemon(DaemonConfig& config);
+
     void run();
-    void run(std::promise<void>& started);
     void stop();
+    void flush();
 
 private:
     struct EventHandlerRegistration;
@@ -45,6 +45,7 @@ private:
 
     std::vector<EventHandlerRegistration> register_event_handlers();
     void enqueue_event(Event const& event);
+    void enqueue_priority_event(Event const& event);
     Event dequeue_event();
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
