@@ -68,7 +68,7 @@ void repowerd::Daemon::run(std::promise<void>& started)
 
 void repowerd::Daemon::stop()
 {
-    enqueue_event({[this] { running = false; }});
+    enqueue_event([this] { running = false; });
 }
 
 std::vector<repowerd::Daemon::EventHandlerRegistration>
@@ -80,9 +80,9 @@ repowerd::Daemon::register_event_handlers()
         [this] (PowerButtonState state)
         { 
             if (state == PowerButtonState::pressed)
-                enqueue_event({[this] { state_machine->handle_power_key_press(); }});
+                enqueue_event([this] { state_machine->handle_power_key_press(); });
             else if (state == PowerButtonState::released)
-                enqueue_event({[this] { state_machine->handle_power_key_release(); }} );
+                enqueue_event([this] { state_machine->handle_power_key_release(); } );
         });
 
     registrations.push_back(
