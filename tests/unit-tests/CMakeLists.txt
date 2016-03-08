@@ -22,6 +22,7 @@ add_executable(
     repowerd-unit-tests
 
     test_fake_timer.cpp
+    test_daemon.cpp
 
     $<TARGET_OBJECTS:repowerd-objects>
     $<TARGET_OBJECTS:repowerd-test-common>

@@ -20,6 +20,8 @@
 
 #include "src/timer.h"
 
+#include <gmock/gmock.h>
+
 #include <vector>
 
 namespace repowerd
@@ -37,6 +39,13 @@ public:
     AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
 
     void advance_by(std::chrono::milliseconds advance);
+
+    struct Mock
+    {
+        MOCK_METHOD1(set_alarm_handler, void(AlarmHandler const&));
+        MOCK_METHOD0(clear_alarm_handler, void());
+    };
+    testing::NiceMock<Mock> mock;
 
 private:
     struct Alarm

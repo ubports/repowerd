@@ -20,6 +20,8 @@
 
 #include "src/power_button.h"
 
+#include <gmock/gmock.h>
+
 namespace repowerd
 {
 namespace test
@@ -33,6 +35,13 @@ public:
 
     void press();
     void release();
+
+    struct Mock
+    {
+        MOCK_METHOD1(set_power_button_handler, void(PowerButtonHandler const&));
+        MOCK_METHOD0(clear_power_button_handler, void());
+    };
+    testing::NiceMock<Mock> mock;
 
 private:
     PowerButtonHandler handler;

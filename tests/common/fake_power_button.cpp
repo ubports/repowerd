@@ -23,11 +23,13 @@ namespace rt = repowerd::test;
 void rt::FakePowerButton::set_power_button_handler(
     PowerButtonHandler const& handler)
 {
+    mock.set_power_button_handler(handler);
     this->handler = handler;
 }
 
 void rt::FakePowerButton::clear_power_button_handler()
 {
+    mock.clear_power_button_handler();
     handler = [](PowerButtonState){};
 }
 
