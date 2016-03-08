@@ -18,27 +18,37 @@
 
 #pragma once
 
-#include "daemon_config.h"
+#include "src/default_daemon_config.h"
 
 namespace repowerd
 {
+namespace test
+{
 
-class DefaultDaemonConfig : public DaemonConfig
+class FakePowerButton;
+class FakeTimer;
+class MockDisplayPowerControl;
+class MockPowerButtonEventSink;
+
+class DaemonConfig : public repowerd::DefaultDaemonConfig
 {
 public:
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
-    std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
 
+    std::shared_ptr<MockDisplayPowerControl> the_mock_display_power_control();
+    std::shared_ptr<FakePowerButton> the_fake_power_button();
+    std::shared_ptr<MockPowerButtonEventSink> the_mock_power_button_event_sink();
+    std::shared_ptr<FakeTimer> the_fake_timer();
+
 private:
-    std::shared_ptr<DisplayPowerControl> display_power_control;
-    std::shared_ptr<PowerButton> power_button;
-    std::shared_ptr<PowerButtonEventSink> power_button_event_sink;
-    std::shared_ptr<StateMachine> state_machine;
-    std::shared_ptr<Timer> timer;
+    std::shared_ptr<MockDisplayPowerControl> mock_display_power_control;
+    std::shared_ptr<FakePowerButton> fake_power_button;
+    std::shared_ptr<MockPowerButtonEventSink> mock_power_button_event_sink;
+    std::shared_ptr<FakeTimer> fake_timer;
 };
 
 }
-
+}

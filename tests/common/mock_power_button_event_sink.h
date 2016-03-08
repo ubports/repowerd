@@ -18,26 +18,21 @@
 
 #pragma once
 
-#include <functional>
+#include "src/power_button_event_sink.h"
+
+#include <gmock/gmock.h>
 
 namespace repowerd
 {
+namespace test
+{
 
-enum class PowerButtonState{released, pressed};
-using PowerButtonHandler = std::function<void(PowerButtonState)>;
-
-class PowerButton
+class MockPowerButtonEventSink : public PowerButtonEventSink
 {
 public:
-    virtual ~PowerButton() = default;
-
-    virtual void set_power_button_handler(PowerButtonHandler const& handler) = 0;
-    virtual void clear_power_button_handler() = 0;
-
-protected:
-    PowerButton() = default;
-    PowerButton (PowerButton const&) = default;
-    PowerButton& operator=(PowerButton const&) = default;
+    MOCK_METHOD0(notify_long_press, void());
 };
 
 }
+}
+

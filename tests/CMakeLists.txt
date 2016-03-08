@@ -14,4 +14,11 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+include_directories(
+    ${CMAKE_SOURCE_DIR}
+    common
+)
+
 add_subdirectory(acceptance-tests/)
+add_subdirectory(common/)
+add_subdirectory(unit-tests/)

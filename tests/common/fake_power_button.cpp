@@ -16,28 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "fake_power_button.h"
 
-#include <functional>
+namespace rt = repowerd::test;
 
-namespace repowerd
+void rt::FakePowerButton::set_power_button_handler(
+    PowerButtonHandler const& handler)
 {
+    this->handler = handler;
+}
 
-enum class PowerButtonState{released, pressed};
-using PowerButtonHandler = std::function<void(PowerButtonState)>;
-
-class PowerButton
+void rt::FakePowerButton::clear_power_button_handler()
 {
-public:
-    virtual ~PowerButton() = default;
+    handler = [](PowerButtonState){};
+}
 
-    virtual void set_power_button_handler(PowerButtonHandler const& handler) = 0;
-    virtual void clear_power_button_handler() = 0;
+void rt::FakePowerButton::press()
+{
+    handler(PowerButtonState::pressed);
+}
 
-protected:
-    PowerButton() = default;
-    PowerButton (PowerButton const&) = default;
-    PowerButton& operator=(PowerButton const&) = default;
-};
-
+void rt::FakePowerButton::release()
+{
+    handler(PowerButtonState::released);
 }

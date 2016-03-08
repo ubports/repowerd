@@ -14,23 +14,10 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_executable(
-    repowerd-acceptance-tests
+add_library(
+    repowerd-test-common OBJECT
 
-    test_power_button.cpp
-
-    $<TARGET_OBJECTS:repowerd-objects>
-    $<TARGET_OBJECTS:repowerd-test-common>
+    daemon_config.cpp
+    fake_power_button.cpp
+    fake_timer.cpp
 )
-
-target_link_libraries(
-    repowerd-acceptance-tests
-
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARY}
-    ${GMOCK_MAIN_LIBRARY}
-)
-
-add_test(repowerd-acceptance-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-acceptance-tests)
-
-add_dependencies(repowerd-acceptance-tests GMock)

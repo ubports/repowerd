@@ -18,25 +18,20 @@
 
 #pragma once
 
-#include "src/power_button.h"
-
 namespace repowerd
 {
-namespace test
-{
 
-class FakePowerButton : public PowerButton
+class PowerButtonEventSink
 {
 public:
-    PowerButtonHandlerId register_power_button_handler(PowerButtonHandler const& handler) override;
-    void unregister_power_button_handler(PowerButtonHandlerId id) override;
+    virtual ~PowerButtonEventSink() = default;
 
-    void press();
-    void release();
+    virtual void notify_long_press() = 0;
 
-private:
-    PowerButtonHandler handler;
+protected:
+    PowerButtonEventSink() = default;
+    PowerButtonEventSink(PowerButtonEventSink const&) = delete;
+    PowerButtonEventSink& operator=(PowerButtonEventSink const&) = delete;
 };
 
-}
 }

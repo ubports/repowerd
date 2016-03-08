@@ -14,23 +14,28 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_executable(
-    repowerd-acceptance-tests
+include_directories(
+    ${CMAKE_SOURCE_DIR}
+)
 
-    test_power_button.cpp
+add_executable(
+    repowerd-unit-tests
+
+    test_fake_timer.cpp
 
     $<TARGET_OBJECTS:repowerd-objects>
     $<TARGET_OBJECTS:repowerd-test-common>
 )
 
 target_link_libraries(
-    repowerd-acceptance-tests
+    repowerd-unit-tests
 
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
 )
 
-add_test(repowerd-acceptance-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-acceptance-tests)
+add_test(repowerd-unit-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-unit-tests)
 
-add_dependencies(repowerd-acceptance-tests GMock)
+add_dependencies(repowerd-unit-tests GMock)
+

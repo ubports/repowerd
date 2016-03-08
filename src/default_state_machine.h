@@ -31,14 +31,19 @@ public:
 
     void handle_power_key_press() override;
     void handle_power_key_release() override;
+    void handle_alarm(AlarmId id) override;
 
 private:
     enum class DisplayPowerMode {unknown, on, off};
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
+    std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
+    std::shared_ptr<Timer> const timer;
 
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_key_press;
+    AlarmId long_press_alarm_id;
+    bool long_press_detected;
 };
 
 }

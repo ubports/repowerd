@@ -19,24 +19,13 @@
 #include "default_daemon_config.h"
 #include "default_state_machine.h"
 
-#include "power_button.h"
 #include "display_power_control.h"
+#include "power_button.h"
+#include "power_button_event_sink.h"
+#include "timer.h"
 
 namespace
 {
-
-struct NullPowerButton : repowerd::PowerButton
-{
-    repowerd::PowerButtonHandlerId register_power_button_handler(
-        repowerd::PowerButtonHandler const&) override
-    {
-        return {};
-    }
-
-    void unregister_power_button_handler(repowerd::PowerButtonHandlerId) override
-    {
-    }
-};
 
 struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 {
@@ -44,14 +33,32 @@ struct NullDisplayPowerControl : repowerd::DisplayPowerControl
     void turn_off() override {}
 };
 
+struct NullPowerButton : repowerd::PowerButton
+{
+    void set_power_button_handler(repowerd::PowerButtonHandler const&) override {}
+    void clear_power_button_handler() override {}
+};
+
+struct NullPowerButtonEventSink : repowerd::PowerButtonEventSink
+{
+    void notify_long_press() override {}
+};
+
+struct NullTimer : repowerd::Timer
+{
+    void set_alarm_handler(repowerd::AlarmHandler const&) override {}
+    void clear_alarm_handler() override {}
+    repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; };
+};
+
 }
 
-std::shared_ptr<repowerd::StateMachine>
-repowerd::DefaultDaemonConfig::the_state_machine()
+std::shared_ptr<repowerd::DisplayPowerControl>
+repowerd::DefaultDaemonConfig::the_display_power_control()
 {
-    if (!state_machine)
-        state_machine = std::make_shared<DefaultStateMachine>(*this);
-    return state_machine;
+    if (!display_power_control)
+        display_power_control = std::make_shared<NullDisplayPowerControl>();
+    return display_power_control;
 }
 
 std::shared_ptr<repowerd::PowerButton>
@@ -63,10 +70,27 @@ repowerd::DefaultDaemonConfig::the_power_button()
 
 }
 
-std::shared_ptr<repowerd::DisplayPowerControl>
-repowerd::DefaultDaemonConfig::the_display_power_control()
+std::shared_ptr<repowerd::PowerButtonEventSink>
+repowerd::DefaultDaemonConfig::the_power_button_event_sink()
 {
-    if (!display_power_control)
-        display_power_control = std::make_shared<NullDisplayPowerControl>();
-    return display_power_control;
+    if (!power_button_event_sink)
+        power_button_event_sink = std::make_shared<NullPowerButtonEventSink>();
+    return power_button_event_sink;
+
+}
+
+std::shared_ptr<repowerd::StateMachine>
+repowerd::DefaultDaemonConfig::the_state_machine()
+{
+    if (!state_machine)
+        state_machine = std::make_shared<DefaultStateMachine>(*this);
+    return state_machine;
+}
+
+std::shared_ptr<repowerd::Timer>
+repowerd::DefaultDaemonConfig::the_timer()
+{
+    if (!timer)
+        timer = std::make_shared<NullTimer>();
+    return timer;
 }

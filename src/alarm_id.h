@@ -18,26 +18,22 @@
 
 #pragma once
 
-#include <functional>
-
 namespace repowerd
 {
 
-enum class PowerButtonState{released, pressed};
-using PowerButtonHandler = std::function<void(PowerButtonState)>;
-
-class PowerButton
+class AlarmId
 {
 public:
-    virtual ~PowerButton() = default;
+    AlarmId() : AlarmId{invalid} {}
+    AlarmId(int id) : id{id} {}
 
-    virtual void set_power_button_handler(PowerButtonHandler const& handler) = 0;
-    virtual void clear_power_button_handler() = 0;
+    AlarmId operator++(int) { return AlarmId{id++}; }
+    operator int() const { return id; }
 
-protected:
-    PowerButton() = default;
-    PowerButton (PowerButton const&) = default;
-    PowerButton& operator=(PowerButton const&) = default;
+    static int constexpr invalid{-1};
+
+private:
+    int id;
 };
 
 }

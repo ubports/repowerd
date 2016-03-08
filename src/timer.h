@@ -16,30 +16,31 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "fake_power_button.h"
+#pragma once
 
-namespace rt = repowerd::test;
+#include <chrono>
+#include <functional>
 
-repowerd::PowerButtonHandlerId rt::FakePowerButton::register_power_button_handler(
-    PowerButtonHandler const& handler)
+#include "alarm_id.h"
+
+namespace repowerd
 {
-    this->handler = handler;
-    return PowerButtonHandlerId{1};
-}
 
-void rt::FakePowerButton::unregister_power_button_handler(
-    PowerButtonHandlerId)
+using AlarmHandler = std::function<void(AlarmId)>;
+
+class Timer
 {
-    handler = [](PowerButtonState){};
-}
+public:
+    virtual ~Timer() = default;
 
-void rt::FakePowerButton::press()
-{
-    handler(PowerButtonState::pressed);
+    virtual void set_alarm_handler(AlarmHandler const& handler) = 0;
+    virtual void clear_alarm_handler() = 0;
+    virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
 
-}
+protected:
+    Timer() = default;
+    Timer(Timer const&) = delete;
+    Timer& operator=(Timer const&) = delete;
+};
 
-void rt::FakePowerButton::release()
-{
-    handler(PowerButtonState::released);
 }

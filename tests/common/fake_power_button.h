@@ -18,26 +18,25 @@
 
 #pragma once
 
-#include <functional>
+#include "src/power_button.h"
 
 namespace repowerd
 {
+namespace test
+{
 
-enum class PowerButtonState{released, pressed};
-using PowerButtonHandler = std::function<void(PowerButtonState)>;
-
-class PowerButton
+class FakePowerButton : public PowerButton
 {
 public:
-    virtual ~PowerButton() = default;
+    void set_power_button_handler(PowerButtonHandler const& handler) override;
+    void clear_power_button_handler() override;
 
-    virtual void set_power_button_handler(PowerButtonHandler const& handler) = 0;
-    virtual void clear_power_button_handler() = 0;
+    void press();
+    void release();
 
-protected:
-    PowerButton() = default;
-    PowerButton (PowerButton const&) = default;
-    PowerButton& operator=(PowerButton const&) = default;
+private:
+    PowerButtonHandler handler;
 };
 
+}
 }

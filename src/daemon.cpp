@@ -21,6 +21,7 @@
 #include "display_power_control.h"
 #include "power_button.h"
 #include "state_machine.h"
+#include "timer.h"
 
 #include <future>
 
@@ -44,6 +45,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
     : display_power_control{config.the_display_power_control()},
       power_button{config.the_power_button()},
       state_machine{config.the_state_machine()},
+      timer{config.the_timer()},
       running{false}
 {
 }
@@ -81,7 +83,7 @@ repowerd::Daemon::register_event_handlers()
 {
     std::vector<EventHandlerRegistration> registrations;
 
-    auto const id = power_button->register_power_button_handler(
+    power_button->set_power_button_handler(
         [this] (PowerButtonState state)
         { 
             if (state == PowerButtonState::pressed)
@@ -92,7 +94,17 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         EventHandlerRegistration{
-            [this, id]{ power_button->unregister_power_button_handler(id); }});
+            [this]{ power_button->clear_power_button_handler(); }});
+
+    timer->set_alarm_handler(
+        [this] (AlarmId id)
+        {
+            enqueue_event([this, id] { state_machine->handle_alarm(id); });
+        });
+
+    registrations.push_back(
+        EventHandlerRegistration{
+            [this]{ timer->clear_alarm_handler(); }});
 
     return registrations;
 }

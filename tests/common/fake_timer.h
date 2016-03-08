@@ -18,28 +18,37 @@
 
 #pragma once
 
-#include "src/default_daemon_config.h"
+#include "src/timer.h"
+
+#include <vector>
 
 namespace repowerd
 {
 namespace test
 {
 
-class FakePowerButton;
-class MockDisplayPowerControl;
-
-class DaemonConfig : public repowerd::DefaultDaemonConfig
+class FakeTimer : public Timer
 {
 public:
-    std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
-    std::shared_ptr<PowerButton> the_power_button() override;
+    FakeTimer();
 
-    std::shared_ptr<MockDisplayPowerControl> the_mock_display_power_control();
-    std::shared_ptr<FakePowerButton> the_fake_power_button();
+    void set_alarm_handler(AlarmHandler const& handler) override;
+    void clear_alarm_handler() override;
+    AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
+
+    void advance_by(std::chrono::milliseconds advance);
 
 private:
-    std::shared_ptr<MockDisplayPowerControl> mock_display_power_control;
-    std::shared_ptr<FakePowerButton> fake_power_button;
+    struct Alarm
+    {
+        AlarmId id;
+        std::chrono::milliseconds time;
+    };
+
+    AlarmHandler handler;
+    AlarmId next_alarm_id;
+    std::chrono::milliseconds now;
+    std::vector<Alarm> alarms;
 };
 
 }

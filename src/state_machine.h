@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "alarm_id.h"
+
 namespace repowerd
 {
 
@@ -28,6 +30,7 @@ public:
 
     virtual void handle_power_key_press() = 0;
     virtual void handle_power_key_release() = 0;
+    virtual void handle_alarm(AlarmId id) = 0;
 
 protected:
     StateMachine() = default;
