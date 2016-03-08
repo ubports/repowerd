@@ -28,8 +28,8 @@ class StateMachine
 public:
     virtual ~StateMachine() = default;
 
-    virtual void handle_power_key_press() = 0;
-    virtual void handle_power_key_release() = 0;
+    virtual void handle_power_button_press() = 0;
+    virtual void handle_power_button_release() = 0;
     virtual void handle_alarm(AlarmId id) = 0;
 
 protected:

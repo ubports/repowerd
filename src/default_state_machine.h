@@ -29,8 +29,8 @@ class DefaultStateMachine : public StateMachine
 public:
     DefaultStateMachine(DaemonConfig& config);
 
-    void handle_power_key_press() override;
-    void handle_power_key_release() override;
+    void handle_power_button_press() override;
+    void handle_power_button_release() override;
     void handle_alarm(AlarmId id) override;
 
 private:
@@ -41,7 +41,7 @@ private:
     std::shared_ptr<Timer> const timer;
 
     DisplayPowerMode display_power_mode;
-    DisplayPowerMode display_power_mode_at_power_key_press;
+    DisplayPowerMode display_power_mode_at_power_button_press;
     AlarmId long_press_alarm_id;
     bool long_press_detected;
 };

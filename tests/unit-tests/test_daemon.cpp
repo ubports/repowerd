@@ -36,8 +36,8 @@ namespace
 
 struct MockStateMachine : public repowerd::StateMachine
 {
-    MOCK_METHOD0(handle_power_key_press, void());
-    MOCK_METHOD0(handle_power_key_release, void());
+    MOCK_METHOD0(handle_power_button_press, void());
+    MOCK_METHOD0(handle_power_button_release, void());
     MOCK_METHOD1(handle_alarm, void(repowerd::AlarmId));
 };
 
@@ -127,7 +127,7 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_press)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_key_press());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_button_press());
     config.the_fake_power_button()->press();
 }
 
@@ -135,6 +135,6 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_release)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_key_release());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_button_release());
     config.the_fake_power_button()->release();
 }

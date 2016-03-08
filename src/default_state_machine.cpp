@@ -29,15 +29,15 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       power_button_event_sink{config.the_power_button_event_sink()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
-      display_power_mode_at_power_key_press{DisplayPowerMode::unknown},
+      display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
       long_press_alarm_id{AlarmId::invalid},
       long_press_detected{false}
 {
 }
 
-void repowerd::DefaultStateMachine::handle_power_key_press()
+void repowerd::DefaultStateMachine::handle_power_button_press()
 {
-    display_power_mode_at_power_key_press = display_power_mode;
+    display_power_mode_at_power_button_press = display_power_mode;
 
     if (display_power_mode == DisplayPowerMode::off)
     {
@@ -48,20 +48,20 @@ void repowerd::DefaultStateMachine::handle_power_key_press()
     long_press_alarm_id = timer->schedule_alarm_in(2s);
 }
 
-void repowerd::DefaultStateMachine::handle_power_key_release()
+void repowerd::DefaultStateMachine::handle_power_button_release()
 {
     if (long_press_detected)
     {
         power_button_event_sink->notify_long_press();
         long_press_detected = false;
     }
-    else if (display_power_mode_at_power_key_press == DisplayPowerMode::on)
+    else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
     {
         display_power_control->turn_off();
         display_power_mode = DisplayPowerMode::off;
     }
 
-    display_power_mode_at_power_key_press = DisplayPowerMode::unknown;
+    display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
     long_press_alarm_id = AlarmId::invalid;
 }
 
