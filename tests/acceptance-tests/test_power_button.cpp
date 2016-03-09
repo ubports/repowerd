@@ -16,98 +16,19 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/daemon.h"
-
-#include "mock_display_power_control.h"
-#include "mock_power_button_event_sink.h"
-#include "fake_power_button.h"
-#include "fake_timer.h"
-
-#include "daemon_config.h"
+#include "acceptance_test.h"
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
-#include <thread>
+#include <chrono>
 
 namespace rt = repowerd::test;
 
 namespace
 {
 
-struct APowerButton : testing::Test
+struct APowerButton : rt::AcceptanceTest
 {
-    rt::DaemonConfig config;
-    repowerd::Daemon daemon{config};
-    std::thread daemon_thread;
-
-    APowerButton()
-    {
-        daemon_thread = std::thread{ [this] { daemon.run(); }};
-        daemon.flush();
-    }
-
-    ~APowerButton()
-    {
-        daemon.flush();
-        daemon.stop();
-        daemon_thread.join();
-    }
-
-    void turn_on_display()
-    {
-        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
-        press_power_button();
-        release_power_button();
-        daemon.flush();
-        testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
-    }
-
-    void press_power_button()
-    {
-        config.the_fake_power_button()->press();
-    }
-
-    void release_power_button()
-    {
-        config.the_fake_power_button()->release();
-    }
-
-    void advance_time_by(std::chrono::milliseconds advance)
-    {
-        daemon.flush();
-        config.the_fake_timer()->advance_by(advance);
-        daemon.flush();
-    }
-
-    void expect_display_turns_on()
-    {
-        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
-    }
-
-    void expect_display_turns_off()
-    {
-        EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
-    }
-
-    void expect_no_display_power_change()
-    {
-        EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
-        EXPECT_CALL(*config.the_mock_display_power_control(), turn_off()).Times(0);
-    }
-
-    void expect_long_press_notification()
-    {
-        EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press());
-    }
-
-    void verify_expectations()
-    {
-        daemon.flush();
-        testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
-        testing::Mock::VerifyAndClearExpectations(config.the_mock_power_button_event_sink().get());
-    }
-
     std::chrono::seconds long_press_timeout{2};
 };
 

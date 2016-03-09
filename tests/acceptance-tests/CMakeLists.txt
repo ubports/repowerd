@@ -17,6 +17,7 @@
 add_executable(
     repowerd-acceptance-tests
 
+    acceptance_test.cpp
     test_power_button.cpp
     test_user_activity.cpp
 

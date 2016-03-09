@@ -16,37 +16,42 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "acceptance_test.h"
+#pragma once
+
+#include "src/daemon.h"
+#include "daemon_config.h"
+
+#include <chrono>
+#include <thread>
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-
-namespace rt = repowerd::test;
-
-namespace
+namespace repowerd
+{
+namespace test
 {
 
-struct AUserActivity : rt::AcceptanceTest
+struct AcceptanceTest : testing::Test
 {
-    std::chrono::seconds display_off_timeout{60};
+    AcceptanceTest();
+    ~AcceptanceTest();
+
+    void expect_display_turns_off();
+    void expect_display_turns_on();
+    void expect_long_press_notification();
+    void expect_no_display_power_change();
+    void verify_expectations();
+
+    void advance_time_by(std::chrono::milliseconds advance);
+    void press_power_button();
+    void release_power_button();
+    void turn_off_display();
+    void turn_on_display();
+
+    DaemonConfig config;
+    Daemon daemon{config};
+    std::thread daemon_thread;
 };
 
 }
-
-TEST_F(AUserActivity, not_performed_allows_display_to_turn_off)
-{
-    turn_on_display();
-
-    expect_display_turns_off();
-    advance_time_by(display_off_timeout);
-}
-
-TEST_F(AUserActivity, not_performed_has_no_effect_after_display_is_turned_off)
-{
-    turn_on_display();
-    turn_off_display();
-
-    expect_no_display_power_change();
-    advance_time_by(display_off_timeout);
 }
