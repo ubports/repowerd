@@ -42,7 +42,7 @@ TEST_F(APowerButton, press_turns_on_display)
     press_power_button();
 }
 
-TEST_F(APowerButton, release_after_press_does_not_affect_display)
+TEST_F(APowerButton, release_after_press_that_turns_on_display_does_nothing)
 {
     expect_display_turns_on();
 
@@ -75,7 +75,7 @@ TEST_F(APowerButton, press_does_nothing_if_display_is_already_on)
     press_power_button();
 }
 
-TEST_F(APowerButton, release_soon_after_press_turns_off_display_it_is_already_on)
+TEST_F(APowerButton, short_press_turns_off_display_it_is_already_on)
 {
     turn_on_display();
 
@@ -107,7 +107,7 @@ TEST_F(APowerButton, long_press_notifies_if_display_is_on)
     release_power_button();
 }
 
-TEST_F(APowerButton, can_change_display_power_state_after_long_press)
+TEST_F(APowerButton, short_press_can_change_display_power_state_after_long_press)
 {
     turn_on_display();
 
