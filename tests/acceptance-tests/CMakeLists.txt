@@ -18,6 +18,7 @@ add_executable(
     repowerd-acceptance-tests
 
     test_power_button.cpp
+    test_user_activity.cpp
 
     $<TARGET_OBJECTS:repowerd-objects>
     $<TARGET_OBJECTS:repowerd-test-common>

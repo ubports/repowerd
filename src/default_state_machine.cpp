@@ -31,8 +31,22 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
       long_press_alarm_id{AlarmId::invalid},
-      long_press_detected{false}
+      long_press_detected{false},
+      user_inactivity_alarm_id{AlarmId::invalid}
 {
+}
+
+void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
+{
+    if (id == long_press_alarm_id)
+    {
+        long_press_detected = true;
+        long_press_alarm_id = AlarmId::invalid;
+    }
+    else if (id == user_inactivity_alarm_id)
+    {
+        set_display_power_mode(DisplayPowerMode::off);
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_power_button_press()
@@ -41,8 +55,7 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
 
     if (display_power_mode == DisplayPowerMode::off)
     {
-        display_power_control->turn_on();
-        display_power_mode = DisplayPowerMode::on;
+        set_display_power_mode(DisplayPowerMode::on);
     }
 
     long_press_alarm_id = timer->schedule_alarm_in(2s);
@@ -57,19 +70,35 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     }
     else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
     {
-        display_power_control->turn_off();
-        display_power_mode = DisplayPowerMode::off;
+        set_display_power_mode(DisplayPowerMode::off);
     }
 
     display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
     long_press_alarm_id = AlarmId::invalid;
 }
 
-void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
+void repowerd::DefaultStateMachine::set_display_power_mode(DisplayPowerMode mode)
 {
-    if (long_press_alarm_id == id)
+    if (mode == DisplayPowerMode::off)
     {
-        long_press_detected = true;
-        long_press_alarm_id = AlarmId::invalid;
+        display_power_control->turn_off();
+        display_power_mode = DisplayPowerMode::off;
+        cancel_user_inactivity_alarm();
     }
+    else if (mode == DisplayPowerMode::on)
+    {
+        display_power_control->turn_on();
+        display_power_mode = DisplayPowerMode::on;
+        schedule_user_inactivity_alarm();
+    }
+}
+
+void repowerd::DefaultStateMachine::schedule_user_inactivity_alarm()
+{
+    user_inactivity_alarm_id = timer->schedule_alarm_in(10s);
+}
+
+void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
+{
+    user_inactivity_alarm_id = AlarmId::invalid;
 }

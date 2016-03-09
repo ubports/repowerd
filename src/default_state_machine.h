@@ -29,12 +29,17 @@ class DefaultStateMachine : public StateMachine
 public:
     DefaultStateMachine(DaemonConfig& config);
 
+    void handle_alarm(AlarmId id) override;
+
     void handle_power_button_press() override;
     void handle_power_button_release() override;
-    void handle_alarm(AlarmId id) override;
 
 private:
     enum class DisplayPowerMode {unknown, on, off};
+
+    void set_display_power_mode(DisplayPowerMode mode);
+    void schedule_user_inactivity_alarm();
+    void cancel_user_inactivity_alarm();
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
@@ -44,6 +49,7 @@ private:
     DisplayPowerMode display_power_mode_at_power_button_press;
     AlarmId long_press_alarm_id;
     bool long_press_detected;
+    AlarmId user_inactivity_alarm_id;
 };
 
 }
