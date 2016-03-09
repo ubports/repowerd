@@ -19,6 +19,7 @@
 #include "daemon_config.h"
 #include "fake_power_button.h"
 #include "fake_timer.h"
+#include "fake_user_activity.h"
 
 #include "src/daemon.h"
 #include "src/state_machine.h"
@@ -36,9 +37,13 @@ namespace
 
 struct MockStateMachine : public repowerd::StateMachine
 {
+    MOCK_METHOD1(handle_alarm, void(repowerd::AlarmId));
+
     MOCK_METHOD0(handle_power_button_press, void());
     MOCK_METHOD0(handle_power_button_release, void());
-    MOCK_METHOD1(handle_alarm, void(repowerd::AlarmId));
+
+    MOCK_METHOD0(handle_user_activity_extending_power_state, void());
+    MOCK_METHOD0(handle_user_activity_changing_power_state, void());
 };
 
 struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
@@ -137,4 +142,39 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_release)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_power_button_release());
     config.the_fake_power_button()->release();
+}
+
+TEST_F(ADaemon, sets_and_clears_user_activity_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_user_activity()->mock, set_user_activity_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_user_activity().get());
+
+    EXPECT_CALL(config.the_fake_user_activity()->mock, clear_user_activity_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_user_activity().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_user_activity_changing_power_state)
+{
+    using namespace testing;
+
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_user_activity_changing_power_state());
+
+    config.the_fake_user_activity()->perform(repowerd::UserActivityType::change_power_state);
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
+{
+    using namespace testing;
+
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_user_activity_extending_power_state());
+
+    config.the_fake_user_activity()->perform(repowerd::UserActivityType::extend_power_state);
 }

@@ -34,6 +34,9 @@ public:
     void handle_power_button_press() override;
     void handle_power_button_release() override;
 
+    void handle_user_activity_changing_power_state() override;
+    void handle_user_activity_extending_power_state() override;
+
 private:
     enum class DisplayPowerMode {unknown, on, off};
 

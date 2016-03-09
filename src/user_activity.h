@@ -18,29 +18,26 @@
 
 #pragma once
 
-#include "alarm_id.h"
+#include <functional>
 
 namespace repowerd
 {
 
-class StateMachine
+enum class UserActivityType{change_power_state, extend_power_state};
+using UserActivityHandler = std::function<void(UserActivityType)>;
+
+class UserActivity
 {
 public:
-    virtual ~StateMachine() = default;
+    virtual ~UserActivity() = default;
 
-    virtual void handle_alarm(AlarmId id) = 0;
-
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
-
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
+    virtual void set_user_activity_handler(UserActivityHandler const& handler) = 0;
+    virtual void clear_user_activity_handler() = 0;
 
 protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
+    UserActivity() = default;
+    UserActivity(UserActivity const&) = delete;
+    UserActivity& operator=(UserActivity const&) = delete;
 };
 
 }
-

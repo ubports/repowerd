@@ -52,6 +52,7 @@ private:
     std::shared_ptr<PowerButton> const power_button;
     std::shared_ptr<StateMachine> const state_machine;
     std::shared_ptr<Timer> const timer;
+    std::shared_ptr<UserActivity> const user_activity;
 
     bool running;
 

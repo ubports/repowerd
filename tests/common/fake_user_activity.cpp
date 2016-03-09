@@ -16,31 +16,29 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "fake_user_activity.h"
 
-#include "alarm_id.h"
+namespace rt = repowerd::test;
 
-namespace repowerd
+rt::FakeUserActivity::FakeUserActivity()
+    : handler{[](UserActivityType){}}
 {
-
-class StateMachine
-{
-public:
-    virtual ~StateMachine() = default;
-
-    virtual void handle_alarm(AlarmId id) = 0;
-
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
-
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
-
-protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
-};
-
 }
 
+void rt::FakeUserActivity::set_user_activity_handler(
+    UserActivityHandler const& handler)
+{
+    mock.set_user_activity_handler(handler);
+    this->handler = handler;
+}
+
+void rt::FakeUserActivity::clear_user_activity_handler()
+{
+    mock.clear_user_activity_handler();
+    handler = [](UserActivityType){};
+}
+
+void rt::FakeUserActivity::perform(UserActivityType type)
+{
+    handler(type);
+}

@@ -78,6 +78,20 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     power_button_long_press_alarm_id = AlarmId::invalid;
 }
 
+void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+        schedule_user_inactivity_alarm();
+    else
+        set_display_power_mode(DisplayPowerMode::on);
+}
+
+void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+        schedule_user_inactivity_alarm();
+}
+
 void repowerd::DefaultStateMachine::set_display_power_mode(DisplayPowerMode mode)
 {
     if (mode == DisplayPowerMode::off)

@@ -20,4 +20,5 @@ add_library(
     daemon_config.cpp
     fake_power_button.cpp
     fake_timer.cpp
+    fake_user_activity.cpp
 )

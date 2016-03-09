@@ -18,29 +18,35 @@
 
 #pragma once
 
-#include "alarm_id.h"
+#include "src/user_activity.h"
+
+#include <gmock/gmock.h>
 
 namespace repowerd
 {
+namespace test
+{
 
-class StateMachine
+class FakeUserActivity : public UserActivity
 {
 public:
-    virtual ~StateMachine() = default;
+    FakeUserActivity();
 
-    virtual void handle_alarm(AlarmId id) = 0;
+    void set_user_activity_handler(UserActivityHandler const& handler) override;
+    void clear_user_activity_handler() override;
 
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
+    void perform(UserActivityType type);
 
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
+    struct Mock
+    {
+        MOCK_METHOD1(set_user_activity_handler, void(UserActivityHandler const&));
+        MOCK_METHOD0(clear_user_activity_handler, void());
+    };
+    testing::NiceMock<Mock> mock;
 
-protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
+private:
+    UserActivityHandler handler;
 };
 
 }
-
+}

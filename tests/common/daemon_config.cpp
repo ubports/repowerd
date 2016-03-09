@@ -22,6 +22,7 @@
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_timer.h"
+#include "fake_user_activity.h"
 
 namespace rt = repowerd::test;
 
@@ -43,6 +44,11 @@ std::shared_ptr<repowerd::PowerButtonEventSink> rt::DaemonConfig::the_power_butt
 std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
 {
     return the_fake_timer();
+}
+
+std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
+{
+    return the_fake_user_activity();
 }
 
 std::shared_ptr<rt::MockDisplayPowerControl> rt::DaemonConfig::the_mock_display_power_control()
@@ -76,4 +82,12 @@ std::shared_ptr<rt::FakeTimer> rt::DaemonConfig::the_fake_timer()
         fake_timer = std::make_shared<rt::FakeTimer>();
 
     return fake_timer;
+}
+
+std::shared_ptr<rt::FakeUserActivity> rt::DaemonConfig::the_fake_user_activity()
+{
+    if (!fake_user_activity)
+        fake_user_activity = std::make_shared<rt::FakeUserActivity>();
+
+    return fake_user_activity;
 }

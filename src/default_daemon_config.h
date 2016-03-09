@@ -31,6 +31,7 @@ public:
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
+    std::shared_ptr<UserActivity> the_user_activity() override;
 
     std::chrono::milliseconds power_button_long_press_timeout() override;
     std::chrono::milliseconds user_inactivity_display_off_timeout() override;
@@ -41,6 +42,7 @@ private:
     std::shared_ptr<PowerButtonEventSink> power_button_event_sink;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;
+    std::shared_ptr<UserActivity> user_activity;
 };
 
 }

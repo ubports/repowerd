@@ -27,6 +27,7 @@ namespace test
 
 class FakePowerButton;
 class FakeTimer;
+class FakeUserActivity;
 class MockDisplayPowerControl;
 class MockPowerButtonEventSink;
 
@@ -37,17 +38,20 @@ public:
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
     std::shared_ptr<Timer> the_timer() override;
+    std::shared_ptr<UserActivity> the_user_activity() override;
 
     std::shared_ptr<MockDisplayPowerControl> the_mock_display_power_control();
     std::shared_ptr<FakePowerButton> the_fake_power_button();
     std::shared_ptr<MockPowerButtonEventSink> the_mock_power_button_event_sink();
     std::shared_ptr<FakeTimer> the_fake_timer();
+    std::shared_ptr<FakeUserActivity> the_fake_user_activity();
 
 private:
     std::shared_ptr<MockDisplayPowerControl> mock_display_power_control;
     std::shared_ptr<FakePowerButton> fake_power_button;
     std::shared_ptr<MockPowerButtonEventSink> mock_power_button_event_sink;
     std::shared_ptr<FakeTimer> fake_timer;
+    std::shared_ptr<FakeUserActivity> fake_user_activity;
 };
 
 }

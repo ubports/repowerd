@@ -23,6 +23,7 @@
 #include "power_button.h"
 #include "power_button_event_sink.h"
 #include "timer.h"
+#include "user_activity.h"
 
 namespace
 {
@@ -49,6 +50,12 @@ struct NullTimer : repowerd::Timer
     void set_alarm_handler(repowerd::AlarmHandler const&) override {}
     void clear_alarm_handler() override {}
     repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; };
+};
+
+struct NullUserActivity : repowerd::UserActivity
+{
+    void set_user_activity_handler(repowerd::UserActivityHandler const&) override {}
+    void clear_user_activity_handler() override {}
 };
 
 }
@@ -93,6 +100,14 @@ repowerd::DefaultDaemonConfig::the_timer()
     if (!timer)
         timer = std::make_shared<NullTimer>();
     return timer;
+}
+
+std::shared_ptr<repowerd::UserActivity>
+repowerd::DefaultDaemonConfig::the_user_activity()
+{
+    if (!user_activity)
+        user_activity = std::make_shared<NullUserActivity>();
+    return user_activity;
 }
 
 std::chrono::milliseconds

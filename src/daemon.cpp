@@ -22,6 +22,7 @@
 #include "power_button.h"
 #include "state_machine.h"
 #include "timer.h"
+#include "user_activity.h"
 
 #include <future>
 
@@ -46,6 +47,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       power_button{config.the_power_button()},
       state_machine{config.the_state_machine()},
       timer{config.the_timer()},
+      user_activity{config.the_user_activity()},
       running{false}
 {
 }
@@ -105,6 +107,25 @@ repowerd::Daemon::register_event_handlers()
     registrations.push_back(
         EventHandlerRegistration{
             [this]{ timer->clear_alarm_handler(); }});
+
+    user_activity->set_user_activity_handler(
+        [this] (UserActivityType type)
+        {
+            if (type == UserActivityType::change_power_state)
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_user_activity_changing_power_state(); });
+            }
+            else if (type == UserActivityType::extend_power_state)
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_user_activity_extending_power_state(); });
+            }
+        });
+
+    registrations.push_back(
+        EventHandlerRegistration{
+            [this]{ user_activity->clear_user_activity_handler(); }});
 
     return registrations;
 }
