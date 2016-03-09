@@ -22,28 +22,28 @@
 #include "power_button_event_sink.h"
 #include "timer.h"
 
-using namespace std::chrono_literals;
-
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
     : display_power_control{config.the_display_power_control()},
       power_button_event_sink{config.the_power_button_event_sink()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
-      long_press_alarm_id{AlarmId::invalid},
-      long_press_detected{false},
-      user_inactivity_alarm_id{AlarmId::invalid}
+      power_button_long_press_alarm_id{AlarmId::invalid},
+      power_button_long_press_detected{false},
+      power_button_long_press_timeout{config.power_button_long_press_timeout()},
+      user_inactivity_display_off_alarm_id{AlarmId::invalid},
+      user_inactivity_display_off_timeout{config.user_inactivity_display_off_timeout()}
 {
 }
 
 void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
 {
-    if (id == long_press_alarm_id)
+    if (id == power_button_long_press_alarm_id)
     {
-        long_press_detected = true;
-        long_press_alarm_id = AlarmId::invalid;
+        power_button_long_press_detected = true;
+        power_button_long_press_alarm_id = AlarmId::invalid;
     }
-    else if (id == user_inactivity_alarm_id)
+    else if (id == user_inactivity_display_off_alarm_id)
     {
         set_display_power_mode(DisplayPowerMode::off);
     }
@@ -58,15 +58,16 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
         set_display_power_mode(DisplayPowerMode::on);
     }
 
-    long_press_alarm_id = timer->schedule_alarm_in(2s);
+    power_button_long_press_alarm_id =
+        timer->schedule_alarm_in(power_button_long_press_timeout);
 }
 
 void repowerd::DefaultStateMachine::handle_power_button_release()
 {
-    if (long_press_detected)
+    if (power_button_long_press_detected)
     {
         power_button_event_sink->notify_long_press();
-        long_press_detected = false;
+        power_button_long_press_detected = false;
     }
     else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
     {
@@ -74,7 +75,7 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     }
 
     display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
-    long_press_alarm_id = AlarmId::invalid;
+    power_button_long_press_alarm_id = AlarmId::invalid;
 }
 
 void repowerd::DefaultStateMachine::set_display_power_mode(DisplayPowerMode mode)
@@ -95,10 +96,11 @@ void repowerd::DefaultStateMachine::set_display_power_mode(DisplayPowerMode mode
 
 void repowerd::DefaultStateMachine::schedule_user_inactivity_alarm()
 {
-    user_inactivity_alarm_id = timer->schedule_alarm_in(10s);
+    user_inactivity_display_off_alarm_id =
+        timer->schedule_alarm_in(user_inactivity_display_off_timeout);
 }
 
 void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
 {
-    user_inactivity_alarm_id = AlarmId::invalid;
+    user_inactivity_display_off_alarm_id = AlarmId::invalid;
 }

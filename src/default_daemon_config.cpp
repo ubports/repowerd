@@ -94,3 +94,15 @@ repowerd::DefaultDaemonConfig::the_timer()
         timer = std::make_shared<NullTimer>();
     return timer;
 }
+
+std::chrono::milliseconds
+repowerd::DefaultDaemonConfig::power_button_long_press_timeout()
+{
+    return std::chrono::seconds{2};
+}
+
+std::chrono::milliseconds
+repowerd::DefaultDaemonConfig::user_inactivity_display_off_timeout()
+{
+    return std::chrono::seconds{60};
+}

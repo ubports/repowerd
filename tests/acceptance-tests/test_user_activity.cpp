@@ -29,7 +29,8 @@ namespace
 
 struct AUserActivity : rt::AcceptanceTest
 {
-    std::chrono::seconds display_off_timeout{60};
+    std::chrono::milliseconds const user_inactivity_display_off_timeout{
+        config.user_inactivity_display_off_timeout()};
 };
 
 }
@@ -39,7 +40,7 @@ TEST_F(AUserActivity, not_performed_allows_display_to_turn_off)
     turn_on_display();
 
     expect_display_turns_off();
-    advance_time_by(display_off_timeout);
+    advance_time_by(user_inactivity_display_off_timeout);
 }
 
 TEST_F(AUserActivity, not_performed_has_no_effect_after_display_is_turned_off)
@@ -48,5 +49,5 @@ TEST_F(AUserActivity, not_performed_has_no_effect_after_display_is_turned_off)
     turn_off_display();
 
     expect_no_display_power_change();
-    advance_time_by(display_off_timeout);
+    advance_time_by(user_inactivity_display_off_timeout);
 }

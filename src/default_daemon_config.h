@@ -32,6 +32,9 @@ public:
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
 
+    std::chrono::milliseconds power_button_long_press_timeout() override;
+    std::chrono::milliseconds user_inactivity_display_off_timeout() override;
+
 private:
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<PowerButton> power_button;

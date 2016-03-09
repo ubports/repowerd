@@ -47,9 +47,11 @@ private:
 
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_button_press;
-    AlarmId long_press_alarm_id;
-    bool long_press_detected;
-    AlarmId user_inactivity_alarm_id;
+    AlarmId power_button_long_press_alarm_id;
+    bool power_button_long_press_detected;
+    std::chrono::milliseconds power_button_long_press_timeout;
+    AlarmId user_inactivity_display_off_alarm_id;
+    std::chrono::milliseconds user_inactivity_display_off_timeout;
 };
 
 }

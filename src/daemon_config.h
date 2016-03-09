@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 
 namespace repowerd
 {
@@ -39,6 +40,9 @@ public:
     virtual std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() = 0;
     virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
     virtual std::shared_ptr<Timer> the_timer() = 0;
+
+    virtual std::chrono::milliseconds power_button_long_press_timeout() = 0;
+    virtual std::chrono::milliseconds user_inactivity_display_off_timeout() = 0;
 
 protected:
     DaemonConfig() = default;

@@ -29,7 +29,8 @@ namespace
 
 struct APowerButton : rt::AcceptanceTest
 {
-    std::chrono::seconds long_press_timeout{2};
+    std::chrono::milliseconds const power_button_long_press_timeout{
+        config.power_button_long_press_timeout()};
 };
 
 }
@@ -90,7 +91,7 @@ TEST_F(APowerButton, long_press_turns_on_display_and_notifies_if_display_is_off)
     expect_long_press_notification();
 
     press_power_button();
-    advance_time_by(long_press_timeout);
+    advance_time_by(power_button_long_press_timeout);
     release_power_button();
 }
 
@@ -102,7 +103,7 @@ TEST_F(APowerButton, long_press_notifies_if_display_is_on)
     expect_long_press_notification();
 
     press_power_button();
-    advance_time_by(long_press_timeout);
+    advance_time_by(power_button_long_press_timeout);
     release_power_button();
 }
 
@@ -112,7 +113,7 @@ TEST_F(APowerButton, can_change_display_power_state_after_long_press)
 
     expect_long_press_notification();
     press_power_button();
-    advance_time_by(long_press_timeout);
+    advance_time_by(power_button_long_press_timeout);
     release_power_button();
     verify_expectations();
 
