@@ -33,18 +33,6 @@ namespace
 
 struct AUserActivity : rt::AcceptanceTest
 {
-    void perform_user_activity_extending_power_state()
-    {
-        config.the_fake_user_activity()->perform(
-            repowerd::UserActivityType::extend_power_state);
-    }
-
-    void perform_user_activity_changing_power_state()
-    {
-        config.the_fake_user_activity()->perform(
-            repowerd::UserActivityType::change_power_state);
-    }
-
     std::chrono::milliseconds const user_inactivity_display_off_timeout{
         config.user_inactivity_display_off_timeout()};
 };

@@ -20,11 +20,13 @@
 
 #include "display_power_control.h"
 #include "power_button_event_sink.h"
+#include "proximity_sensor.h"
 #include "timer.h"
 
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
     : display_power_control{config.the_display_power_control()},
       power_button_event_sink{config.the_power_button_event_sink()},
+      proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
@@ -82,7 +84,7 @@ void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
 {
     if (display_power_mode == DisplayPowerMode::on)
         schedule_user_inactivity_alarm();
-    else
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
         set_display_power_mode(DisplayPowerMode::on);
 }
 
@@ -117,4 +119,16 @@ void repowerd::DefaultStateMachine::schedule_user_inactivity_alarm()
 void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
 {
     user_inactivity_display_off_alarm_id = AlarmId::invalid;
+}
+
+void repowerd::DefaultStateMachine::handle_proximity_far()
+{
+    if (display_power_mode == DisplayPowerMode::off)
+        set_display_power_mode(DisplayPowerMode::on);
+}
+
+void repowerd::DefaultStateMachine::handle_proximity_near()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+        set_display_power_mode(DisplayPowerMode::off);
 }

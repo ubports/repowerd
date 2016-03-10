@@ -37,6 +37,9 @@ public:
     void handle_user_activity_changing_power_state() override;
     void handle_user_activity_extending_power_state() override;
 
+    void handle_proximity_far() override;
+    void handle_proximity_near() override;
+
 private:
     enum class DisplayPowerMode {unknown, on, off};
 
@@ -46,6 +49,7 @@ private:
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
+    std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<Timer> const timer;
 
     DisplayPowerMode display_power_mode;

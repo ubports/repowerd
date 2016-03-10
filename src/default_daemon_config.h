@@ -29,6 +29,7 @@ public:
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
+    std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
@@ -40,6 +41,7 @@ private:
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<PowerButton> power_button;
     std::shared_ptr<PowerButtonEventSink> power_button_event_sink;
+    std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UserActivity> user_activity;

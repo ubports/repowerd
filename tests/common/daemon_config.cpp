@@ -21,6 +21,7 @@
 #include "mock_display_power_control.h"
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
+#include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 
@@ -39,6 +40,11 @@ std::shared_ptr<repowerd::PowerButton> rt::DaemonConfig::the_power_button()
 std::shared_ptr<repowerd::PowerButtonEventSink> rt::DaemonConfig::the_power_button_event_sink()
 {
     return the_mock_power_button_event_sink();
+}
+
+std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_sensor()
+{
+    return the_fake_proximity_sensor();
 }
 
 std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
@@ -74,6 +80,14 @@ rt::DaemonConfig::the_mock_power_button_event_sink()
         mock_power_button_event_sink = std::make_shared<rt::MockPowerButtonEventSink>();
 
     return mock_power_button_event_sink;
+}
+
+std::shared_ptr<rt::FakeProximitySensor> rt::DaemonConfig::the_fake_proximity_sensor()
+{
+    if (!fake_proximity_sensor)
+        fake_proximity_sensor = std::make_shared<rt::FakeProximitySensor>();
+
+    return fake_proximity_sensor;
 }
 
 std::shared_ptr<rt::FakeTimer> rt::DaemonConfig::the_fake_timer()

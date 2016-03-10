@@ -43,8 +43,14 @@ struct AcceptanceTest : testing::Test
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
+    void emit_proximity_state_far();
+    void emit_proximity_state_near();
+    void perform_user_activity_extending_power_state();
+    void perform_user_activity_changing_power_state();
     void press_power_button();
     void release_power_button();
+    void set_proximity_state_far();
+    void set_proximity_state_near();
     void turn_off_display();
     void turn_on_display();
 

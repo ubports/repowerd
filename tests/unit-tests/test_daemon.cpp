@@ -18,6 +18,7 @@
 
 #include "daemon_config.h"
 #include "fake_power_button.h"
+#include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 
@@ -44,6 +45,9 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
+
+    MOCK_METHOD0(handle_proximity_far, void());
+    MOCK_METHOD0(handle_proximity_near, void());
 };
 
 struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
@@ -177,4 +181,35 @@ TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_user_activity_extending_power_state());
 
     config.the_fake_user_activity()->perform(repowerd::UserActivityType::extend_power_state);
+}
+
+TEST_F(ADaemon, sets_and_clears_proximity_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, set_proximity_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
+
+    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, clear_proximity_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_proximity_far)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_proximity_far());
+
+    config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::far);
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_proximity_near());
+
+    config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::near);
 }

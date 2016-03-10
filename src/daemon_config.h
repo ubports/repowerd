@@ -27,6 +27,7 @@ namespace repowerd
 class DisplayPowerControl;
 class PowerButton;
 class PowerButtonEventSink;
+class ProximitySensor;
 class StateMachine;
 class Timer;
 class UserActivity;
@@ -39,6 +40,7 @@ public:
     virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
     virtual std::shared_ptr<PowerButton> the_power_button() = 0;
     virtual std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() = 0;
+    virtual std::shared_ptr<ProximitySensor> the_proximity_sensor() = 0;
     virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
     virtual std::shared_ptr<Timer> the_timer() = 0;
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;

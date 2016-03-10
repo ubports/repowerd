@@ -22,6 +22,7 @@
 #include "display_power_control.h"
 #include "power_button.h"
 #include "power_button_event_sink.h"
+#include "proximity_sensor.h"
 #include "timer.h"
 #include "user_activity.h"
 
@@ -43,6 +44,13 @@ struct NullPowerButton : repowerd::PowerButton
 struct NullPowerButtonEventSink : repowerd::PowerButtonEventSink
 {
     void notify_long_press() override {}
+};
+
+struct NullProximitySensor : repowerd::ProximitySensor
+{
+    void set_proximity_handler(repowerd::ProximityHandler const&) override {}
+    void clear_proximity_handler() override {}
+    repowerd::ProximityState proximity_state() override { return {}; }
 };
 
 struct NullTimer : repowerd::Timer
@@ -74,7 +82,6 @@ repowerd::DefaultDaemonConfig::the_power_button()
     if (!power_button)
         power_button = std::make_shared<NullPowerButton>();
     return power_button;
-
 }
 
 std::shared_ptr<repowerd::PowerButtonEventSink>
@@ -83,7 +90,14 @@ repowerd::DefaultDaemonConfig::the_power_button_event_sink()
     if (!power_button_event_sink)
         power_button_event_sink = std::make_shared<NullPowerButtonEventSink>();
     return power_button_event_sink;
+}
 
+std::shared_ptr<repowerd::ProximitySensor>
+repowerd::DefaultDaemonConfig::the_proximity_sensor()
+{
+    if (!proximity_sensor)
+        proximity_sensor = std::make_shared<NullProximitySensor>();
+    return proximity_sensor;
 }
 
 std::shared_ptr<repowerd::StateMachine>

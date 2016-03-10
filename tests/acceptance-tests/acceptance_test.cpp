@@ -22,7 +22,9 @@
 #include "mock_display_power_control.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_power_button.h"
+#include "fake_proximity_sensor.h"
 #include "fake_timer.h"
+#include "fake_user_activity.h"
 
 #include "src/daemon.h"
 
@@ -79,6 +81,30 @@ void rt::AcceptanceTest::advance_time_by(std::chrono::milliseconds advance)
     daemon.flush();
 }
 
+void rt::AcceptanceTest::emit_proximity_state_far()
+{
+    config.the_fake_proximity_sensor()->emit_proximity_state(
+        repowerd::ProximityState::far);
+}
+
+void rt::AcceptanceTest::emit_proximity_state_near()
+{
+    config.the_fake_proximity_sensor()->emit_proximity_state(
+        repowerd::ProximityState::near);
+}
+
+void rt::AcceptanceTest::perform_user_activity_extending_power_state()
+{
+    config.the_fake_user_activity()->perform(
+        repowerd::UserActivityType::extend_power_state);
+}
+
+void rt::AcceptanceTest::perform_user_activity_changing_power_state()
+{
+    config.the_fake_user_activity()->perform(
+        repowerd::UserActivityType::change_power_state);
+}
+
 void rt::AcceptanceTest::press_power_button()
 {
     config.the_fake_power_button()->press();
@@ -87,6 +113,18 @@ void rt::AcceptanceTest::press_power_button()
 void rt::AcceptanceTest::release_power_button()
 {
     config.the_fake_power_button()->release();
+}
+
+void rt::AcceptanceTest::set_proximity_state_far()
+{
+    config.the_fake_proximity_sensor()->set_proximity_state(
+        repowerd::ProximityState::far);
+}
+
+void rt::AcceptanceTest::set_proximity_state_near()
+{
+    config.the_fake_proximity_sensor()->set_proximity_state(
+        repowerd::ProximityState::near);
 }
 
 void rt::AcceptanceTest::turn_off_display()

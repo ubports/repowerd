@@ -50,6 +50,7 @@ private:
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButton> const power_button;
+    std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<StateMachine> const state_machine;
     std::shared_ptr<Timer> const timer;
     std::shared_ptr<UserActivity> const user_activity;

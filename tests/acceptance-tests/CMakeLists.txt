@@ -19,6 +19,7 @@ add_executable(
 
     acceptance_test.cpp
     test_power_button.cpp
+    test_proximity_sensor.cpp
     test_user_activity.cpp
 
     $<TARGET_OBJECTS:repowerd-objects>

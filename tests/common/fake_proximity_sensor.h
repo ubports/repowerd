@@ -18,32 +18,38 @@
 
 #pragma once
 
-#include "alarm_id.h"
+#include "src/proximity_sensor.h"
+
+#include <gmock/gmock.h>
 
 namespace repowerd
 {
+namespace test
+{
 
-class StateMachine
+class FakeProximitySensor : public ProximitySensor
 {
 public:
-    virtual ~StateMachine() = default;
+    FakeProximitySensor();
 
-    virtual void handle_alarm(AlarmId id) = 0;
+    void set_proximity_handler(ProximityHandler const& handler) override;
+    void clear_proximity_handler() override;
+    ProximityState proximity_state() override;
 
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
+    void emit_proximity_state(ProximityState state);
+    void set_proximity_state(ProximityState state);
 
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
+    struct Mock
+    {
+        MOCK_METHOD1(set_proximity_handler, void(ProximityHandler const&));
+        MOCK_METHOD0(clear_proximity_handler, void());
+    };
+    testing::NiceMock<Mock> mock;
 
-    virtual void handle_proximity_far() = 0;
-    virtual void handle_proximity_near() = 0;
-
-protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
+private:
+    ProximityHandler handler;
+    ProximityState state;
 };
 
 }
-
+}

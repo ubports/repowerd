@@ -18,32 +18,27 @@
 
 #pragma once
 
-#include "alarm_id.h"
+#include <functional>
 
 namespace repowerd
 {
 
-class StateMachine
+enum class ProximityState{near, far};
+using ProximityHandler = std::function<void(ProximityState)>;
+
+class ProximitySensor
 {
 public:
-    virtual ~StateMachine() = default;
+    virtual ~ProximitySensor() = default;
 
-    virtual void handle_alarm(AlarmId id) = 0;
-
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
-
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
-
-    virtual void handle_proximity_far() = 0;
-    virtual void handle_proximity_near() = 0;
+    virtual void set_proximity_handler(ProximityHandler const& handler) = 0;
+    virtual void clear_proximity_handler() = 0;
+    virtual ProximityState proximity_state() = 0;
 
 protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
+    ProximitySensor() = default;
+    ProximitySensor (ProximitySensor const&) = default;
+    ProximitySensor& operator=(ProximitySensor const&) = default;
 };
 
 }
-
