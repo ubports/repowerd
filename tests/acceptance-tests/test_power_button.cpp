@@ -92,7 +92,6 @@ TEST_F(APowerButton, long_press_turns_on_display_and_notifies_if_display_is_off)
 
     press_power_button();
     advance_time_by(power_button_long_press_timeout);
-    release_power_button();
 }
 
 TEST_F(APowerButton, long_press_notifies_if_display_is_on)
@@ -104,7 +103,6 @@ TEST_F(APowerButton, long_press_notifies_if_display_is_on)
 
     press_power_button();
     advance_time_by(power_button_long_press_timeout);
-    release_power_button();
 }
 
 TEST_F(APowerButton, short_press_can_change_display_power_state_after_long_press)

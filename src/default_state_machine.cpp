@@ -42,6 +42,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
 {
     if (id == power_button_long_press_alarm_id)
     {
+        power_button_event_sink->notify_long_press();
         power_button_long_press_detected = true;
         power_button_long_press_alarm_id = AlarmId::invalid;
     }
@@ -68,7 +69,6 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
 {
     if (power_button_long_press_detected)
     {
-        power_button_event_sink->notify_long_press();
         power_button_long_press_detected = false;
     }
     else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
