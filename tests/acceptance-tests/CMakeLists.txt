@@ -18,6 +18,7 @@ add_executable(
     repowerd-acceptance-tests
 
     acceptance_test.cpp
+    test_client_requests.cpp
     test_power_button.cpp
     test_proximity_sensor.cpp
     test_user_activity.cpp

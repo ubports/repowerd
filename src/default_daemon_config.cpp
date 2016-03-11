@@ -19,6 +19,7 @@
 #include "default_daemon_config.h"
 #include "default_state_machine.h"
 
+#include "client_requests.h"
 #include "display_power_control.h"
 #include "power_button.h"
 #include "power_button_event_sink.h"
@@ -28,6 +29,12 @@
 
 namespace
 {
+
+struct NullClientRequests : repowerd::ClientRequests
+{
+    void set_turn_on_display_handler(repowerd::TurnOnDisplayHandler const&) override {}
+    void clear_turn_on_display_handler() override {}
+};
 
 struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 {
@@ -57,7 +64,8 @@ struct NullTimer : repowerd::Timer
 {
     void set_alarm_handler(repowerd::AlarmHandler const&) override {}
     void clear_alarm_handler() override {}
-    repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; };
+    repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; }
+    std::chrono::steady_clock::time_point now() { return {}; }
 };
 
 struct NullUserActivity : repowerd::UserActivity
@@ -66,6 +74,14 @@ struct NullUserActivity : repowerd::UserActivity
     void clear_user_activity_handler() override {}
 };
 
+}
+
+std::shared_ptr<repowerd::ClientRequests>
+repowerd::DefaultDaemonConfig::the_client_requests()
+{
+    if (!client_requests)
+        client_requests = std::make_shared<NullClientRequests>();
+    return client_requests;
 }
 
 std::shared_ptr<repowerd::DisplayPowerControl>
@@ -131,7 +147,13 @@ repowerd::DefaultDaemonConfig::power_button_long_press_timeout()
 }
 
 std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::user_inactivity_display_off_timeout()
+repowerd::DefaultDaemonConfig::user_inactivity_normal_display_off_timeout()
 {
     return std::chrono::seconds{60};
+}
+
+std::chrono::milliseconds
+repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
+{
+    return std::chrono::seconds{15};
 }

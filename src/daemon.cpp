@@ -18,6 +18,7 @@
 
 #include "daemon.h"
 
+#include "client_requests.h"
 #include "display_power_control.h"
 #include "power_button.h"
 #include "proximity_sensor.h"
@@ -44,7 +45,8 @@ struct repowerd::Daemon::EventHandlerRegistration
 };
 
 repowerd::Daemon::Daemon(DaemonConfig& config)
-    : display_power_control{config.the_display_power_control()},
+    : client_requests{config.the_client_requests()},
+      display_power_control{config.the_display_power_control()},
       power_button{config.the_power_button()},
       proximity_sensor{config.the_proximity_sensor()},
       state_machine{config.the_state_machine()},
@@ -147,6 +149,25 @@ repowerd::Daemon::register_event_handlers()
     registrations.push_back(
         EventHandlerRegistration{
             [this]{ proximity_sensor->clear_proximity_handler(); }});
+
+    client_requests->set_turn_on_display_handler(
+        [this] (TurnOnDisplayTimeout timeout)
+        {
+            if (timeout == TurnOnDisplayTimeout::normal)
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_turn_on_display_with_normal_timeout(); });
+            }
+            else if (timeout == TurnOnDisplayTimeout::reduced)
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_turn_on_display_with_reduced_timeout(); });
+            }
+        });
+
+    registrations.push_back(
+        EventHandlerRegistration{
+            [this]{ client_requests->clear_turn_on_display_handler(); }});
 
     return registrations;
 }

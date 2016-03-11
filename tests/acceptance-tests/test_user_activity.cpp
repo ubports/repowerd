@@ -33,8 +33,8 @@ namespace
 
 struct AUserActivity : rt::AcceptanceTest
 {
-    std::chrono::milliseconds const user_inactivity_display_off_timeout{
-        config.user_inactivity_display_off_timeout()};
+    std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
+        config.user_inactivity_normal_display_off_timeout()};
 };
 
 }
@@ -44,7 +44,7 @@ TEST_F(AUserActivity, not_performed_turns_off_display_after_timeout)
     turn_on_display();
 
     expect_display_turns_off();
-    advance_time_by(user_inactivity_display_off_timeout);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
 }
 
 TEST_F(AUserActivity, not_performed_does_not_turn_off_display_prematurely)
@@ -52,7 +52,7 @@ TEST_F(AUserActivity, not_performed_does_not_turn_off_display_prematurely)
     turn_on_display();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
 }
 
 TEST_F(AUserActivity, not_performed_has_no_effect_after_display_is_turned_off)
@@ -61,7 +61,7 @@ TEST_F(AUserActivity, not_performed_has_no_effect_after_display_is_turned_off)
     turn_off_display();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_display_off_timeout);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
 }
 
 TEST_F(AUserActivity, extending_power_state_has_no_effect_when_display_is_off)
@@ -69,7 +69,7 @@ TEST_F(AUserActivity, extending_power_state_has_no_effect_when_display_is_off)
     expect_no_display_power_change();
 
     perform_user_activity_extending_power_state();
-    advance_time_by(user_inactivity_display_off_timeout);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
 }
 
 TEST_F(AUserActivity, extending_power_state_resets_display_off_timer)
@@ -77,9 +77,9 @@ TEST_F(AUserActivity, extending_power_state_resets_display_off_timer)
     turn_on_display();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     perform_user_activity_extending_power_state();
-    advance_time_by(user_inactivity_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
     expect_display_turns_off();
@@ -106,9 +106,9 @@ TEST_F(AUserActivity, changing_power_state_resets_display_off_timer)
     turn_on_display();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     perform_user_activity_changing_power_state();
-    advance_time_by(user_inactivity_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
     expect_display_turns_off();

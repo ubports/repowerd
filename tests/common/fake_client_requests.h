@@ -18,30 +18,35 @@
 
 #pragma once
 
-#include <chrono>
-#include <functional>
+#include "src/client_requests.h"
 
-#include "alarm_id.h"
+#include <gmock/gmock.h>
 
 namespace repowerd
 {
+namespace test
+{
 
-using AlarmHandler = std::function<void(AlarmId)>;
-
-class Timer
+class FakeClientRequests : public ClientRequests
 {
 public:
-    virtual ~Timer() = default;
+    FakeClientRequests();
 
-    virtual void set_alarm_handler(AlarmHandler const& handler) = 0;
-    virtual void clear_alarm_handler() = 0;
-    virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
-    virtual std::chrono::steady_clock::time_point now() = 0;
+    void set_turn_on_display_handler(TurnOnDisplayHandler const& handler) override;
+    void clear_turn_on_display_handler() override;
 
-protected:
-    Timer() = default;
-    Timer(Timer const&) = delete;
-    Timer& operator=(Timer const&) = delete;
+    void emit_turn_on_display(TurnOnDisplayTimeout timeout);
+
+    struct Mock
+    {
+        MOCK_METHOD1(set_turn_on_display_handler, void(TurnOnDisplayHandler const&));
+        MOCK_METHOD0(clear_turn_on_display_handler, void());
+    };
+    testing::NiceMock<Mock> mock;
+
+private:
+    TurnOnDisplayHandler turn_on_display_handler;
 };
 
+}
 }

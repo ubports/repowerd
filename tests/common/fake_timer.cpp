@@ -25,7 +25,7 @@ namespace rt = repowerd::test;
 rt::FakeTimer::FakeTimer()
     : handler{[](AlarmId){}},
       next_alarm_id{1},
-      now{0}
+      now_ms{0}
 {
 }
 
@@ -43,17 +43,23 @@ void rt::FakeTimer::clear_alarm_handler()
 
 repowerd::AlarmId rt::FakeTimer::schedule_alarm_in(std::chrono::milliseconds t)
 {
-    alarms.push_back({next_alarm_id, now + t});
+    alarms.push_back({next_alarm_id, now_ms + t});
 
     return next_alarm_id++;
 }
+
+std::chrono::steady_clock::time_point rt::FakeTimer::now()
+{
+    return std::chrono::steady_clock::time_point{now_ms};
+}
+
 void rt::FakeTimer::advance_by(std::chrono::milliseconds advance)
 {
-    now += advance;
+    now_ms += advance;
 
     for (auto const& alarm : alarms)
     {
-        if (now >= alarm.time)
+        if (now_ms >= alarm.time)
             handler(alarm.id);
     }
 
@@ -61,6 +67,6 @@ void rt::FakeTimer::advance_by(std::chrono::milliseconds advance)
         std::remove_if(
             alarms.begin(),
             alarms.end(),
-            [this](auto const& alarm) { return now >= alarm.time; }),
+            [this](auto const& alarm) { return now_ms >= alarm.time; }),
         alarms.end());
 }

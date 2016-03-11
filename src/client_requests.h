@@ -18,30 +18,26 @@
 
 #pragma once
 
-#include <chrono>
 #include <functional>
-
-#include "alarm_id.h"
 
 namespace repowerd
 {
 
-using AlarmHandler = std::function<void(AlarmId)>;
+enum class TurnOnDisplayTimeout{normal, reduced};
+using TurnOnDisplayHandler = std::function<void(TurnOnDisplayTimeout)>;
 
-class Timer
+class ClientRequests
 {
 public:
-    virtual ~Timer() = default;
+    virtual ~ClientRequests() = default;
 
-    virtual void set_alarm_handler(AlarmHandler const& handler) = 0;
-    virtual void clear_alarm_handler() = 0;
-    virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
-    virtual std::chrono::steady_clock::time_point now() = 0;
+    virtual void set_turn_on_display_handler(TurnOnDisplayHandler const& handler) = 0;
+    virtual void clear_turn_on_display_handler() = 0;
 
 protected:
-    Timer() = default;
-    Timer(Timer const&) = delete;
-    Timer& operator=(Timer const&) = delete;
+    ClientRequests() = default;
+    ClientRequests (ClientRequests const&) = default;
+    ClientRequests& operator=(ClientRequests const&) = default;
 };
 
 }

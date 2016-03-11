@@ -16,32 +16,30 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "fake_client_requests.h"
 
-#include <chrono>
-#include <functional>
+namespace rt = repowerd::test;
 
-#include "alarm_id.h"
-
-namespace repowerd
+rt::FakeClientRequests::FakeClientRequests()
+    : turn_on_display_handler{[](TurnOnDisplayTimeout){}}
 {
+}
 
-using AlarmHandler = std::function<void(AlarmId)>;
-
-class Timer
+void rt::FakeClientRequests::set_turn_on_display_handler(
+    TurnOnDisplayHandler const& handler)
 {
-public:
-    virtual ~Timer() = default;
+    mock.set_turn_on_display_handler(handler);
+    turn_on_display_handler = handler;
+}
 
-    virtual void set_alarm_handler(AlarmHandler const& handler) = 0;
-    virtual void clear_alarm_handler() = 0;
-    virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
-    virtual std::chrono::steady_clock::time_point now() = 0;
+void rt::FakeClientRequests::clear_turn_on_display_handler()
+{
+    mock.clear_turn_on_display_handler();
+    turn_on_display_handler = [](TurnOnDisplayTimeout){};
+}
 
-protected:
-    Timer() = default;
-    Timer(Timer const&) = delete;
-    Timer& operator=(Timer const&) = delete;
-};
-
+void rt::FakeClientRequests::emit_turn_on_display(
+    TurnOnDisplayTimeout timeout)
+{
+    turn_on_display_handler(timeout);
 }

@@ -18,6 +18,7 @@ add_library(
     repowerd-test-common OBJECT
 
     daemon_config.cpp
+    fake_client_requests.cpp
     fake_power_button.cpp
     fake_proximity_sensor.cpp
     fake_timer.cpp

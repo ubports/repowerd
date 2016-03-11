@@ -24,6 +24,7 @@
 namespace repowerd
 {
 
+class ClientRequests;
 class DisplayPowerControl;
 class PowerButton;
 class PowerButtonEventSink;
@@ -37,6 +38,7 @@ class DaemonConfig
 public:
     virtual ~DaemonConfig() = default;
 
+    virtual std::shared_ptr<ClientRequests> the_client_requests() = 0;
     virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
     virtual std::shared_ptr<PowerButton> the_power_button() = 0;
     virtual std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() = 0;
@@ -46,7 +48,8 @@ public:
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
 
     virtual std::chrono::milliseconds power_button_long_press_timeout() = 0;
-    virtual std::chrono::milliseconds user_inactivity_display_off_timeout() = 0;
+    virtual std::chrono::milliseconds user_inactivity_normal_display_off_timeout() = 0;
+    virtual std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() = 0;
 
 protected:
     DaemonConfig() = default;

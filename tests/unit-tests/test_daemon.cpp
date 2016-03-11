@@ -17,6 +17,7 @@
  */
 
 #include "daemon_config.h"
+#include "fake_client_requests.h"
 #include "fake_power_button.h"
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
@@ -43,11 +44,14 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_power_button_press, void());
     MOCK_METHOD0(handle_power_button_release, void());
 
-    MOCK_METHOD0(handle_user_activity_extending_power_state, void());
-    MOCK_METHOD0(handle_user_activity_changing_power_state, void());
-
     MOCK_METHOD0(handle_proximity_far, void());
     MOCK_METHOD0(handle_proximity_near, void());
+
+    MOCK_METHOD0(handle_turn_on_display_with_normal_timeout, void());
+    MOCK_METHOD0(handle_turn_on_display_with_reduced_timeout, void());
+
+    MOCK_METHOD0(handle_user_activity_extending_power_state, void());
+    MOCK_METHOD0(handle_user_activity_changing_power_state, void());
 };
 
 struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
@@ -212,4 +216,35 @@ TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_proximity_near());
 
     config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::near);
+}
+
+TEST_F(ADaemon, sets_and_clears_turn_on_display_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, set_turn_on_display_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, clear_turn_on_display_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_turn_on_display_with_normal_timeout)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_turn_on_display_with_normal_timeout());
+
+    config.the_fake_client_requests()->emit_turn_on_display(repowerd::TurnOnDisplayTimeout::normal);
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_turn_on_display_with_reduced_timeout)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_turn_on_display_with_reduced_timeout());
+
+    config.the_fake_client_requests()->emit_turn_on_display(repowerd::TurnOnDisplayTimeout::reduced);
 }

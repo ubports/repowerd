@@ -18,6 +18,7 @@
 
 #include "daemon_config.h"
 
+#include "fake_client_requests.h"
 #include "mock_display_power_control.h"
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
@@ -26,6 +27,11 @@
 #include "fake_user_activity.h"
 
 namespace rt = repowerd::test;
+
+std::shared_ptr<repowerd::ClientRequests> rt::DaemonConfig::the_client_requests()
+{
+    return the_fake_client_requests();
+}
 
 std::shared_ptr<repowerd::DisplayPowerControl> rt::DaemonConfig::the_display_power_control()
 {
@@ -55,6 +61,14 @@ std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
 std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
 {
     return the_fake_user_activity();
+}
+
+std::shared_ptr<rt::FakeClientRequests> rt::DaemonConfig::the_fake_client_requests()
+{
+    if (!fake_client_requests)
+        fake_client_requests = std::make_shared<rt::FakeClientRequests>();
+
+    return fake_client_requests;
 }
 
 std::shared_ptr<rt::MockDisplayPowerControl> rt::DaemonConfig::the_mock_display_power_control()

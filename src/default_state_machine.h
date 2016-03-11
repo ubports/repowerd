@@ -40,12 +40,18 @@ public:
     void handle_proximity_far() override;
     void handle_proximity_near() override;
 
+    void handle_turn_on_display_with_normal_timeout() override;
+    void handle_turn_on_display_with_reduced_timeout() override;
+
 private:
     enum class DisplayPowerMode {unknown, on, off};
 
-    void set_display_power_mode(DisplayPowerMode mode);
-    void schedule_user_inactivity_alarm();
     void cancel_user_inactivity_alarm();
+    void schedule_normal_user_inactivity_alarm();
+    void schedule_reduced_user_inactivity_alarm();
+    void turn_off_display();
+    void turn_on_display_with_normal_timeout();
+    void turn_on_display_with_reduced_timeout();
 
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
@@ -58,7 +64,9 @@ private:
     bool power_button_long_press_detected;
     std::chrono::milliseconds power_button_long_press_timeout;
     AlarmId user_inactivity_display_off_alarm_id;
-    std::chrono::milliseconds user_inactivity_display_off_timeout;
+    std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
+    std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
+    std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
 };
 
 }

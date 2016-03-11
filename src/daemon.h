@@ -48,6 +48,7 @@ private:
     void enqueue_priority_event(Event const& event);
     Event dequeue_event();
 
+    std::shared_ptr<ClientRequests> const client_requests;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButton> const power_button;
     std::shared_ptr<ProximitySensor> const proximity_sensor;

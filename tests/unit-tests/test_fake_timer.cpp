@@ -111,3 +111,12 @@ TEST_F(AFakeTimer, notifies_for_alarms_added_after_advancing)
 
     fake_timer.advance_by(10s);
 }
+
+TEST_F(AFakeTimer, updates_now_when_advanced)
+{
+    auto const advance = 10ms;
+    auto const then = fake_timer.now();
+    fake_timer.advance_by(advance);
+    auto const now = fake_timer.now();
+    EXPECT_THAT(now - then, testing::Eq(advance));
+}

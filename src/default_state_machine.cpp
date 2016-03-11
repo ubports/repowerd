@@ -34,7 +34,10 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       power_button_long_press_detected{false},
       power_button_long_press_timeout{config.power_button_long_press_timeout()},
       user_inactivity_display_off_alarm_id{AlarmId::invalid},
-      user_inactivity_display_off_timeout{config.user_inactivity_display_off_timeout()}
+      user_inactivity_normal_display_off_timeout{
+          config.user_inactivity_normal_display_off_timeout()},
+      user_inactivity_reduced_display_off_timeout{
+          config.user_inactivity_reduced_display_off_timeout()}
 {
 }
 
@@ -48,7 +51,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     }
     else if (id == user_inactivity_display_off_alarm_id)
     {
-        set_display_power_mode(DisplayPowerMode::off);
+        turn_off_display();
     }
 }
 
@@ -58,7 +61,7 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
 
     if (display_power_mode == DisplayPowerMode::off)
     {
-        set_display_power_mode(DisplayPowerMode::on);
+        turn_on_display_with_normal_timeout();
     }
 
     power_button_long_press_alarm_id =
@@ -73,62 +76,108 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     }
     else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
     {
-        set_display_power_mode(DisplayPowerMode::off);
+        turn_off_display();
     }
 
     display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
     power_button_long_press_alarm_id = AlarmId::invalid;
 }
-
-void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
-{
-    if (display_power_mode == DisplayPowerMode::on)
-        schedule_user_inactivity_alarm();
-    else if (proximity_sensor->proximity_state() == ProximityState::far)
-        set_display_power_mode(DisplayPowerMode::on);
-}
-
-void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
-{
-    if (display_power_mode == DisplayPowerMode::on)
-        schedule_user_inactivity_alarm();
-}
-
-void repowerd::DefaultStateMachine::set_display_power_mode(DisplayPowerMode mode)
-{
-    if (mode == DisplayPowerMode::off)
-    {
-        display_power_control->turn_off();
-        display_power_mode = DisplayPowerMode::off;
-        cancel_user_inactivity_alarm();
-    }
-    else if (mode == DisplayPowerMode::on)
-    {
-        display_power_control->turn_on();
-        display_power_mode = DisplayPowerMode::on;
-        schedule_user_inactivity_alarm();
-    }
-}
-
-void repowerd::DefaultStateMachine::schedule_user_inactivity_alarm()
-{
-    user_inactivity_display_off_alarm_id =
-        timer->schedule_alarm_in(user_inactivity_display_off_timeout);
-}
-
-void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
-{
-    user_inactivity_display_off_alarm_id = AlarmId::invalid;
-}
-
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
     if (display_power_mode == DisplayPowerMode::off)
-        set_display_power_mode(DisplayPowerMode::on);
+        turn_on_display_with_normal_timeout();
 }
 
 void repowerd::DefaultStateMachine::handle_proximity_near()
 {
     if (display_power_mode == DisplayPowerMode::on)
-        set_display_power_mode(DisplayPowerMode::off);
+        turn_off_display();
+}
+
+void repowerd::DefaultStateMachine::handle_turn_on_display_with_normal_timeout()
+{
+    if (display_power_mode == DisplayPowerMode::off)
+    {
+        if (proximity_sensor->proximity_state() == ProximityState::far)
+            turn_on_display_with_normal_timeout();
+    }
+    else
+    {
+        schedule_normal_user_inactivity_alarm();
+    }
+}
+
+void repowerd::DefaultStateMachine::handle_turn_on_display_with_reduced_timeout()
+{
+    if (display_power_mode == DisplayPowerMode::off)
+    {
+        if (proximity_sensor->proximity_state() == ProximityState::far)
+            turn_on_display_with_reduced_timeout();
+    }
+    else
+    {
+        schedule_reduced_user_inactivity_alarm();
+    }
+}
+
+void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+        schedule_normal_user_inactivity_alarm();
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
+        turn_on_display_with_normal_timeout();
+}
+
+void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+        schedule_normal_user_inactivity_alarm();
+}
+
+void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
+{
+    user_inactivity_display_off_alarm_id = AlarmId::invalid;
+    user_inactivity_display_off_time_point = {};
+}
+
+void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
+{
+    cancel_user_inactivity_alarm();
+    user_inactivity_display_off_time_point =
+        timer->now() + user_inactivity_normal_display_off_timeout;
+    user_inactivity_display_off_alarm_id =
+        timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout);
+}
+
+void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
+{
+    auto const tp = timer->now() + user_inactivity_reduced_display_off_timeout;
+    if (tp > user_inactivity_display_off_time_point)
+    {
+        cancel_user_inactivity_alarm();
+        user_inactivity_display_off_alarm_id =
+            timer->schedule_alarm_in(user_inactivity_reduced_display_off_timeout);
+        user_inactivity_display_off_time_point = tp;
+    }
+}
+
+void repowerd::DefaultStateMachine::turn_off_display()
+{
+    display_power_control->turn_off();
+    display_power_mode = DisplayPowerMode::off;
+    cancel_user_inactivity_alarm();
+}
+
+void repowerd::DefaultStateMachine::turn_on_display_with_normal_timeout()
+{
+    display_power_control->turn_on();
+    display_power_mode = DisplayPowerMode::on;
+    schedule_normal_user_inactivity_alarm();
+}
+
+void repowerd::DefaultStateMachine::turn_on_display_with_reduced_timeout()
+{
+    display_power_control->turn_on();
+    display_power_mode = DisplayPowerMode::on;
+    schedule_reduced_user_inactivity_alarm();
 }

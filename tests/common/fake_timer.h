@@ -37,6 +37,7 @@ public:
     void set_alarm_handler(AlarmHandler const& handler) override;
     void clear_alarm_handler() override;
     AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
+    std::chrono::steady_clock::time_point now() override;
 
     void advance_by(std::chrono::milliseconds advance);
 
@@ -56,7 +57,7 @@ private:
 
     AlarmHandler handler;
     AlarmId next_alarm_id;
-    std::chrono::milliseconds now;
+    std::chrono::milliseconds now_ms;
     std::vector<Alarm> alarms;
 };
 
