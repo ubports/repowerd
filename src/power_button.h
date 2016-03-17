@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "handler_registration.h"
+
 #include <functional>
 
 namespace repowerd
@@ -31,8 +33,8 @@ class PowerButton
 public:
     virtual ~PowerButton() = default;
 
-    virtual void set_power_button_handler(PowerButtonHandler const& handler) = 0;
-    virtual void clear_power_button_handler() = 0;
+    virtual HandlerRegistration register_power_button_handler(
+        PowerButtonHandler const& handler) = 0;
 
 protected:
     PowerButton() = default;

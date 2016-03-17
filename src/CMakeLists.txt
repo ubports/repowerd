@@ -19,6 +19,7 @@ set(
     daemon.cpp
     default_daemon_config.cpp
     default_state_machine.cpp
+    handler_registration.cpp
 )
 
 add_library(

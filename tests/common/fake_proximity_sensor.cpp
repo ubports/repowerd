@@ -26,17 +26,17 @@ rt::FakeProximitySensor::FakeProximitySensor()
 {
 }
 
-void rt::FakeProximitySensor::set_proximity_handler(
+repowerd::HandlerRegistration rt::FakeProximitySensor::register_proximity_handler(
     ProximityHandler const& handler)
 {
-    mock.set_proximity_handler(handler);
+    mock.register_proximity_handler(handler);
     this->handler = handler;
-}
-
-void rt::FakeProximitySensor::clear_proximity_handler()
-{
-    mock.clear_proximity_handler();
-    handler = [](ProximityState){};
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_proximity_handler();
+            this->handler = [](ProximityState){};
+        }};
 }
 
 repowerd::ProximityState rt::FakeProximitySensor::proximity_state()

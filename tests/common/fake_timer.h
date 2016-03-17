@@ -34,8 +34,7 @@ class FakeTimer : public Timer
 public:
     FakeTimer();
 
-    void set_alarm_handler(AlarmHandler const& handler) override;
-    void clear_alarm_handler() override;
+    HandlerRegistration register_alarm_handler(AlarmHandler const& handler) override;
     AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
     std::chrono::steady_clock::time_point now() override;
 
@@ -43,8 +42,8 @@ public:
 
     struct Mock
     {
-        MOCK_METHOD1(set_alarm_handler, void(AlarmHandler const&));
-        MOCK_METHOD0(clear_alarm_handler, void());
+        MOCK_METHOD1(register_alarm_handler, void(AlarmHandler const&));
+        MOCK_METHOD0(unregister_alarm_handler, void());
     };
     testing::NiceMock<Mock> mock;
 

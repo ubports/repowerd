@@ -99,15 +99,15 @@ struct ADaemon : testing::Test
 
 }
 
-TEST_F(ADaemon, sets_and_clears_timer_alarm_handler)
+TEST_F(ADaemon, registers_and_unregisters_timer_alarm_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_timer()->mock, set_alarm_handler(_));
+    EXPECT_CALL(config.the_fake_timer()->mock, register_alarm_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_timer().get());
 
-    EXPECT_CALL(config.the_fake_timer()->mock, clear_alarm_handler());
+    EXPECT_CALL(config.the_fake_timer()->mock, unregister_alarm_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_timer().get());
 }
@@ -123,15 +123,15 @@ TEST_F(ADaemon, notifies_state_machine_of_timer_alarm)
     config.the_fake_timer()->advance_by(1s);
 }
 
-TEST_F(ADaemon, sets_and_clears_power_button_handler)
+TEST_F(ADaemon, registers_and_unregisters_power_button_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_power_button()->mock, set_power_button_handler(_));
+    EXPECT_CALL(config.the_fake_power_button()->mock, register_power_button_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_power_button().get());
 
-    EXPECT_CALL(config.the_fake_power_button()->mock, clear_power_button_handler());
+    EXPECT_CALL(config.the_fake_power_button()->mock, unregister_power_button_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_power_button().get());
 }
@@ -152,15 +152,15 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_release)
     config.the_fake_power_button()->release();
 }
 
-TEST_F(ADaemon, sets_and_clears_user_activity_handler)
+TEST_F(ADaemon, registers_and_unregisters_user_activity_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_user_activity()->mock, set_user_activity_handler(_));
+    EXPECT_CALL(config.the_fake_user_activity()->mock, register_user_activity_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_user_activity().get());
 
-    EXPECT_CALL(config.the_fake_user_activity()->mock, clear_user_activity_handler());
+    EXPECT_CALL(config.the_fake_user_activity()->mock, unregister_user_activity_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_user_activity().get());
 }
@@ -187,15 +187,15 @@ TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
     config.the_fake_user_activity()->perform(repowerd::UserActivityType::extend_power_state);
 }
 
-TEST_F(ADaemon, sets_and_clears_proximity_handler)
+TEST_F(ADaemon, registers_and_unregisters_proximity_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, set_proximity_handler(_));
+    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, register_proximity_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
 
-    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, clear_proximity_handler());
+    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, unregister_proximity_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
 }
@@ -218,15 +218,15 @@ TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
     config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::near);
 }
 
-TEST_F(ADaemon, sets_and_clears_turn_on_display_handler)
+TEST_F(ADaemon, registers_and_unregisters_turn_on_display_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_client_requests()->mock, set_turn_on_display_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_turn_on_display_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
-    EXPECT_CALL(config.the_fake_client_requests()->mock, clear_turn_on_display_handler());
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_turn_on_display_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 }

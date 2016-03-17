@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "handler_registration.h"
+
 #include <functional>
 
 namespace repowerd
@@ -31,8 +33,8 @@ class ProximitySensor
 public:
     virtual ~ProximitySensor() = default;
 
-    virtual void set_proximity_handler(ProximityHandler const& handler) = 0;
-    virtual void clear_proximity_handler() = 0;
+    virtual HandlerRegistration register_proximity_handler(
+        ProximityHandler const& handler) = 0;
     virtual ProximityState proximity_state() = 0;
 
 protected:

@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "handler_registration.h"
+
 #include <functional>
 
 namespace repowerd
@@ -31,8 +33,8 @@ class UserActivity
 public:
     virtual ~UserActivity() = default;
 
-    virtual void set_user_activity_handler(UserActivityHandler const& handler) = 0;
-    virtual void clear_user_activity_handler() = 0;
+    virtual HandlerRegistration register_user_activity_handler(
+        UserActivityHandler const& handler) = 0;
 
 protected:
     UserActivity() = default;

@@ -30,16 +30,15 @@ namespace test
 class FakePowerButton : public PowerButton
 {
 public:
-    void set_power_button_handler(PowerButtonHandler const& handler) override;
-    void clear_power_button_handler() override;
+    HandlerRegistration register_power_button_handler(PowerButtonHandler const& handler) override;
 
     void press();
     void release();
 
     struct Mock
     {
-        MOCK_METHOD1(set_power_button_handler, void(PowerButtonHandler const&));
-        MOCK_METHOD0(clear_power_button_handler, void());
+        MOCK_METHOD1(register_power_button_handler, void(PowerButtonHandler const&));
+        MOCK_METHOD0(unregister_power_button_handler, void());
     };
     testing::NiceMock<Mock> mock;
 

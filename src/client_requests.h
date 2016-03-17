@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "handler_registration.h"
+
 #include <functional>
 
 namespace repowerd
@@ -31,8 +33,8 @@ class ClientRequests
 public:
     virtual ~ClientRequests() = default;
 
-    virtual void set_turn_on_display_handler(TurnOnDisplayHandler const& handler) = 0;
-    virtual void clear_turn_on_display_handler() = 0;
+    virtual HandlerRegistration register_turn_on_display_handler(
+        TurnOnDisplayHandler const& handler) = 0;
 
 protected:
     ClientRequests() = default;

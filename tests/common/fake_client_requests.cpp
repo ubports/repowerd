@@ -25,17 +25,17 @@ rt::FakeClientRequests::FakeClientRequests()
 {
 }
 
-void rt::FakeClientRequests::set_turn_on_display_handler(
+repowerd::HandlerRegistration rt::FakeClientRequests::register_turn_on_display_handler(
     TurnOnDisplayHandler const& handler)
 {
-    mock.set_turn_on_display_handler(handler);
+    mock.register_turn_on_display_handler(handler);
     turn_on_display_handler = handler;
-}
-
-void rt::FakeClientRequests::clear_turn_on_display_handler()
-{
-    mock.clear_turn_on_display_handler();
-    turn_on_display_handler = [](TurnOnDisplayTimeout){};
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_turn_on_display_handler();
+            turn_on_display_handler = [](TurnOnDisplayTimeout){};
+        }};
 }
 
 void rt::FakeClientRequests::emit_turn_on_display(

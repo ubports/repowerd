@@ -30,10 +30,18 @@
 namespace
 {
 
+struct NullHandlerRegistration : repowerd::HandlerRegistration
+{
+    NullHandlerRegistration() : HandlerRegistration{[]{}} {}
+};
+
 struct NullClientRequests : repowerd::ClientRequests
 {
-    void set_turn_on_display_handler(repowerd::TurnOnDisplayHandler const&) override {}
-    void clear_turn_on_display_handler() override {}
+    repowerd::HandlerRegistration register_turn_on_display_handler(
+        repowerd::TurnOnDisplayHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 struct NullDisplayPowerControl : repowerd::DisplayPowerControl
@@ -44,8 +52,11 @@ struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 
 struct NullPowerButton : repowerd::PowerButton
 {
-    void set_power_button_handler(repowerd::PowerButtonHandler const&) override {}
-    void clear_power_button_handler() override {}
+    repowerd::HandlerRegistration register_power_button_handler(
+        repowerd::PowerButtonHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 struct NullPowerButtonEventSink : repowerd::PowerButtonEventSink
@@ -55,23 +66,32 @@ struct NullPowerButtonEventSink : repowerd::PowerButtonEventSink
 
 struct NullProximitySensor : repowerd::ProximitySensor
 {
-    void set_proximity_handler(repowerd::ProximityHandler const&) override {}
-    void clear_proximity_handler() override {}
+    repowerd::HandlerRegistration register_proximity_handler(
+        repowerd::ProximityHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
     repowerd::ProximityState proximity_state() override { return {}; }
 };
 
 struct NullTimer : repowerd::Timer
 {
-    void set_alarm_handler(repowerd::AlarmHandler const&) override {}
-    void clear_alarm_handler() override {}
+    repowerd::HandlerRegistration register_alarm_handler(
+        repowerd::AlarmHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
     repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; }
     std::chrono::steady_clock::time_point now() { return {}; }
 };
 
 struct NullUserActivity : repowerd::UserActivity
 {
-    void set_user_activity_handler(repowerd::UserActivityHandler const&) override {}
-    void clear_user_activity_handler() override {}
+    repowerd::HandlerRegistration register_user_activity_handler(
+        repowerd::UserActivityHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 }

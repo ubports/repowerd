@@ -32,8 +32,8 @@ class FakeProximitySensor : public ProximitySensor
 public:
     FakeProximitySensor();
 
-    void set_proximity_handler(ProximityHandler const& handler) override;
-    void clear_proximity_handler() override;
+    HandlerRegistration register_proximity_handler(
+        ProximityHandler const& handler) override;
     ProximityState proximity_state() override;
 
     void emit_proximity_state(ProximityState state);
@@ -41,8 +41,8 @@ public:
 
     struct Mock
     {
-        MOCK_METHOD1(set_proximity_handler, void(ProximityHandler const&));
-        MOCK_METHOD0(clear_proximity_handler, void());
+        MOCK_METHOD1(register_proximity_handler, void(ProximityHandler const&));
+        MOCK_METHOD0(unregister_proximity_handler, void());
     };
     testing::NiceMock<Mock> mock;
 

@@ -29,16 +29,16 @@ rt::FakeTimer::FakeTimer()
 {
 }
 
-void rt::FakeTimer::set_alarm_handler(AlarmHandler const& handler)
+repowerd::HandlerRegistration rt::FakeTimer::register_alarm_handler(AlarmHandler const& handler)
 {
-    mock.set_alarm_handler(handler);
+    mock.register_alarm_handler(handler);
     this->handler = handler;
-}
-
-void rt::FakeTimer::clear_alarm_handler()
-{
-    mock.clear_alarm_handler();
-    this->handler = [](AlarmId){};
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_alarm_handler();
+            this->handler = [](AlarmId){};
+        }};
 }
 
 repowerd::AlarmId rt::FakeTimer::schedule_alarm_in(std::chrono::milliseconds t)

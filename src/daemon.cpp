@@ -28,22 +28,6 @@
 
 #include <future>
 
-struct repowerd::Daemon::EventHandlerRegistration
-{
-    EventHandlerRegistration(std::function<void()> const& unregister)
-        : unregister{std::make_unique<std::function<void()>>(unregister)}
-    {
-    }
-    ~EventHandlerRegistration()
-    {
-        if (unregister) (*unregister)();
-    }
-
-    EventHandlerRegistration(EventHandlerRegistration&& reg) = default;
-
-    std::unique_ptr<std::function<void()>> unregister;
-};
-
 repowerd::Daemon::Daemon(DaemonConfig& config)
     : client_requests{config.the_client_requests()},
       display_power_control{config.the_display_power_control()},
@@ -84,90 +68,75 @@ void repowerd::Daemon::flush()
     flushed_future.wait();
 }
 
-std::vector<repowerd::Daemon::EventHandlerRegistration>
+std::vector<repowerd::HandlerRegistration>
 repowerd::Daemon::register_event_handlers()
 {
-    std::vector<EventHandlerRegistration> registrations;
-
-    power_button->set_power_button_handler(
-        [this] (PowerButtonState state)
-        { 
-            if (state == PowerButtonState::pressed)
-                enqueue_event([this] { state_machine->handle_power_button_press(); });
-            else if (state == PowerButtonState::released)
-                enqueue_event([this] { state_machine->handle_power_button_release(); } );
-        });
+    std::vector<HandlerRegistration> registrations;
 
     registrations.push_back(
-        EventHandlerRegistration{
-            [this]{ power_button->clear_power_button_handler(); }});
-
-    timer->set_alarm_handler(
-        [this] (AlarmId id)
-        {
-            enqueue_event([this, id] { state_machine->handle_alarm(id); });
-        });
+        power_button->register_power_button_handler(
+            [this] (PowerButtonState state)
+            {
+                if (state == PowerButtonState::pressed)
+                    enqueue_event([this] { state_machine->handle_power_button_press(); });
+                else if (state == PowerButtonState::released)
+                    enqueue_event([this] { state_machine->handle_power_button_release(); } );
+            }));
 
     registrations.push_back(
-        EventHandlerRegistration{
-            [this]{ timer->clear_alarm_handler(); }});
-
-    user_activity->set_user_activity_handler(
-        [this] (UserActivityType type)
-        {
-            if (type == UserActivityType::change_power_state)
+        timer->register_alarm_handler(
+            [this] (AlarmId id)
             {
-                enqueue_event(
-                    [this] { state_machine->handle_user_activity_changing_power_state(); });
-            }
-            else if (type == UserActivityType::extend_power_state)
-            {
-                enqueue_event(
-                    [this] { state_machine->handle_user_activity_extending_power_state(); });
-            }
-        });
+                enqueue_event([this, id] { state_machine->handle_alarm(id); });
+            }));
 
     registrations.push_back(
-        EventHandlerRegistration{
-            [this]{ user_activity->clear_user_activity_handler(); }});
-
-    proximity_sensor->set_proximity_handler(
-        [this] (ProximityState state)
-        {
-            if (state == ProximityState::far)
+        user_activity->register_user_activity_handler(
+            [this] (UserActivityType type)
             {
-                enqueue_event(
-                    [this] { state_machine->handle_proximity_far(); });
-            }
-            else if (state == ProximityState::near)
-            {
-                enqueue_event(
-                    [this] { state_machine->handle_proximity_near(); });
-            }
-        });
+                if (type == UserActivityType::change_power_state)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_user_activity_changing_power_state(); });
+                }
+                else if (type == UserActivityType::extend_power_state)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_user_activity_extending_power_state(); });
+                }
+            }));
 
     registrations.push_back(
-        EventHandlerRegistration{
-            [this]{ proximity_sensor->clear_proximity_handler(); }});
-
-    client_requests->set_turn_on_display_handler(
-        [this] (TurnOnDisplayTimeout timeout)
-        {
-            if (timeout == TurnOnDisplayTimeout::normal)
+        proximity_sensor->register_proximity_handler(
+            [this] (ProximityState state)
             {
-                enqueue_event(
-                    [this] { state_machine->handle_turn_on_display_with_normal_timeout(); });
-            }
-            else if (timeout == TurnOnDisplayTimeout::reduced)
-            {
-                enqueue_event(
-                    [this] { state_machine->handle_turn_on_display_with_reduced_timeout(); });
-            }
-        });
+                if (state == ProximityState::far)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_proximity_far(); });
+                }
+                else if (state == ProximityState::near)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_proximity_near(); });
+                }
+            }));
 
     registrations.push_back(
-        EventHandlerRegistration{
-            [this]{ client_requests->clear_turn_on_display_handler(); }});
+        client_requests->register_turn_on_display_handler(
+            [this] (TurnOnDisplayTimeout timeout)
+            {
+                if (timeout == TurnOnDisplayTimeout::normal)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_turn_on_display_with_normal_timeout(); });
+                }
+                else if (timeout == TurnOnDisplayTimeout::reduced)
+                {
+                    enqueue_event(
+                        [this] { state_machine->handle_turn_on_display_with_reduced_timeout(); });
+                }
+            }));
 
     return registrations;
 }

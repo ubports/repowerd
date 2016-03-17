@@ -16,29 +16,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "fake_user_activity.h"
+#pragma once
 
-namespace rt = repowerd::test;
+#include <memory>
+#include <functional>
 
-rt::FakeUserActivity::FakeUserActivity()
-    : handler{[](UserActivityType){}}
+namespace repowerd
 {
-}
 
-repowerd::HandlerRegistration rt::FakeUserActivity::register_user_activity_handler(
-    UserActivityHandler const& handler)
+class HandlerRegistration
 {
-    mock.register_user_activity_handler(handler);
-    this->handler = handler;
-    return HandlerRegistration{
-        [this]
-        {
-            mock.unregister_user_activity_handler();
-            this->handler = [](UserActivityType){};
-        }};
-}
+public:
+    HandlerRegistration(std::function<void()> const& unregister);
+    ~HandlerRegistration();
+    HandlerRegistration(HandlerRegistration&& reg) = default;
 
-void rt::FakeUserActivity::perform(UserActivityType type)
-{
-    handler(type);
+private:
+    std::unique_ptr<std::function<void()>> unregister;
+};
+
 }

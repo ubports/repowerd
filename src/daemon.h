@@ -19,6 +19,7 @@
 #pragma once
 
 #include "daemon_config.h"
+#include "handler_registration.h"
 
 #include <memory>
 #include <vector>
@@ -40,10 +41,9 @@ public:
     void flush();
 
 private:
-    struct EventHandlerRegistration;
     using Event = std::function<void()>;
 
-    std::vector<EventHandlerRegistration> register_event_handlers();
+    std::vector<HandlerRegistration> register_event_handlers();
     void enqueue_event(Event const& event);
     void enqueue_priority_event(Event const& event);
     Event dequeue_event();

@@ -29,13 +29,10 @@ namespace
 
 struct AFakeTimer : testing::Test
 {
-    AFakeTimer()
-    {
-        fake_timer.set_alarm_handler(
-            [this](repowerd::AlarmId id) { alarm_handler(id); });
-    }
-
     rt::FakeTimer fake_timer;
+    repowerd::HandlerRegistration const reg{
+        fake_timer.register_alarm_handler(
+            [this](repowerd::AlarmId id) { alarm_handler(id); })};
 
     MOCK_METHOD1(alarm_handler, void(repowerd::AlarmId id));
 };

@@ -32,15 +32,15 @@ class FakeClientRequests : public ClientRequests
 public:
     FakeClientRequests();
 
-    void set_turn_on_display_handler(TurnOnDisplayHandler const& handler) override;
-    void clear_turn_on_display_handler() override;
+    HandlerRegistration register_turn_on_display_handler(
+        TurnOnDisplayHandler const& handler) override;
 
     void emit_turn_on_display(TurnOnDisplayTimeout timeout);
 
     struct Mock
     {
-        MOCK_METHOD1(set_turn_on_display_handler, void(TurnOnDisplayHandler const&));
-        MOCK_METHOD0(clear_turn_on_display_handler, void());
+        MOCK_METHOD1(register_turn_on_display_handler, void(TurnOnDisplayHandler const&));
+        MOCK_METHOD0(unregister_turn_on_display_handler, void());
     };
     testing::NiceMock<Mock> mock;
 

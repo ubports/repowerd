@@ -32,15 +32,15 @@ class FakeUserActivity : public UserActivity
 public:
     FakeUserActivity();
 
-    void set_user_activity_handler(UserActivityHandler const& handler) override;
-    void clear_user_activity_handler() override;
+    HandlerRegistration register_user_activity_handler(
+        UserActivityHandler const& handler) override;
 
     void perform(UserActivityType type);
 
     struct Mock
     {
-        MOCK_METHOD1(set_user_activity_handler, void(UserActivityHandler const&));
-        MOCK_METHOD0(clear_user_activity_handler, void());
+        MOCK_METHOD1(register_user_activity_handler, void(UserActivityHandler const&));
+        MOCK_METHOD0(unregister_user_activity_handler, void());
     };
     testing::NiceMock<Mock> mock;
 

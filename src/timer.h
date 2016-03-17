@@ -22,6 +22,7 @@
 #include <functional>
 
 #include "alarm_id.h"
+#include "handler_registration.h"
 
 namespace repowerd
 {
@@ -33,8 +34,7 @@ class Timer
 public:
     virtual ~Timer() = default;
 
-    virtual void set_alarm_handler(AlarmHandler const& handler) = 0;
-    virtual void clear_alarm_handler() = 0;
+    virtual HandlerRegistration register_alarm_handler(AlarmHandler const& handler) = 0;
     virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
     virtual std::chrono::steady_clock::time_point now() = 0;
 
