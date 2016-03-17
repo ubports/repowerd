@@ -31,6 +31,9 @@ public:
 
     void handle_alarm(AlarmId id) override;
 
+    void handle_enable_inactivity_timeout() override;
+    void handle_disable_inactivity_timeout() override;
+
     void handle_power_button_press() override;
     void handle_power_button_release() override;
 
@@ -39,9 +42,6 @@ public:
 
     void handle_proximity_far() override;
     void handle_proximity_near() override;
-
-    void handle_turn_on_display_with_normal_timeout() override;
-    void handle_turn_on_display_with_reduced_timeout() override;
 
 private:
     enum class DisplayPowerMode {unknown, on, off};
@@ -58,6 +58,7 @@ private:
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<Timer> const timer;
 
+    bool enable_inactivity_timeout;
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_button_press;
     AlarmId power_button_long_press_alarm_id;

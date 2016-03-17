@@ -37,8 +37,14 @@ struct NullHandlerRegistration : repowerd::HandlerRegistration
 
 struct NullClientRequests : repowerd::ClientRequests
 {
-    repowerd::HandlerRegistration register_turn_on_display_handler(
-        repowerd::TurnOnDisplayHandler const&) override
+    repowerd::HandlerRegistration register_enable_inactivity_timeout_handler(
+        repowerd::EnableInactivityTimeoutHandler const&)
+    {
+        return NullHandlerRegistration{};
+    }
+
+    repowerd::HandlerRegistration register_disable_inactivity_timeout_handler(
+        repowerd::DisableInactivityTimeoutHandler const&)
     {
         return NullHandlerRegistration{};
     }

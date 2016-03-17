@@ -123,19 +123,19 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
-        client_requests->register_turn_on_display_handler(
-            [this] (TurnOnDisplayTimeout timeout)
+        client_requests->register_enable_inactivity_timeout_handler(
+            [this]
             {
-                if (timeout == TurnOnDisplayTimeout::normal)
-                {
-                    enqueue_event(
-                        [this] { state_machine->handle_turn_on_display_with_normal_timeout(); });
-                }
-                else if (timeout == TurnOnDisplayTimeout::reduced)
-                {
-                    enqueue_event(
-                        [this] { state_machine->handle_turn_on_display_with_reduced_timeout(); });
-                }
+                enqueue_event(
+                    [this] { state_machine->handle_enable_inactivity_timeout(); });
+            }));
+
+    registrations.push_back(
+        client_requests->register_disable_inactivity_timeout_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_disable_inactivity_timeout(); });
             }));
 
     return registrations;

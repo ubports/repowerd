@@ -28,6 +28,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
+      enable_inactivity_timeout{true},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
       power_button_long_press_alarm_id{AlarmId::invalid},
@@ -51,7 +52,9 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     }
     else if (id == user_inactivity_display_off_alarm_id)
     {
-        turn_off_display();
+        user_inactivity_display_off_alarm_id = AlarmId::invalid;
+        if (enable_inactivity_timeout)
+            turn_off_display();
     }
 }
 
@@ -94,30 +97,19 @@ void repowerd::DefaultStateMachine::handle_proximity_near()
         turn_off_display();
 }
 
-void repowerd::DefaultStateMachine::handle_turn_on_display_with_normal_timeout()
+void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
 {
-    if (display_power_mode == DisplayPowerMode::off)
+    if (!enable_inactivity_timeout)
     {
-        if (proximity_sensor->proximity_state() == ProximityState::far)
-            turn_on_display_with_normal_timeout();
-    }
-    else
-    {
-        schedule_normal_user_inactivity_alarm();
+        enable_inactivity_timeout = true;
+        if (user_inactivity_display_off_alarm_id == AlarmId::invalid)
+            turn_off_display();
     }
 }
 
-void repowerd::DefaultStateMachine::handle_turn_on_display_with_reduced_timeout()
+void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
 {
-    if (display_power_mode == DisplayPowerMode::off)
-    {
-        if (proximity_sensor->proximity_state() == ProximityState::far)
-            turn_on_display_with_reduced_timeout();
-    }
-    else
-    {
-        schedule_reduced_user_inactivity_alarm();
-    }
+    enable_inactivity_timeout = false;
 }
 
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()

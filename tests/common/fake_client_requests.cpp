@@ -21,25 +21,43 @@
 namespace rt = repowerd::test;
 
 rt::FakeClientRequests::FakeClientRequests()
-    : turn_on_display_handler{[](TurnOnDisplayTimeout){}}
+    : enable_inactivity_timeout_handler{[]{}},
+      disable_inactivity_timeout_handler{[]{}}
 {
 }
 
-repowerd::HandlerRegistration rt::FakeClientRequests::register_turn_on_display_handler(
-    TurnOnDisplayHandler const& handler)
+repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity_timeout_handler(
+    EnableInactivityTimeoutHandler const& handler)
 {
-    mock.register_turn_on_display_handler(handler);
-    turn_on_display_handler = handler;
+    mock.register_enable_inactivity_timeout_handler(handler);
+    enable_inactivity_timeout_handler = handler;
     return HandlerRegistration{
         [this]
         {
-            mock.unregister_turn_on_display_handler();
-            turn_on_display_handler = [](TurnOnDisplayTimeout){};
+            mock.unregister_enable_inactivity_timeout_handler();
+            enable_inactivity_timeout_handler = []{};
         }};
 }
 
-void rt::FakeClientRequests::emit_turn_on_display(
-    TurnOnDisplayTimeout timeout)
+repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivity_timeout_handler(
+    DisableInactivityTimeoutHandler const& handler)
 {
-    turn_on_display_handler(timeout);
+    mock.register_disable_inactivity_timeout_handler(handler);
+    disable_inactivity_timeout_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_disable_inactivity_timeout_handler();
+            disable_inactivity_timeout_handler = []{};
+        }};
+}
+
+void rt::FakeClientRequests::emit_enable_inactivity_timeout()
+{
+    enable_inactivity_timeout_handler();
+}
+
+void rt::FakeClientRequests::emit_disable_inactivity_timeout()
+{
+    disable_inactivity_timeout_handler();
 }

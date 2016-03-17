@@ -25,16 +25,18 @@
 namespace repowerd
 {
 
-enum class TurnOnDisplayTimeout{normal, reduced};
-using TurnOnDisplayHandler = std::function<void(TurnOnDisplayTimeout)>;
+using EnableInactivityTimeoutHandler = std::function<void()>;
+using DisableInactivityTimeoutHandler = std::function<void()>;
 
 class ClientRequests
 {
 public:
     virtual ~ClientRequests() = default;
 
-    virtual HandlerRegistration register_turn_on_display_handler(
-        TurnOnDisplayHandler const& handler) = 0;
+    virtual HandlerRegistration register_enable_inactivity_timeout_handler(
+        EnableInactivityTimeoutHandler const& handler) = 0;
+    virtual HandlerRegistration register_disable_inactivity_timeout_handler(
+        DisableInactivityTimeoutHandler const& handler) = 0;
 
 protected:
     ClientRequests() = default;

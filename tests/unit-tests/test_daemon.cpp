@@ -47,8 +47,8 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_proximity_far, void());
     MOCK_METHOD0(handle_proximity_near, void());
 
-    MOCK_METHOD0(handle_turn_on_display_with_normal_timeout, void());
-    MOCK_METHOD0(handle_turn_on_display_with_reduced_timeout, void());
+    MOCK_METHOD0(handle_enable_inactivity_timeout, void());
+    MOCK_METHOD0(handle_disable_inactivity_timeout, void());
 
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
@@ -218,33 +218,46 @@ TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
     config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::near);
 }
 
-TEST_F(ADaemon, registers_and_unregisters_turn_on_display_handler)
+TEST_F(ADaemon, registers_and_unregisters_enable_inactivity_timeout_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_client_requests()->mock, register_turn_on_display_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_inactivity_timeout_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
-    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_turn_on_display_handler());
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_enable_inactivity_timeout_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 }
 
-TEST_F(ADaemon, notifies_state_machine_of_turn_on_display_with_normal_timeout)
+TEST_F(ADaemon, notifies_state_machine_of_enable_inactivity_timeout)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_turn_on_display_with_normal_timeout());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_inactivity_timeout());
 
-    config.the_fake_client_requests()->emit_turn_on_display(repowerd::TurnOnDisplayTimeout::normal);
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout();
 }
 
-TEST_F(ADaemon, notifies_state_machine_of_turn_on_display_with_reduced_timeout)
+TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_inactivity_timeout_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_disable_inactivity_timeout_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_turn_on_display_with_reduced_timeout());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
-    config.the_fake_client_requests()->emit_turn_on_display(repowerd::TurnOnDisplayTimeout::reduced);
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout();
 }

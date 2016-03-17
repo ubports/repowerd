@@ -32,16 +32,14 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
-    void client_request_turn_on_display_with_normal_timeout()
+    void client_request_disable_inactivity_timeout()
     {
-        config.the_fake_client_requests()->emit_turn_on_display(
-            repowerd::TurnOnDisplayTimeout::normal);
+        config.the_fake_client_requests()->emit_disable_inactivity_timeout();
     }
 
-    void client_request_turn_on_display_with_reduced_timeout()
+    void client_request_enable_inactivity_timeout()
     {
-        config.the_fake_client_requests()->emit_turn_on_display(
-            repowerd::TurnOnDisplayTimeout::reduced);
+        config.the_fake_client_requests()->emit_enable_inactivity_timeout();
     }
 
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
@@ -52,101 +50,49 @@ struct AClientRequest : rt::AcceptanceTest
 
 }
 
-TEST_F(AClientRequest, to_turn_on_display_with_normal_timeout_works)
+TEST_F(AClientRequest, to_disable_inactivity_timeout_works)
 {
-    expect_display_turns_on();
-    client_request_turn_on_display_with_normal_timeout();
-    verify_expectations();
+    turn_on_display();
+    client_request_disable_inactivity_timeout();
 
-    expect_display_turns_off();
+    expect_no_display_power_change();
     advance_time_by(user_inactivity_normal_display_off_timeout);
 }
 
-TEST_F(AClientRequest, to_turn_on_display_with_normal_timeout_extends_existing_normal_timeout)
+TEST_F(AClientRequest, to_disable_inactivity_timeout_does_not_affect_power_button)
 {
     turn_on_display();
-    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
-
-    client_request_turn_on_display_with_normal_timeout();
-
-    expect_no_display_power_change();
-    advance_time_by(1ms);
-    verify_expectations();
+    client_request_disable_inactivity_timeout();
 
     expect_display_turns_off();
+    press_power_button();
+    release_power_button();
+}
+
+TEST_F(AClientRequest, to_enable_inactivity_timeout_turns_off_display_immediately_if_inactivity_timeout_has_expired)
+{
+    turn_on_display();
+
+    expect_no_display_power_change();
+    client_request_disable_inactivity_timeout();
     advance_time_by(user_inactivity_normal_display_off_timeout);
-}
-
-TEST_F(AClientRequest, to_turn_on_display_with_normal_timeout_extends_existing_reduced_timeout)
-{
-    client_request_turn_on_display_with_reduced_timeout();
-
-    expect_no_display_power_change();
-    advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
-    client_request_turn_on_display_with_normal_timeout();
-    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
     expect_display_turns_off();
-    advance_time_by(1ms);
-}
-
-TEST_F(AClientRequest, to_turn_on_display_with_normal_timeout_is_disallowed_by_proximity)
-{
-    set_proximity_state_near();
-
-    expect_no_display_power_change();
-    client_request_turn_on_display_with_normal_timeout();
-}
-
-TEST_F(AClientRequest, to_turn_on_display_with_reduced_timeout_works)
-{
-    expect_display_turns_on();
-    client_request_turn_on_display_with_reduced_timeout();
-    verify_expectations();
-
-    expect_display_turns_off();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
-}
-
-TEST_F(AClientRequest, to_turn_on_display_with_reduced_timeout_extends_timeout)
-{
-    turn_on_display();
-    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
-
-    client_request_turn_on_display_with_reduced_timeout();
-
-    expect_no_display_power_change();
-    advance_time_by(1ms);
-    verify_expectations();
-
-    expect_display_turns_off();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    client_request_enable_inactivity_timeout();
 }
 
 TEST_F(AClientRequest,
-       to_turn_on_display_with_reduced_timeout_does_not_reduce_existing_longer_timeout)
+       to_enable_inactivity_timeout_turns_off_display_after_existing_inactivity_timeout_expires)
 {
     turn_on_display();
-    advance_time_by(
-        user_inactivity_normal_display_off_timeout -
-        user_inactivity_reduced_display_off_timeout -
-        1ms);
-
-    client_request_turn_on_display_with_reduced_timeout();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    client_request_disable_inactivity_timeout();
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
+    client_request_enable_inactivity_timeout();
     verify_expectations();
 
     expect_display_turns_off();
     advance_time_by(1ms);
-}
-
-TEST_F(AClientRequest, to_turn_on_display_with_reduced_timeout_is_disallowed_by_proximity)
-{
-    set_proximity_state_near();
-
-    expect_no_display_power_change();
-    client_request_turn_on_display_with_reduced_timeout();
 }

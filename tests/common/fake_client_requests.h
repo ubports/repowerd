@@ -32,20 +32,28 @@ class FakeClientRequests : public ClientRequests
 public:
     FakeClientRequests();
 
-    HandlerRegistration register_turn_on_display_handler(
-        TurnOnDisplayHandler const& handler) override;
+    HandlerRegistration register_enable_inactivity_timeout_handler(
+        EnableInactivityTimeoutHandler const& handler) override;
 
-    void emit_turn_on_display(TurnOnDisplayTimeout timeout);
+    HandlerRegistration register_disable_inactivity_timeout_handler(
+        DisableInactivityTimeoutHandler const& handler) override;
+
+    void emit_enable_inactivity_timeout();
+    void emit_disable_inactivity_timeout();
 
     struct Mock
     {
-        MOCK_METHOD1(register_turn_on_display_handler, void(TurnOnDisplayHandler const&));
-        MOCK_METHOD0(unregister_turn_on_display_handler, void());
+        MOCK_METHOD1(register_enable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));
+        MOCK_METHOD0(unregister_enable_inactivity_timeout_handler, void());
+
+        MOCK_METHOD1(register_disable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));
+        MOCK_METHOD0(unregister_disable_inactivity_timeout_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
-    TurnOnDisplayHandler turn_on_display_handler;
+    EnableInactivityTimeoutHandler enable_inactivity_timeout_handler;
+    DisableInactivityTimeoutHandler disable_inactivity_timeout_handler;
 };
 
 }
