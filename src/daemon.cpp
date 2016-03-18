@@ -20,6 +20,7 @@
 
 #include "client_requests.h"
 #include "display_power_control.h"
+#include "notification_service.h"
 #include "power_button.h"
 #include "proximity_sensor.h"
 #include "state_machine.h"
@@ -31,6 +32,7 @@
 repowerd::Daemon::Daemon(DaemonConfig& config)
     : client_requests{config.the_client_requests()},
       display_power_control{config.the_display_power_control()},
+      notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
       proximity_sensor{config.the_proximity_sensor()},
       state_machine{config.the_state_machine()},
@@ -136,6 +138,14 @@ repowerd::Daemon::register_event_handlers()
             {
                 enqueue_event(
                     [this] { state_machine->handle_disable_inactivity_timeout(); });
+            }));
+
+    registrations.push_back(
+        notification_service->register_notification_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_notification(); });
             }));
 
     return registrations;

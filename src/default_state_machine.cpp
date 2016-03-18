@@ -58,6 +58,33 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     }
 }
 
+void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
+{
+    if (!enable_inactivity_timeout)
+    {
+        enable_inactivity_timeout = true;
+        if (user_inactivity_display_off_alarm_id == AlarmId::invalid)
+            turn_off_display();
+    }
+}
+
+void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
+{
+    enable_inactivity_timeout = false;
+}
+
+void repowerd::DefaultStateMachine::handle_notification()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        schedule_reduced_user_inactivity_alarm();
+    }
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    {
+        turn_on_display_with_reduced_timeout();
+    }
+}
+
 void repowerd::DefaultStateMachine::handle_power_button_press()
 {
     display_power_mode_at_power_button_press = display_power_mode;
@@ -85,6 +112,7 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
     power_button_long_press_alarm_id = AlarmId::invalid;
 }
+
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
     if (display_power_mode == DisplayPowerMode::off)
@@ -95,21 +123,6 @@ void repowerd::DefaultStateMachine::handle_proximity_near()
 {
     if (display_power_mode == DisplayPowerMode::on)
         turn_off_display();
-}
-
-void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
-{
-    if (!enable_inactivity_timeout)
-    {
-        enable_inactivity_timeout = true;
-        if (user_inactivity_display_off_alarm_id == AlarmId::invalid)
-            turn_off_display();
-    }
-}
-
-void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
-{
-    enable_inactivity_timeout = false;
 }
 
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()

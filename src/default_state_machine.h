@@ -34,14 +34,16 @@ public:
     void handle_enable_inactivity_timeout() override;
     void handle_disable_inactivity_timeout() override;
 
+    void handle_notification() override;
+
     void handle_power_button_press() override;
     void handle_power_button_release() override;
 
-    void handle_user_activity_changing_power_state() override;
-    void handle_user_activity_extending_power_state() override;
-
     void handle_proximity_far() override;
     void handle_proximity_near() override;
+
+    void handle_user_activity_changing_power_state() override;
+    void handle_user_activity_extending_power_state() override;
 
 private:
     enum class DisplayPowerMode {unknown, on, off};

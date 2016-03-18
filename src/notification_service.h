@@ -18,37 +18,27 @@
 
 #pragma once
 
-#include "alarm_id.h"
+#include "handler_registration.h"
+
+#include <functional>
 
 namespace repowerd
 {
 
-class StateMachine
+using NotificationHandler = std::function<void()>;
+
+class NotificationService
 {
 public:
-    virtual ~StateMachine() = default;
+    virtual ~NotificationService() = default;
 
-    virtual void handle_alarm(AlarmId id) = 0;
-
-    virtual void handle_enable_inactivity_timeout() = 0;
-    virtual void handle_disable_inactivity_timeout() = 0;
-
-    virtual void handle_notification() = 0;
-
-    virtual void handle_power_button_press() = 0;
-    virtual void handle_power_button_release() = 0;
-
-    virtual void handle_proximity_far() = 0;
-    virtual void handle_proximity_near() = 0;
-
-    virtual void handle_user_activity_changing_power_state() = 0;
-    virtual void handle_user_activity_extending_power_state() = 0;
+    virtual HandlerRegistration register_notification_handler(
+        NotificationHandler const& handler) = 0;
 
 protected:
-    StateMachine() = default;
-    StateMachine(StateMachine const&) = delete;
-    StateMachine& operator=(StateMachine const&) = delete;
+    NotificationService() = default;
+    NotificationService (NotificationService const&) = default;
+    NotificationService& operator=(NotificationService const&) = default;
 };
 
 }
-

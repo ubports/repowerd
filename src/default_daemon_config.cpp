@@ -21,6 +21,7 @@
 
 #include "client_requests.h"
 #include "display_power_control.h"
+#include "notification_service.h"
 #include "power_button.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
@@ -54,6 +55,15 @@ struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 {
     void turn_on() override {}
     void turn_off() override {}
+};
+
+struct NullNotificationService : repowerd::NotificationService
+{
+    repowerd::HandlerRegistration register_notification_handler(
+        repowerd::NotificationHandler const&)
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 struct NullPowerButton : repowerd::PowerButton
@@ -116,6 +126,14 @@ repowerd::DefaultDaemonConfig::the_display_power_control()
     if (!display_power_control)
         display_power_control = std::make_shared<NullDisplayPowerControl>();
     return display_power_control;
+}
+
+std::shared_ptr<repowerd::NotificationService>
+repowerd::DefaultDaemonConfig::the_notification_service()
+{
+    if (!notification_service)
+        notification_service = std::make_shared<NullNotificationService>();
+    return notification_service;
 }
 
 std::shared_ptr<repowerd::PowerButton>

@@ -18,6 +18,7 @@
 
 #include "daemon_config.h"
 #include "fake_client_requests.h"
+#include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
@@ -40,6 +41,8 @@ namespace
 struct MockStateMachine : public repowerd::StateMachine
 {
     MOCK_METHOD1(handle_alarm, void(repowerd::AlarmId));
+
+    MOCK_METHOD0(handle_notification, void());
 
     MOCK_METHOD0(handle_power_button_press, void());
     MOCK_METHOD0(handle_power_button_release, void());
@@ -260,4 +263,26 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
     config.the_fake_client_requests()->emit_disable_inactivity_timeout();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_notification_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_notification_service()->mock, register_notification_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
+
+    EXPECT_CALL(config.the_fake_notification_service()->mock, unregister_notification_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_notification)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_notification());
+
+    config.the_fake_notification_service()->emit_notification();
 }

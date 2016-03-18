@@ -20,6 +20,7 @@
 
 #include "fake_client_requests.h"
 #include "mock_display_power_control.h"
+#include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_proximity_sensor.h"
@@ -36,6 +37,11 @@ std::shared_ptr<repowerd::ClientRequests> rt::DaemonConfig::the_client_requests(
 std::shared_ptr<repowerd::DisplayPowerControl> rt::DaemonConfig::the_display_power_control()
 {
     return the_mock_display_power_control();
+}
+
+std::shared_ptr<repowerd::NotificationService> rt::DaemonConfig::the_notification_service()
+{
+    return the_fake_notification_service();
 }
 
 std::shared_ptr<repowerd::PowerButton> rt::DaemonConfig::the_power_button()
@@ -77,6 +83,14 @@ std::shared_ptr<rt::MockDisplayPowerControl> rt::DaemonConfig::the_mock_display_
         mock_display_power_control = std::make_shared<rt::MockDisplayPowerControl>();
 
     return mock_display_power_control;
+}
+
+std::shared_ptr<rt::FakeNotificationService> rt::DaemonConfig::the_fake_notification_service()
+{
+    if (!fake_notification_service)
+        fake_notification_service = std::make_shared<rt::FakeNotificationService>();
+
+    return fake_notification_service;
 }
 
 std::shared_ptr<rt::FakePowerButton> rt::DaemonConfig::the_fake_power_button()

@@ -44,8 +44,6 @@ struct AClientRequest : rt::AcceptanceTest
 
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
         config.user_inactivity_normal_display_off_timeout()};
-    std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout{
-        config.user_inactivity_reduced_display_off_timeout()};
 };
 
 }
