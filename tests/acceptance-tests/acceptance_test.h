@@ -38,8 +38,11 @@ struct AcceptanceTest : testing::Test
 
     void expect_display_turns_off();
     void expect_display_turns_on();
+    void expect_display_dims();
+    void expect_display_brightens();
     void expect_long_press_notification();
     void expect_no_display_power_change();
+    void expect_no_display_brightness_change();
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);

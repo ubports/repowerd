@@ -24,6 +24,7 @@
 namespace repowerd
 {
 
+class BrightnessControl;
 class ClientRequests;
 class DisplayPowerControl;
 class NotificationService;
@@ -39,6 +40,7 @@ class DaemonConfig
 public:
     virtual ~DaemonConfig() = default;
 
+    virtual std::shared_ptr<BrightnessControl> the_brightness_control() = 0;
     virtual std::shared_ptr<ClientRequests> the_client_requests() = 0;
     virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
     virtual std::shared_ptr<NotificationService> the_notification_service() = 0;
@@ -50,6 +52,7 @@ public:
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
 
     virtual std::chrono::milliseconds power_button_long_press_timeout() = 0;
+    virtual std::chrono::milliseconds user_inactivity_normal_display_dim_duration() = 0;
     virtual std::chrono::milliseconds user_inactivity_normal_display_off_timeout() = 0;
     virtual std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() = 0;
 

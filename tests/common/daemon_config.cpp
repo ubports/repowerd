@@ -18,6 +18,7 @@
 
 #include "daemon_config.h"
 
+#include "mock_brightness_control.h"
 #include "fake_client_requests.h"
 #include "mock_display_power_control.h"
 #include "fake_notification_service.h"
@@ -28,6 +29,12 @@
 #include "fake_user_activity.h"
 
 namespace rt = repowerd::test;
+using testing::NiceMock;
+
+std::shared_ptr<repowerd::BrightnessControl> rt::DaemonConfig::the_brightness_control()
+{
+    return the_mock_brightness_control();
+}
 
 std::shared_ptr<repowerd::ClientRequests> rt::DaemonConfig::the_client_requests()
 {
@@ -69,6 +76,15 @@ std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
     return the_fake_user_activity();
 }
 
+std::shared_ptr<NiceMock<rt::MockBrightnessControl>>
+rt::DaemonConfig::the_mock_brightness_control()
+{
+    if (!mock_brightness_control)
+        mock_brightness_control = std::make_shared<NiceMock<rt::MockBrightnessControl>>();
+
+    return mock_brightness_control;
+}
+
 std::shared_ptr<rt::FakeClientRequests> rt::DaemonConfig::the_fake_client_requests()
 {
     if (!fake_client_requests)
@@ -77,10 +93,11 @@ std::shared_ptr<rt::FakeClientRequests> rt::DaemonConfig::the_fake_client_reques
     return fake_client_requests;
 }
 
-std::shared_ptr<rt::MockDisplayPowerControl> rt::DaemonConfig::the_mock_display_power_control()
+std::shared_ptr<NiceMock<rt::MockDisplayPowerControl>>
+rt::DaemonConfig::the_mock_display_power_control()
 {
     if (!mock_display_power_control)
-        mock_display_power_control = std::make_shared<rt::MockDisplayPowerControl>();
+        mock_display_power_control = std::make_shared<NiceMock<rt::MockDisplayPowerControl>>();
 
     return mock_display_power_control;
 }
@@ -101,11 +118,11 @@ std::shared_ptr<rt::FakePowerButton> rt::DaemonConfig::the_fake_power_button()
     return fake_power_button;
 }
 
-std::shared_ptr<rt::MockPowerButtonEventSink>
+std::shared_ptr<NiceMock<rt::MockPowerButtonEventSink>>
 rt::DaemonConfig::the_mock_power_button_event_sink()
 {
     if (!mock_power_button_event_sink)
-        mock_power_button_event_sink = std::make_shared<rt::MockPowerButtonEventSink>();
+        mock_power_button_event_sink = std::make_shared<NiceMock<rt::MockPowerButtonEventSink>>();
 
     return mock_power_button_event_sink;
 }

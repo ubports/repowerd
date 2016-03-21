@@ -19,6 +19,7 @@
 #include "acceptance_test.h"
 
 #include "daemon_config.h"
+#include "mock_brightness_control.h"
 #include "mock_display_power_control.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_power_button.h"
@@ -49,16 +50,35 @@ rt::AcceptanceTest::~AcceptanceTest()
 void rt::AcceptanceTest::expect_display_turns_off()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness());
 }
 
 void rt::AcceptanceTest::expect_display_turns_on()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
+}
+
+void rt::AcceptanceTest::expect_display_dims()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_dim_brightness());
+}
+
+void rt::AcceptanceTest::expect_display_brightens()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
 }
 
 void rt::AcceptanceTest::expect_long_press_notification()
 {
     EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press());
+}
+
+void rt::AcceptanceTest::expect_no_display_brightness_change()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_dim_brightness()).Times(0);
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness()).Times(0);
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness()).Times(0);
 }
 
 void rt::AcceptanceTest::expect_no_display_power_change()
@@ -70,6 +90,7 @@ void rt::AcceptanceTest::expect_no_display_power_change()
 void rt::AcceptanceTest::verify_expectations()
 {
     daemon.flush();
+    testing::Mock::VerifyAndClearExpectations(config.the_mock_brightness_control().get());
     testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
     testing::Mock::VerifyAndClearExpectations(config.the_mock_power_button_event_sink().get());
 }
@@ -130,17 +151,21 @@ void rt::AcceptanceTest::set_proximity_state_near()
 void rt::AcceptanceTest::turn_off_display()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness());
     press_power_button();
     release_power_button();
     daemon.flush();
     testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
+    testing::Mock::VerifyAndClearExpectations(config.the_mock_brightness_control().get());
 }
 
 void rt::AcceptanceTest::turn_on_display()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
     press_power_button();
     release_power_button();
     daemon.flush();
     testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
+    testing::Mock::VerifyAndClearExpectations(config.the_mock_brightness_control().get());
 }

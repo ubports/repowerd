@@ -54,7 +54,10 @@ private:
     void turn_off_display();
     void turn_on_display_with_normal_timeout();
     void turn_on_display_with_reduced_timeout();
+    void brighten_display();
+    void dim_display();
 
+    std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
@@ -66,8 +69,10 @@ private:
     AlarmId power_button_long_press_alarm_id;
     bool power_button_long_press_detected;
     std::chrono::milliseconds power_button_long_press_timeout;
+    AlarmId user_inactivity_display_dim_alarm_id;
     AlarmId user_inactivity_display_off_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
+    std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
 };

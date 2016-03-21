@@ -20,11 +20,14 @@
 
 #include "src/default_daemon_config.h"
 
+#include <gmock/gmock.h>
+
 namespace repowerd
 {
 namespace test
 {
 
+class MockBrightnessControl;
 class FakeClientRequests;
 class MockDisplayPowerControl;
 class FakeNotificationService;
@@ -37,6 +40,7 @@ class FakeUserActivity;
 class DaemonConfig : public repowerd::DefaultDaemonConfig
 {
 public:
+    std::shared_ptr<BrightnessControl> the_brightness_control() override;
     std::shared_ptr<ClientRequests> the_client_requests() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<NotificationService> the_notification_service() override;
@@ -46,21 +50,23 @@ public:
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
 
+    std::shared_ptr<testing::NiceMock<MockBrightnessControl>> the_mock_brightness_control();
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
-    std::shared_ptr<MockDisplayPowerControl> the_mock_display_power_control();
+    std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> the_mock_display_power_control();
     std::shared_ptr<FakeNotificationService> the_fake_notification_service();
     std::shared_ptr<FakePowerButton> the_fake_power_button();
-    std::shared_ptr<MockPowerButtonEventSink> the_mock_power_button_event_sink();
+    std::shared_ptr<testing::NiceMock<MockPowerButtonEventSink>> the_mock_power_button_event_sink();
     std::shared_ptr<FakeProximitySensor> the_fake_proximity_sensor();
     std::shared_ptr<FakeTimer> the_fake_timer();
     std::shared_ptr<FakeUserActivity> the_fake_user_activity();
 
 private:
+    std::shared_ptr<testing::NiceMock<MockBrightnessControl>> mock_brightness_control;
     std::shared_ptr<FakeClientRequests> fake_client_requests;
-    std::shared_ptr<MockDisplayPowerControl> mock_display_power_control;
+    std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> mock_display_power_control;
     std::shared_ptr<FakeNotificationService> fake_notification_service;
     std::shared_ptr<FakePowerButton> fake_power_button;
-    std::shared_ptr<MockPowerButtonEventSink> mock_power_button_event_sink;
+    std::shared_ptr<testing::NiceMock<MockPowerButtonEventSink>> mock_power_button_event_sink;
     std::shared_ptr<FakeProximitySensor> fake_proximity_sensor;
     std::shared_ptr<FakeTimer> fake_timer;
     std::shared_ptr<FakeUserActivity> fake_user_activity;

@@ -19,6 +19,7 @@
 #include "default_daemon_config.h"
 #include "default_state_machine.h"
 
+#include "brightness_control.h"
 #include "client_requests.h"
 #include "display_power_control.h"
 #include "notification_service.h"
@@ -28,12 +29,21 @@
 #include "timer.h"
 #include "user_activity.h"
 
+using namespace std::chrono_literals;
+
 namespace
 {
 
 struct NullHandlerRegistration : repowerd::HandlerRegistration
 {
     NullHandlerRegistration() : HandlerRegistration{[]{}} {}
+};
+
+struct NullBrightnessControl : repowerd::BrightnessControl
+{
+    void set_normal_brightness() override {}
+    void set_dim_brightness() override {}
+    void set_off_brightness() override {}
 };
 
 struct NullClientRequests : repowerd::ClientRequests
@@ -112,6 +122,14 @@ struct NullUserActivity : repowerd::UserActivity
 
 }
 
+std::shared_ptr<repowerd::BrightnessControl>
+repowerd::DefaultDaemonConfig::the_brightness_control()
+{
+    if (!brightness_control)
+        brightness_control = std::make_shared<NullBrightnessControl>();
+    return brightness_control;
+}
+
 std::shared_ptr<repowerd::ClientRequests>
 repowerd::DefaultDaemonConfig::the_client_requests()
 {
@@ -187,17 +205,23 @@ repowerd::DefaultDaemonConfig::the_user_activity()
 std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::power_button_long_press_timeout()
 {
-    return std::chrono::seconds{2};
+    return 2s;
+}
+
+std::chrono::milliseconds
+repowerd::DefaultDaemonConfig::user_inactivity_normal_display_dim_duration()
+{
+    return 10s;
 }
 
 std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::user_inactivity_normal_display_off_timeout()
 {
-    return std::chrono::seconds{60};
+    return 60s;
 }
 
 std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
 {
-    return std::chrono::seconds{15};
+    return 15s;
 }
