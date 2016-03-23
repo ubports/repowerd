@@ -30,7 +30,6 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
-      enable_inactivity_timeout{true},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
       power_button_long_press_alarm_id{AlarmId::invalid},
@@ -45,6 +44,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       user_inactivity_reduced_display_off_timeout{
           config.user_inactivity_reduced_display_off_timeout()}
 {
+      inactivity_timeout_allowances.fill(true);
 }
 
 void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
@@ -58,42 +58,48 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     else if (id == user_inactivity_display_dim_alarm_id)
     {
         user_inactivity_display_dim_alarm_id = AlarmId::invalid;
-        if (enable_inactivity_timeout)
+        if (is_inactivity_timeout_allowed())
             dim_display();
     }
     else if (id == user_inactivity_display_off_alarm_id)
     {
         user_inactivity_display_off_alarm_id = AlarmId::invalid;
-        if (enable_inactivity_timeout)
+        if (is_inactivity_timeout_allowed())
             turn_off_display();
     }
 }
 
 void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
 {
-    if (!enable_inactivity_timeout)
-    {
-        enable_inactivity_timeout = true;
-        if (user_inactivity_display_off_alarm_id == AlarmId::invalid)
-            turn_off_display();
-    }
+    allow_inactivity_timeout(InactivityTimeoutAllowance::client);
 }
 
 void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
 {
-    enable_inactivity_timeout = false;
+    disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
+}
+
+void repowerd::DefaultStateMachine::handle_all_notifications_done()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        schedule_reduced_user_inactivity_alarm();
+    }
+
+    allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
 }
 
 void repowerd::DefaultStateMachine::handle_notification()
 {
+    disallow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
-        schedule_reduced_user_inactivity_alarm();
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
-        turn_on_display_with_reduced_timeout();
+        turn_on_display_without_timeout();
     }
 }
 
@@ -207,12 +213,11 @@ void repowerd::DefaultStateMachine::turn_on_display_with_normal_timeout()
     schedule_normal_user_inactivity_alarm();
 }
 
-void repowerd::DefaultStateMachine::turn_on_display_with_reduced_timeout()
+void repowerd::DefaultStateMachine::turn_on_display_without_timeout()
 {
     display_power_control->turn_on();
     brightness_control->set_normal_brightness();
     display_power_mode = DisplayPowerMode::on;
-    schedule_reduced_user_inactivity_alarm();
 }
 
 void repowerd::DefaultStateMachine::brighten_display()
@@ -223,4 +228,33 @@ void repowerd::DefaultStateMachine::brighten_display()
 void repowerd::DefaultStateMachine::dim_display()
 {
     brightness_control->set_dim_brightness();
+}
+
+void repowerd::DefaultStateMachine::allow_inactivity_timeout(
+    InactivityTimeoutAllowance allowance)
+{
+    if (!is_inactivity_timeout_allowed())
+    {
+        inactivity_timeout_allowances[allowance] = true;
+
+        if (is_inactivity_timeout_allowed() &&
+            display_power_mode == DisplayPowerMode::on &&
+            user_inactivity_display_off_alarm_id == AlarmId::invalid)
+        {
+            turn_off_display();
+        }
+    }
+}
+
+void repowerd::DefaultStateMachine::disallow_inactivity_timeout(
+    InactivityTimeoutAllowance allowance)
+{
+    inactivity_timeout_allowances[allowance] = false;
+}
+
+bool repowerd::DefaultStateMachine::is_inactivity_timeout_allowed()
+{
+    for (auto const& allowed : inactivity_timeout_allowances)
+        if (!allowed) return false;
+    return true;
 }

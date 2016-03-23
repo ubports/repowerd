@@ -26,11 +26,15 @@ namespace repowerd
 {
 
 using NotificationHandler = std::function<void()>;
+using AllNotificationsDoneHandler = std::function<void()>;
 
 class NotificationService
 {
 public:
     virtual ~NotificationService() = default;
+
+    virtual HandlerRegistration register_all_notifications_done_handler(
+        AllNotificationsDoneHandler const& handler) = 0;
 
     virtual HandlerRegistration register_notification_handler(
         NotificationHandler const& handler) = 0;

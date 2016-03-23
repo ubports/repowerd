@@ -33,6 +33,7 @@ public:
     virtual void handle_enable_inactivity_timeout() = 0;
     virtual void handle_disable_inactivity_timeout() = 0;
 
+    virtual void handle_all_notifications_done() = 0;
     virtual void handle_notification() = 0;
 
     virtual void handle_power_button_press() = 0;

@@ -21,6 +21,8 @@
 #include "state_machine.h"
 #include "daemon_config.h"
 
+#include <array>
+
 namespace repowerd
 {
 
@@ -34,6 +36,7 @@ public:
     void handle_enable_inactivity_timeout() override;
     void handle_disable_inactivity_timeout() override;
 
+    void handle_all_notifications_done() override;
     void handle_notification() override;
 
     void handle_power_button_press() override;
@@ -47,15 +50,22 @@ public:
 
 private:
     enum class DisplayPowerMode {unknown, on, off};
+    struct InactivityTimeoutAllowanceEnum {
+        enum Allowance {client, notification, count};
+    };
+    using InactivityTimeoutAllowance = InactivityTimeoutAllowanceEnum::Allowance;
 
     void cancel_user_inactivity_alarm();
     void schedule_normal_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
     void turn_off_display();
     void turn_on_display_with_normal_timeout();
-    void turn_on_display_with_reduced_timeout();
+    void turn_on_display_without_timeout();
     void brighten_display();
     void dim_display();
+    void allow_inactivity_timeout(InactivityTimeoutAllowance allowance);
+    void disallow_inactivity_timeout(InactivityTimeoutAllowance allowance);
+    bool is_inactivity_timeout_allowed();
 
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
@@ -63,7 +73,7 @@ private:
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<Timer> const timer;
 
-    bool enable_inactivity_timeout;
+    std::array<bool,InactivityTimeoutAllowance::count> inactivity_timeout_allowances;
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_button_press;
     AlarmId power_button_long_press_alarm_id;

@@ -17,7 +17,6 @@
  */
 
 #include "acceptance_test.h"
-#include "fake_notification_service.h"
 
 #include <gtest/gtest.h>
 
@@ -32,11 +31,6 @@ namespace
 
 struct ANotification : rt::AcceptanceTest
 {
-    void emit_notification()
-    {
-        config.the_fake_notification_service()->emit_notification();
-    }
-
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
         config.user_inactivity_normal_display_off_timeout()};
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout{
@@ -45,10 +39,24 @@ struct ANotification : rt::AcceptanceTest
 
 }
 
-TEST_F(ANotification, turns_on_display_with_reduced_timeout)
+TEST_F(ANotification, turns_on_display_and_keeps_it_on)
 {
     expect_display_turns_on();
     emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(10h);
+}
+
+TEST_F(ANotification, turns_off_display_after_reduced_timeout_when_done)
+{
+    expect_display_turns_on();
+    emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_all_notifications_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -63,6 +71,15 @@ TEST_F(ANotification, does_not_turn_on_display_if_display_is_already_on)
     emit_notification();
 }
 
+TEST_F(ANotification, keeps_display_on_if_display_is_already_on)
+{
+    turn_on_display();
+
+    expect_no_display_power_change();
+    emit_notification();
+    advance_time_by(10h);
+}
+
 TEST_F(ANotification, does_not_dim_display_after_timeout)
 {
     expect_display_turns_on();
@@ -70,6 +87,7 @@ TEST_F(ANotification, does_not_dim_display_after_timeout)
     verify_expectations();
 
     expect_no_display_brightness_change();
+    emit_all_notifications_done();
     advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
 }
 
@@ -79,6 +97,7 @@ TEST_F(ANotification, extends_existing_shorter_timeout)
     advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
 
     emit_notification();
+    emit_all_notifications_done();
 
     expect_no_display_power_change();
     advance_time_by(1ms);
@@ -97,6 +116,7 @@ TEST_F(ANotification, does_not_reduce_existing_longer_timeout)
         1ms);
 
     emit_notification();
+    emit_all_notifications_done();
 
     expect_no_display_power_change();
     advance_time_by(user_inactivity_reduced_display_off_timeout);
@@ -117,6 +137,7 @@ TEST_F(ANotification, does_not_schedule_inactivity_timeout_when_proximity_is_nea
 
     expect_no_display_power_change();
     emit_notification();
+    emit_all_notifications_done();
     advance_time_by(user_inactivity_reduced_display_off_timeout);
 }
 
@@ -124,6 +145,7 @@ TEST_F(ANotification, reduced_timeout_is_extended_by_user_activity)
 {
     expect_display_turns_on();
     emit_notification();
+    emit_all_notifications_done();
     verify_expectations();
 
     expect_no_display_power_change();
@@ -157,4 +179,17 @@ TEST_F(ANotification, brightens_dim_display)
 
     expect_display_brightens();
     emit_notification();
+}
+
+TEST_F(ANotification,
+       does_not_turn_off_display_when_done_if_a_client_has_disabled_inactivity_timeout)
+{
+    expect_display_turns_on();
+    emit_notification();
+    client_request_disable_inactivity_timeout();
+    emit_all_notifications_done();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_reduced_display_off_timeout);
 }

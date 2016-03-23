@@ -32,19 +32,26 @@ class FakeNotificationService : public NotificationService
 public:
     FakeNotificationService();
 
+    HandlerRegistration register_all_notifications_done_handler(
+        AllNotificationsDoneHandler const& handler) override;
     HandlerRegistration register_notification_handler(
         NotificationHandler const& handler) override;
 
+    void emit_all_notifications_done();
     void emit_notification();
 
     struct Mock
     {
+        MOCK_METHOD1(register_all_notifications_done_handler,
+                     void(AllNotificationsDoneHandler const&));
+        MOCK_METHOD0(unregister_all_notifications_done_handler, void());
         MOCK_METHOD1(register_notification_handler, void(NotificationHandler const&));
         MOCK_METHOD0(unregister_notification_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
+    AllNotificationsDoneHandler all_notifications_done_handler;
     NotificationHandler notification_handler;
 };
 

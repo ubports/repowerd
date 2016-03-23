@@ -18,10 +18,7 @@
 
 #include "acceptance_test.h"
 
-#include "fake_client_requests.h"
-
 #include <gtest/gtest.h>
-
 
 namespace rt = repowerd::test;
 
@@ -32,16 +29,6 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
-    void client_request_disable_inactivity_timeout()
-    {
-        config.the_fake_client_requests()->emit_disable_inactivity_timeout();
-    }
-
-    void client_request_enable_inactivity_timeout()
-    {
-        config.the_fake_client_requests()->emit_enable_inactivity_timeout();
-    }
-
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
         config.user_inactivity_normal_display_off_timeout()};
 };

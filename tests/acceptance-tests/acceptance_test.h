@@ -46,6 +46,10 @@ struct AcceptanceTest : testing::Test
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
+    void client_request_disable_inactivity_timeout();
+    void client_request_enable_inactivity_timeout();
+    void emit_all_notifications_done();
+    void emit_notification();
     void emit_proximity_state_far();
     void emit_proximity_state_near();
     void perform_user_activity_extending_power_state();

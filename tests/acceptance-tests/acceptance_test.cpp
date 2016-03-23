@@ -22,6 +22,8 @@
 #include "mock_brightness_control.h"
 #include "mock_display_power_control.h"
 #include "mock_power_button_event_sink.h"
+#include "fake_client_requests.h"
+#include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
@@ -100,6 +102,26 @@ void rt::AcceptanceTest::advance_time_by(std::chrono::milliseconds advance)
     daemon.flush();
     config.the_fake_timer()->advance_by(advance);
     daemon.flush();
+}
+
+void rt::AcceptanceTest::client_request_disable_inactivity_timeout()
+{
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout();
+}
+
+void rt::AcceptanceTest::client_request_enable_inactivity_timeout()
+{
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout();
+}
+
+void rt::AcceptanceTest::emit_all_notifications_done()
+{
+    config.the_fake_notification_service()->emit_all_notifications_done();
+}
+
+void rt::AcceptanceTest::emit_notification()
+{
+    config.the_fake_notification_service()->emit_notification();
 }
 
 void rt::AcceptanceTest::emit_proximity_state_far()
