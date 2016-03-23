@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/proximity_sensor.h"
+#include "src/voice_call_service.h"
 
 #include <gmock/gmock.h>
 
@@ -27,33 +27,31 @@ namespace repowerd
 namespace test
 {
 
-class FakeProximitySensor : public ProximitySensor
+class FakeVoiceCallService : public VoiceCallService
 {
 public:
-    FakeProximitySensor();
+    FakeVoiceCallService();
 
-    HandlerRegistration register_proximity_handler(
-        ProximityHandler const& handler) override;
-    ProximityState proximity_state() override;
+    HandlerRegistration register_active_call_handler(
+        ActiveCallHandler const& handler) override;
+    HandlerRegistration register_no_active_call_handler(
+        NoActiveCallHandler const& handler) override;
 
-    void enable_proximity_events() override;
-    void disable_proximity_events() override;
-
-    void emit_proximity_state(ProximityState state);
-    void emit_proximity_state_if_enabled(ProximityState state);
-    void set_proximity_state(ProximityState state);
+    void emit_active_call();
+    void emit_no_active_call();
 
     struct Mock
     {
-        MOCK_METHOD1(register_proximity_handler, void(ProximityHandler const&));
-        MOCK_METHOD0(unregister_proximity_handler, void());
+        MOCK_METHOD1(register_active_call_handler, void(ActiveCallHandler const&));
+        MOCK_METHOD0(unregister_active_call_handler, void());
+        MOCK_METHOD1(register_no_active_call_handler, void(NoActiveCallHandler const&));
+        MOCK_METHOD0(unregister_no_active_call_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
-    bool events_enabled;
-    ProximityHandler handler;
-    ProximityState state;
+    ActiveCallHandler active_call_handler;
+    NoActiveCallHandler no_active_call_handler;
 };
 
 }

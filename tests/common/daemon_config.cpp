@@ -27,6 +27,7 @@
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
+#include "fake_voice_call_service.h"
 
 namespace rt = repowerd::test;
 using testing::NiceMock;
@@ -74,6 +75,11 @@ std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
 std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
 {
     return the_fake_user_activity();
+}
+
+std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_service()
+{
+    return the_fake_voice_call_service();
 }
 
 std::shared_ptr<NiceMock<rt::MockBrightnessControl>>
@@ -149,4 +155,12 @@ std::shared_ptr<rt::FakeUserActivity> rt::DaemonConfig::the_fake_user_activity()
         fake_user_activity = std::make_shared<rt::FakeUserActivity>();
 
     return fake_user_activity;
+}
+
+std::shared_ptr<rt::FakeVoiceCallService> rt::DaemonConfig::the_fake_voice_call_service()
+{
+    if (!fake_voice_call_service)
+        fake_voice_call_service = std::make_shared<rt::FakeVoiceCallService>();
+
+    return fake_voice_call_service;
 }

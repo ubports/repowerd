@@ -69,6 +69,37 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     }
 }
 
+void repowerd::DefaultStateMachine::handle_active_call()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        brighten_display();
+        schedule_normal_user_inactivity_alarm();
+    }
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    {
+        turn_on_display_with_normal_timeout();
+    }
+
+    proximity_sensor->enable_proximity_events();
+}
+
+void repowerd::DefaultStateMachine::handle_no_active_call()
+{
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        brighten_display();
+        schedule_reduced_user_inactivity_alarm();
+    }
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    {
+        turn_on_display_without_timeout();
+        schedule_reduced_user_inactivity_alarm();
+    }
+
+    proximity_sensor->disable_proximity_events();
+}
+
 void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
 {
     allow_inactivity_timeout(InactivityTimeoutAllowance::client);

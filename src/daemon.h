@@ -56,6 +56,7 @@ private:
     std::shared_ptr<StateMachine> const state_machine;
     std::shared_ptr<Timer> const timer;
     std::shared_ptr<UserActivity> const user_activity;
+    std::shared_ptr<VoiceCallService> const voice_call_service;
 
     bool running;
 

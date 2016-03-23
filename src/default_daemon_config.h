@@ -36,6 +36,7 @@ public:
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
+    std::shared_ptr<VoiceCallService> the_voice_call_service() override;
 
     std::chrono::milliseconds power_button_long_press_timeout() override;
     std::chrono::milliseconds user_inactivity_normal_display_dim_duration() override;
@@ -53,6 +54,7 @@ private:
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UserActivity> user_activity;
+    std::shared_ptr<VoiceCallService> voice_call_service;
 };
 
 }

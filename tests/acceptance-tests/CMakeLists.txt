@@ -23,6 +23,7 @@ add_executable(
     test_power_button.cpp
     test_proximity_sensor.cpp
     test_user_activity.cpp
+    test_voice_call.cpp
 
     $<TARGET_OBJECTS:repowerd-objects>
     $<TARGET_OBJECTS:repowerd-test-common>

@@ -26,6 +26,7 @@
 #include "state_machine.h"
 #include "timer.h"
 #include "user_activity.h"
+#include "voice_call_service.h"
 
 #include <future>
 
@@ -38,6 +39,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       state_machine{config.the_state_machine()},
       timer{config.the_timer()},
       user_activity{config.the_user_activity()},
+      voice_call_service{config.the_voice_call_service()},
       running{false}
 {
 }
@@ -154,6 +156,22 @@ repowerd::Daemon::register_event_handlers()
             {
                 enqueue_event(
                     [this] { state_machine->handle_all_notifications_done(); });
+            }));
+
+    registrations.push_back(
+        voice_call_service->register_active_call_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_active_call(); });
+            }));
+
+    registrations.push_back(
+        voice_call_service->register_no_active_call_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { state_machine->handle_no_active_call(); });
             }));
 
     return registrations;

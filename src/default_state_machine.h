@@ -33,6 +33,9 @@ public:
 
     void handle_alarm(AlarmId id) override;
 
+    void handle_active_call() override;
+    void handle_no_active_call() override;
+
     void handle_enable_inactivity_timeout() override;
     void handle_disable_inactivity_timeout() override;
 

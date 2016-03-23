@@ -52,6 +52,8 @@ struct AcceptanceTest : testing::Test
     void emit_notification();
     void emit_proximity_state_far();
     void emit_proximity_state_near();
+    void emit_active_call();
+    void emit_no_active_call();
     void perform_user_activity_extending_power_state();
     void perform_user_activity_changing_power_state();
     void press_power_button();

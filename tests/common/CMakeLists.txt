@@ -24,4 +24,5 @@ add_library(
     fake_proximity_sensor.cpp
     fake_timer.cpp
     fake_user_activity.cpp
+    fake_voice_call_service.cpp
 )

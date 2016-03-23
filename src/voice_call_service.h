@@ -25,25 +25,24 @@
 namespace repowerd
 {
 
-enum class ProximityState{near, far};
-using ProximityHandler = std::function<void(ProximityState)>;
+using ActiveCallHandler = std::function<void()>;
+using NoActiveCallHandler = std::function<void()>;
 
-class ProximitySensor
+class VoiceCallService
 {
 public:
-    virtual ~ProximitySensor() = default;
+    virtual ~VoiceCallService() = default;
 
-    virtual HandlerRegistration register_proximity_handler(
-        ProximityHandler const& handler) = 0;
-    virtual ProximityState proximity_state() = 0;
+    virtual HandlerRegistration register_active_call_handler(
+        ActiveCallHandler const& handler) = 0;
 
-    virtual void enable_proximity_events() = 0;
-    virtual void disable_proximity_events() = 0;
+    virtual HandlerRegistration register_no_active_call_handler(
+        NoActiveCallHandler const& handler) = 0;
 
 protected:
-    ProximitySensor() = default;
-    ProximitySensor (ProximitySensor const&) = default;
-    ProximitySensor& operator=(ProximitySensor const&) = default;
+    VoiceCallService() = default;
+    VoiceCallService (VoiceCallService const&) = default;
+    VoiceCallService& operator=(VoiceCallService const&) = default;
 };
 
 }

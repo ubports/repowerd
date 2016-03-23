@@ -28,6 +28,7 @@
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
+#include "fake_voice_call_service.h"
 
 #include "src/daemon.h"
 
@@ -143,6 +144,16 @@ void rt::AcceptanceTest::emit_proximity_state_near()
 {
     config.the_fake_proximity_sensor()->emit_proximity_state(
         repowerd::ProximityState::near);
+}
+
+void rt::AcceptanceTest::emit_active_call()
+{
+    config.the_fake_voice_call_service()->emit_active_call();
+}
+
+void rt::AcceptanceTest::emit_no_active_call()
+{
+    config.the_fake_voice_call_service()->emit_no_active_call();
 }
 
 void rt::AcceptanceTest::perform_user_activity_extending_power_state()

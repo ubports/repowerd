@@ -21,7 +21,8 @@
 namespace rt = repowerd::test;
 
 rt::FakeProximitySensor::FakeProximitySensor()
-    : handler{[](ProximityState){}},
+    : events_enabled{false},
+      handler{[](ProximityState){}},
       state{ProximityState::far}
 {
 }
@@ -44,10 +45,27 @@ repowerd::ProximityState rt::FakeProximitySensor::proximity_state()
     return state;
 }
 
+void rt::FakeProximitySensor::enable_proximity_events()
+{
+    events_enabled = true;
+}
+
+void rt::FakeProximitySensor::disable_proximity_events()
+{
+    events_enabled = false;
+}
+
 void rt::FakeProximitySensor::emit_proximity_state(ProximityState state)
 {
     this->state = state;
     handler(state);
+}
+
+void rt::FakeProximitySensor::emit_proximity_state_if_enabled(ProximityState state)
+{
+    this->state = state;
+    if (events_enabled)
+        handler(state);
 }
 
 void rt::FakeProximitySensor::set_proximity_state(ProximityState state)

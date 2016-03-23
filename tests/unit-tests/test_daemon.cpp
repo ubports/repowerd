@@ -23,6 +23,7 @@
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
+#include "fake_voice_call_service.h"
 
 #include "src/daemon.h"
 #include "src/state_machine.h"
@@ -41,6 +42,9 @@ namespace
 struct MockStateMachine : public repowerd::StateMachine
 {
     MOCK_METHOD1(handle_alarm, void(repowerd::AlarmId));
+
+    MOCK_METHOD0(handle_active_call, void());
+    MOCK_METHOD0(handle_no_active_call, void());
 
     MOCK_METHOD0(handle_all_notifications_done, void());
     MOCK_METHOD0(handle_notification, void());
@@ -308,4 +312,48 @@ TEST_F(ADaemon, notifies_state_machine_of_all_notifications_done)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_all_notifications_done());
 
     config.the_fake_notification_service()->emit_all_notifications_done();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_active_call_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_active_call_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
+
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, unregister_active_call_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_active_call)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_active_call());
+
+    config.the_fake_voice_call_service()->emit_active_call();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_no_active_call_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_no_active_call_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
+
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, unregister_no_active_call_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_no_active_call)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_no_active_call());
+
+    config.the_fake_voice_call_service()->emit_no_active_call();
 }

@@ -36,6 +36,7 @@ class MockPowerButtonEventSink;
 class FakeProximitySensor;
 class FakeTimer;
 class FakeUserActivity;
+class FakeVoiceCallService;
 
 class DaemonConfig : public repowerd::DefaultDaemonConfig
 {
@@ -49,6 +50,7 @@ public:
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
+    std::shared_ptr<VoiceCallService> the_voice_call_service() override;
 
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> the_mock_brightness_control();
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
@@ -59,6 +61,7 @@ public:
     std::shared_ptr<FakeProximitySensor> the_fake_proximity_sensor();
     std::shared_ptr<FakeTimer> the_fake_timer();
     std::shared_ptr<FakeUserActivity> the_fake_user_activity();
+    std::shared_ptr<FakeVoiceCallService> the_fake_voice_call_service();
 
 private:
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> mock_brightness_control;
@@ -70,6 +73,7 @@ private:
     std::shared_ptr<FakeProximitySensor> fake_proximity_sensor;
     std::shared_ptr<FakeTimer> fake_timer;
     std::shared_ptr<FakeUserActivity> fake_user_activity;
+    std::shared_ptr<FakeVoiceCallService> fake_voice_call_service;
 };
 
 }

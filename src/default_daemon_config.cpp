@@ -28,6 +28,7 @@
 #include "proximity_sensor.h"
 #include "timer.h"
 #include "user_activity.h"
+#include "voice_call_service.h"
 
 using namespace std::chrono_literals;
 
@@ -104,6 +105,8 @@ struct NullProximitySensor : repowerd::ProximitySensor
         return NullHandlerRegistration{};
     }
     repowerd::ProximityState proximity_state() override { return {}; }
+    void enable_proximity_events() override {}
+    void disable_proximity_events() override {}
 };
 
 struct NullTimer : repowerd::Timer
@@ -121,6 +124,21 @@ struct NullUserActivity : repowerd::UserActivity
 {
     repowerd::HandlerRegistration register_user_activity_handler(
         repowerd::UserActivityHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
+struct NullVoiceCallService : repowerd::VoiceCallService
+{
+    repowerd::HandlerRegistration register_active_call_handler(
+        repowerd::ActiveCallHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+
+    repowerd::HandlerRegistration register_no_active_call_handler(
+        repowerd::NoActiveCallHandler const&) override
     {
         return NullHandlerRegistration{};
     }
@@ -206,6 +224,14 @@ repowerd::DefaultDaemonConfig::the_user_activity()
     if (!user_activity)
         user_activity = std::make_shared<NullUserActivity>();
     return user_activity;
+}
+
+std::shared_ptr<repowerd::VoiceCallService>
+repowerd::DefaultDaemonConfig::the_voice_call_service()
+{
+    if (!voice_call_service)
+        voice_call_service = std::make_shared<NullVoiceCallService>();
+    return voice_call_service;
 }
 
 std::chrono::milliseconds
