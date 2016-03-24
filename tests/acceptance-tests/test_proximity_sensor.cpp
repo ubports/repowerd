@@ -18,11 +18,7 @@
 
 #include "acceptance_test.h"
 
-#include "fake_proximity_sensor.h"
-
 #include <gtest/gtest.h>
-
-#include <chrono>
 
 namespace rt = repowerd::test;
 

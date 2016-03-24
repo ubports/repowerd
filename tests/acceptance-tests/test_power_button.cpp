@@ -20,8 +20,6 @@
 
 #include <gtest/gtest.h>
 
-#include <chrono>
-
 namespace rt = repowerd::test;
 
 namespace
@@ -29,8 +27,6 @@ namespace
 
 struct APowerButton : rt::AcceptanceTest
 {
-    std::chrono::milliseconds const power_button_long_press_timeout{
-        config.power_button_long_press_timeout()};
 };
 
 }

@@ -18,8 +18,6 @@
 
 #include "acceptance_test.h"
 
-#include "fake_user_activity.h"
-
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -33,11 +31,6 @@ namespace
 
 struct AUserActivity : rt::AcceptanceTest
 {
-    std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
-        config.user_inactivity_normal_display_off_timeout()};
-    std::chrono::milliseconds const user_inactivity_normal_display_dim_timeout{
-        config.user_inactivity_normal_display_off_timeout() -
-        config.user_inactivity_normal_display_dim_duration()};
 };
 
 }

@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 namespace rt = repowerd::test;
 
 using namespace std::chrono_literals;
@@ -29,8 +31,6 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
-    std::chrono::milliseconds const user_inactivity_normal_display_off_timeout{
-        config.user_inactivity_normal_display_off_timeout()};
 };
 
 }
