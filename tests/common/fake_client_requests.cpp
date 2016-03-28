@@ -21,10 +21,25 @@
 namespace rt = repowerd::test;
 
 rt::FakeClientRequests::FakeClientRequests()
-    : enable_inactivity_timeout_handler{[]{}},
-      disable_inactivity_timeout_handler{[]{}},
+    : disable_inactivity_timeout_handler{[]{}},
+      enable_inactivity_timeout_handler{[]{}},
+      disable_autobrightness_handler{[]{}},
+      enable_autobrightness_handler{[]{}},
       set_normal_brightness_value_handler{[](float){}}
 {
+}
+
+repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivity_timeout_handler(
+    DisableInactivityTimeoutHandler const& handler)
+{
+    mock.register_disable_inactivity_timeout_handler(handler);
+    disable_inactivity_timeout_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_disable_inactivity_timeout_handler();
+            disable_inactivity_timeout_handler = []{};
+        }};
 }
 
 repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity_timeout_handler(
@@ -40,16 +55,29 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity
         }};
 }
 
-repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivity_timeout_handler(
+repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_autobrightness_handler(
     DisableInactivityTimeoutHandler const& handler)
 {
-    mock.register_disable_inactivity_timeout_handler(handler);
-    disable_inactivity_timeout_handler = handler;
+    mock.register_disable_autobrightness_handler(handler);
+    disable_autobrightness_handler = handler;
     return HandlerRegistration{
         [this]
         {
-            mock.unregister_disable_inactivity_timeout_handler();
-            disable_inactivity_timeout_handler = []{};
+            mock.unregister_disable_autobrightness_handler();
+            disable_autobrightness_handler = []{};
+        }};
+}
+
+repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_autobrightness_handler(
+    EnableInactivityTimeoutHandler const& handler)
+{
+    mock.register_enable_autobrightness_handler(handler);
+    enable_autobrightness_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_enable_autobrightness_handler();
+            enable_autobrightness_handler = []{};
         }};
 }
 
@@ -66,15 +94,24 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_bright
         }};
 }
 
+void rt::FakeClientRequests::emit_disable_inactivity_timeout()
+{
+    disable_inactivity_timeout_handler();
+}
 
 void rt::FakeClientRequests::emit_enable_inactivity_timeout()
 {
     enable_inactivity_timeout_handler();
 }
 
-void rt::FakeClientRequests::emit_disable_inactivity_timeout()
+void rt::FakeClientRequests::emit_disable_autobrightness()
 {
-    disable_inactivity_timeout_handler();
+    disable_autobrightness_handler();
+}
+
+void rt::FakeClientRequests::emit_enable_autobrightness()
+{
+    enable_autobrightness_handler();
 }
 
 void rt::FakeClientRequests::emit_set_normal_brightness_value(float f)

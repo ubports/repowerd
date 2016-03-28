@@ -184,6 +184,22 @@ repowerd::Daemon::register_event_handlers()
                     [this,value] { brightness_control->set_normal_brightness_value(value); });
             }));
 
+    registrations.push_back(
+        client_requests->register_disable_autobrightness_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { brightness_control->disable_autobrightness(); });
+            }));
+
+    registrations.push_back(
+        client_requests->register_enable_autobrightness_handler(
+            [this]
+            {
+                enqueue_event(
+                    [this] { brightness_control->enable_autobrightness(); });
+            }));
+
     return registrations;
 }
 

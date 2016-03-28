@@ -30,6 +30,8 @@ namespace test
 class MockBrightnessControl : public BrightnessControl
 {
 public:
+    MOCK_METHOD0(disable_autobrightness, void());
+    MOCK_METHOD0(enable_autobrightness, void());
     MOCK_METHOD0(set_dim_brightness, void());
     MOCK_METHOD0(set_normal_brightness, void());
     MOCK_METHOD1(set_normal_brightness_value, void(float));

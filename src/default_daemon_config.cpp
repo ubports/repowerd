@@ -42,6 +42,8 @@ struct NullHandlerRegistration : repowerd::HandlerRegistration
 
 struct NullBrightnessControl : repowerd::BrightnessControl
 {
+    void disable_autobrightness() override {}
+    void enable_autobrightness() override {}
     void set_dim_brightness() override {}
     void set_normal_brightness() override {}
     void set_normal_brightness_value(float)  override {}
@@ -50,14 +52,26 @@ struct NullBrightnessControl : repowerd::BrightnessControl
 
 struct NullClientRequests : repowerd::ClientRequests
 {
+    repowerd::HandlerRegistration register_disable_inactivity_timeout_handler(
+        repowerd::DisableInactivityTimeoutHandler const&)
+    {
+        return NullHandlerRegistration{};
+    }
+
     repowerd::HandlerRegistration register_enable_inactivity_timeout_handler(
         repowerd::EnableInactivityTimeoutHandler const&)
     {
         return NullHandlerRegistration{};
     }
 
-    repowerd::HandlerRegistration register_disable_inactivity_timeout_handler(
-        repowerd::DisableInactivityTimeoutHandler const&)
+    repowerd::HandlerRegistration register_disable_autobrightness_handler(
+        repowerd::DisableAutobrightnessHandler const&)
+    {
+        return NullHandlerRegistration{};
+    }
+
+    repowerd::HandlerRegistration register_enable_autobrightness_handler(
+        repowerd::EnableAutobrightnessHandler const&)
     {
         return NullHandlerRegistration{};
     }

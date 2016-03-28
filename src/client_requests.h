@@ -28,6 +28,8 @@ namespace repowerd
 using EnableInactivityTimeoutHandler = std::function<void()>;
 using DisableInactivityTimeoutHandler = std::function<void()>;
 using SetNormalBrightnessValueHandler = std::function<void(float)>;
+using EnableAutobrightnessHandler = std::function<void()>;
+using DisableAutobrightnessHandler = std::function<void()>;
 
 class ClientRequests
 {
@@ -41,6 +43,10 @@ public:
 
     virtual HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) = 0;
+    virtual HandlerRegistration register_enable_autobrightness_handler(
+        EnableAutobrightnessHandler const& handler) = 0;
+    virtual HandlerRegistration register_disable_autobrightness_handler(
+        DisableAutobrightnessHandler const& handler) = 0;
 
 protected:
     ClientRequests() = default;

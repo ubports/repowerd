@@ -271,6 +271,50 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
     config.the_fake_client_requests()->emit_disable_inactivity_timeout();
 }
 
+TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_autobrightness_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_disable_autobrightness_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_brightness_control_of_disable_autobrightness)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_brightness_control(), disable_autobrightness());
+
+    config.the_fake_client_requests()->emit_disable_autobrightness();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_enable_autobrightness)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_autobrightness_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_enable_autobrightness_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_brightness_control_of_enable_autobrightness)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_brightness_control(), enable_autobrightness());
+
+    config.the_fake_client_requests()->emit_enable_autobrightness();
+}
+
 TEST_F(ADaemon, registers_and_unregisters_set_normal_brightness_value)
 {
     using namespace testing;
