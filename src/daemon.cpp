@@ -18,6 +18,7 @@
 
 #include "daemon.h"
 
+#include "brightness_control.h"
 #include "client_requests.h"
 #include "display_power_control.h"
 #include "notification_service.h"
@@ -31,7 +32,8 @@
 #include <future>
 
 repowerd::Daemon::Daemon(DaemonConfig& config)
-    : client_requests{config.the_client_requests()},
+    : brightness_control{config.the_brightness_control()},
+      client_requests{config.the_client_requests()},
       display_power_control{config.the_display_power_control()},
       notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
@@ -172,6 +174,14 @@ repowerd::Daemon::register_event_handlers()
             {
                 enqueue_event(
                     [this] { state_machine->handle_no_active_call(); });
+            }));
+
+    registrations.push_back(
+        client_requests->register_set_normal_brightness_value_handler(
+            [this] (float value)
+            {
+                enqueue_event(
+                    [this,value] { brightness_control->set_normal_brightness_value(value); });
             }));
 
     return registrations;

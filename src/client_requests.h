@@ -27,6 +27,7 @@ namespace repowerd
 
 using EnableInactivityTimeoutHandler = std::function<void()>;
 using DisableInactivityTimeoutHandler = std::function<void()>;
+using SetNormalBrightnessValueHandler = std::function<void(float)>;
 
 class ClientRequests
 {
@@ -37,6 +38,9 @@ public:
         EnableInactivityTimeoutHandler const& handler) = 0;
     virtual HandlerRegistration register_disable_inactivity_timeout_handler(
         DisableInactivityTimeoutHandler const& handler) = 0;
+
+    virtual HandlerRegistration register_set_normal_brightness_value_handler(
+        SetNormalBrightnessValueHandler const& handler) = 0;
 
 protected:
     ClientRequests() = default;

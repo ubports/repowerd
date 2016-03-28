@@ -24,6 +24,7 @@
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
+#include "mock_brightness_control.h"
 
 #include "src/daemon.h"
 #include "src/state_machine.h"
@@ -268,6 +269,29 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
     config.the_fake_client_requests()->emit_disable_inactivity_timeout();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_set_normal_brightness_value)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_normal_brightness_value_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_set_normal_brightness_value_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_brightness_control_of_set_normal_brightness_value)
+{
+    start_daemon();
+
+    auto const value = 0.7f;
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
+
+    config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
 }
 
 TEST_F(ADaemon, registers_and_unregisters_notification_handler)

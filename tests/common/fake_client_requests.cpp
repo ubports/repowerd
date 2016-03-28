@@ -22,7 +22,8 @@ namespace rt = repowerd::test;
 
 rt::FakeClientRequests::FakeClientRequests()
     : enable_inactivity_timeout_handler{[]{}},
-      disable_inactivity_timeout_handler{[]{}}
+      disable_inactivity_timeout_handler{[]{}},
+      set_normal_brightness_value_handler{[](float){}}
 {
 }
 
@@ -52,6 +53,20 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivit
         }};
 }
 
+repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_brightness_value_handler(
+    SetNormalBrightnessValueHandler const& handler)
+{
+    mock.register_set_normal_brightness_value_handler(handler);
+    set_normal_brightness_value_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_set_normal_brightness_value_handler();
+            set_normal_brightness_value_handler = [](float){};
+        }};
+}
+
+
 void rt::FakeClientRequests::emit_enable_inactivity_timeout()
 {
     enable_inactivity_timeout_handler();
@@ -60,4 +75,9 @@ void rt::FakeClientRequests::emit_enable_inactivity_timeout()
 void rt::FakeClientRequests::emit_disable_inactivity_timeout()
 {
     disable_inactivity_timeout_handler();
+}
+
+void rt::FakeClientRequests::emit_set_normal_brightness_value(float f)
+{
+    set_normal_brightness_value_handler(f);
 }

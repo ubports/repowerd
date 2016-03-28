@@ -38,8 +38,12 @@ public:
     HandlerRegistration register_disable_inactivity_timeout_handler(
         DisableInactivityTimeoutHandler const& handler) override;
 
+    HandlerRegistration register_set_normal_brightness_value_handler(
+        SetNormalBrightnessValueHandler const& handler) override;
+
     void emit_enable_inactivity_timeout();
     void emit_disable_inactivity_timeout();
+    void emit_set_normal_brightness_value(float f);
 
     struct Mock
     {
@@ -48,12 +52,15 @@ public:
 
         MOCK_METHOD1(register_disable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));
         MOCK_METHOD0(unregister_disable_inactivity_timeout_handler, void());
+        MOCK_METHOD1(register_set_normal_brightness_value_handler, void(SetNormalBrightnessValueHandler const&));
+        MOCK_METHOD0(unregister_set_normal_brightness_value_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
     EnableInactivityTimeoutHandler enable_inactivity_timeout_handler;
     DisableInactivityTimeoutHandler disable_inactivity_timeout_handler;
+    SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
 };
 
 }
