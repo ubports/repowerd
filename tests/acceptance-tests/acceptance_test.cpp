@@ -40,6 +40,8 @@ namespace rt = repowerd::test;
 rt::AcceptanceTest::AcceptanceTest()
     : power_button_long_press_timeout{
           config.power_button_long_press_timeout()},
+      user_inactivity_normal_display_dim_duration{
+          config.user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_dim_timeout{
           config.user_inactivity_normal_display_off_timeout() -
           config.user_inactivity_normal_display_dim_duration()},
@@ -122,6 +124,12 @@ void rt::AcceptanceTest::client_request_disable_inactivity_timeout()
 void rt::AcceptanceTest::client_request_enable_inactivity_timeout()
 {
     config.the_fake_client_requests()->emit_enable_inactivity_timeout();
+}
+
+void rt::AcceptanceTest::client_request_set_inactivity_timeout(
+    std::chrono::milliseconds timeout)
+{
+    config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
 }
 
 void rt::AcceptanceTest::emit_all_notifications_done()

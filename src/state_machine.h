@@ -20,6 +20,8 @@
 
 #include "alarm_id.h"
 
+#include <chrono>
+
 namespace repowerd
 {
 
@@ -35,6 +37,7 @@ public:
 
     virtual void handle_enable_inactivity_timeout() = 0;
     virtual void handle_disable_inactivity_timeout() = 0;
+    virtual void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) = 0;
 
     virtual void handle_all_notifications_done() = 0;
     virtual void handle_notification() = 0;

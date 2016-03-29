@@ -81,3 +81,49 @@ TEST_F(AClientRequest,
     expect_display_turns_off();
     advance_time_by(1ms);
 }
+
+TEST_F(AClientRequest, to_set_inactivity_timeout_affects_display_off_timeout)
+{
+    auto const display_off_timeout = user_inactivity_normal_display_off_timeout + 10s;
+
+    client_request_set_inactivity_timeout(display_off_timeout);
+
+    turn_on_display();
+
+    expect_no_display_power_change();
+    advance_time_by(display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+}
+
+TEST_F(AClientRequest, to_set_inactivity_timeout_affects_display_dim_timeout)
+{
+    auto const display_off_timeout = user_inactivity_normal_display_off_timeout + 10s;
+    auto const display_dim_timeout =
+        display_off_timeout - user_inactivity_normal_display_dim_duration;
+
+    client_request_set_inactivity_timeout(display_off_timeout);
+
+    turn_on_display();
+
+    expect_no_display_brightness_change();
+    advance_time_by(display_dim_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_dims();
+    advance_time_by(1ms);
+}
+
+TEST_F(AClientRequest, to_set_short_inactivity_timeout_cancels_display_dim_timeout)
+{
+    auto const display_off_timeout = user_inactivity_normal_display_dim_duration;
+
+    client_request_set_inactivity_timeout(display_off_timeout);
+
+    turn_on_display();
+
+    expect_no_display_brightness_change();
+    advance_time_by(display_off_timeout - 1ms);
+}

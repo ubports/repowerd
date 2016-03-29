@@ -145,6 +145,14 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
+        client_requests->register_set_inactivity_timeout_handler(
+            [this] (std::chrono::milliseconds timeout)
+            {
+                enqueue_event(
+                    [this,timeout] { state_machine->handle_set_inactivity_timeout(timeout); });
+            }));
+
+    registrations.push_back(
         notification_service->register_notification_handler(
             [this]
             {

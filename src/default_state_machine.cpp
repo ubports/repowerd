@@ -110,6 +110,11 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
     disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
 }
 
+void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(std::chrono::milliseconds timeout)
+{
+    user_inactivity_normal_display_off_timeout = timeout;
+}
+
 void repowerd::DefaultStateMachine::handle_all_notifications_done()
 {
     if (display_power_mode == DisplayPowerMode::on)
@@ -208,10 +213,14 @@ void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
     cancel_user_inactivity_alarm();
     user_inactivity_display_off_time_point =
         timer->now() + user_inactivity_normal_display_off_timeout;
-    user_inactivity_display_dim_alarm_id =
-        timer->schedule_alarm_in(
-            user_inactivity_normal_display_off_timeout -
-            user_inactivity_normal_display_dim_duration);
+    if (user_inactivity_normal_display_off_timeout > user_inactivity_normal_display_dim_duration)
+    {
+        user_inactivity_display_dim_alarm_id =
+            timer->schedule_alarm_in(
+                user_inactivity_normal_display_off_timeout -
+                user_inactivity_normal_display_dim_duration);
+    }
+
     user_inactivity_display_off_alarm_id =
         timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout);
 }

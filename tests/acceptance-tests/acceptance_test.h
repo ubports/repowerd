@@ -48,6 +48,7 @@ struct AcceptanceTest : testing::Test
     void advance_time_by(std::chrono::milliseconds advance);
     void client_request_disable_inactivity_timeout();
     void client_request_enable_inactivity_timeout();
+    void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
     void emit_all_notifications_done();
     void emit_notification();
     void emit_proximity_state_far();
@@ -68,6 +69,7 @@ struct AcceptanceTest : testing::Test
     std::thread daemon_thread;
 
     std::chrono::milliseconds const power_button_long_press_timeout;
+    std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_timeout;
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;

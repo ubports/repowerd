@@ -38,6 +38,7 @@ public:
 
     void handle_enable_inactivity_timeout() override;
     void handle_disable_inactivity_timeout() override;
+    void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) override;
 
     void handle_all_notifications_done() override;
     void handle_notification() override;
@@ -86,7 +87,7 @@ private:
     AlarmId user_inactivity_display_off_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
-    std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
+    std::chrono::milliseconds user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
 };
 

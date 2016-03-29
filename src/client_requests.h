@@ -21,12 +21,14 @@
 #include "handler_registration.h"
 
 #include <functional>
+#include <chrono>
 
 namespace repowerd
 {
 
 using EnableInactivityTimeoutHandler = std::function<void()>;
 using DisableInactivityTimeoutHandler = std::function<void()>;
+using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds)>;
 using SetNormalBrightnessValueHandler = std::function<void(float)>;
 using EnableAutobrightnessHandler = std::function<void()>;
 using DisableAutobrightnessHandler = std::function<void()>;
@@ -40,6 +42,8 @@ public:
         EnableInactivityTimeoutHandler const& handler) = 0;
     virtual HandlerRegistration register_disable_inactivity_timeout_handler(
         DisableInactivityTimeoutHandler const& handler) = 0;
+    virtual HandlerRegistration register_set_inactivity_timeout_handler(
+        SetInactivityTimeoutHandler const& handler) = 0;
 
     virtual HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) = 0;

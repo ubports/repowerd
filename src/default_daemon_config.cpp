@@ -53,31 +53,37 @@ struct NullBrightnessControl : repowerd::BrightnessControl
 struct NullClientRequests : repowerd::ClientRequests
 {
     repowerd::HandlerRegistration register_disable_inactivity_timeout_handler(
-        repowerd::DisableInactivityTimeoutHandler const&)
+        repowerd::DisableInactivityTimeoutHandler const&) override
     {
         return NullHandlerRegistration{};
     }
 
     repowerd::HandlerRegistration register_enable_inactivity_timeout_handler(
-        repowerd::EnableInactivityTimeoutHandler const&)
+        repowerd::EnableInactivityTimeoutHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+
+    repowerd::HandlerRegistration register_set_inactivity_timeout_handler(
+        repowerd::SetInactivityTimeoutHandler const&) override
     {
         return NullHandlerRegistration{};
     }
 
     repowerd::HandlerRegistration register_disable_autobrightness_handler(
-        repowerd::DisableAutobrightnessHandler const&)
+        repowerd::DisableAutobrightnessHandler const&) override
     {
         return NullHandlerRegistration{};
     }
 
     repowerd::HandlerRegistration register_enable_autobrightness_handler(
-        repowerd::EnableAutobrightnessHandler const&)
+        repowerd::EnableAutobrightnessHandler const&) override
     {
         return NullHandlerRegistration{};
     }
 
     repowerd::HandlerRegistration register_set_normal_brightness_value_handler(
-        repowerd::SetNormalBrightnessValueHandler const&)
+        repowerd::SetNormalBrightnessValueHandler const&) override
     {
         return NullHandlerRegistration{};
     }

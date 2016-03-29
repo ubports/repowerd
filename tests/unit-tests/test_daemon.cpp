@@ -58,6 +58,7 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_enable_inactivity_timeout, void());
     MOCK_METHOD0(handle_disable_inactivity_timeout, void());
+    MOCK_METHOD1(handle_set_inactivity_timeout, void(std::chrono::milliseconds));
 
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
@@ -269,6 +270,29 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
     config.the_fake_client_requests()->emit_disable_inactivity_timeout();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_set_inactivity_timeout_handler)
+{
+    using namespace testing;
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_inactivity_timeout_handler(_));
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_set_inactivity_timeout_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_set_inactivity_timeout)
+{
+    start_daemon();
+
+    auto const timeout = 10000ms;
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_set_inactivity_timeout(timeout));
+
+    config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
 }
 
 TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)

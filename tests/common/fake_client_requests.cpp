@@ -23,6 +23,7 @@ namespace rt = repowerd::test;
 rt::FakeClientRequests::FakeClientRequests()
     : disable_inactivity_timeout_handler{[]{}},
       enable_inactivity_timeout_handler{[]{}},
+      set_inactivity_timeout_handler{[](std::chrono::milliseconds){}},
       disable_autobrightness_handler{[]{}},
       enable_autobrightness_handler{[]{}},
       set_normal_brightness_value_handler{[](float){}}
@@ -52,6 +53,19 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity
         {
             mock.unregister_enable_inactivity_timeout_handler();
             enable_inactivity_timeout_handler = []{};
+        }};
+}
+
+repowerd::HandlerRegistration rt::FakeClientRequests::register_set_inactivity_timeout_handler(
+    SetInactivityTimeoutHandler const& handler)
+{
+    mock.register_set_inactivity_timeout_handler(handler);
+    set_inactivity_timeout_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_set_inactivity_timeout_handler();
+            set_inactivity_timeout_handler = [](std::chrono::milliseconds){};
         }};
 }
 
@@ -102,6 +116,11 @@ void rt::FakeClientRequests::emit_disable_inactivity_timeout()
 void rt::FakeClientRequests::emit_enable_inactivity_timeout()
 {
     enable_inactivity_timeout_handler();
+}
+
+void rt::FakeClientRequests::emit_set_inactivity_timeout(std::chrono::milliseconds timeout)
+{
+    set_inactivity_timeout_handler(timeout);
 }
 
 void rt::FakeClientRequests::emit_disable_autobrightness()

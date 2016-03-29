@@ -36,6 +36,8 @@ public:
         DisableInactivityTimeoutHandler const& handler) override;
     HandlerRegistration register_enable_inactivity_timeout_handler(
         EnableInactivityTimeoutHandler const& handler) override;
+    HandlerRegistration register_set_inactivity_timeout_handler(
+        SetInactivityTimeoutHandler const& handler) override;
 
     HandlerRegistration register_disable_autobrightness_handler(
         DisableAutobrightnessHandler const& handler) override;
@@ -46,16 +48,19 @@ public:
 
     void emit_disable_inactivity_timeout();
     void emit_enable_inactivity_timeout();
+    void emit_set_inactivity_timeout(std::chrono::milliseconds timeout);
     void emit_disable_autobrightness();
     void emit_enable_autobrightness();
     void emit_set_normal_brightness_value(float f);
 
     struct Mock
     {
+        MOCK_METHOD1(register_disable_inactivity_timeout_handler, void(DisableInactivityTimeoutHandler const&));
+        MOCK_METHOD0(unregister_disable_inactivity_timeout_handler, void());
         MOCK_METHOD1(register_enable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));
         MOCK_METHOD0(unregister_enable_inactivity_timeout_handler, void());
-        MOCK_METHOD1(register_disable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));
-        MOCK_METHOD0(unregister_disable_inactivity_timeout_handler, void());
+        MOCK_METHOD1(register_set_inactivity_timeout_handler, void(SetInactivityTimeoutHandler const&));
+        MOCK_METHOD0(unregister_set_inactivity_timeout_handler, void());
 
         MOCK_METHOD1(register_disable_autobrightness_handler, void(DisableAutobrightnessHandler const&));
         MOCK_METHOD0(unregister_disable_autobrightness_handler, void());
@@ -69,6 +74,7 @@ public:
 private:
     DisableInactivityTimeoutHandler disable_inactivity_timeout_handler;
     EnableInactivityTimeoutHandler enable_inactivity_timeout_handler;
+    SetInactivityTimeoutHandler set_inactivity_timeout_handler;
     DisableAutobrightnessHandler disable_autobrightness_handler;
     EnableAutobrightnessHandler enable_autobrightness_handler;
     SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
