@@ -119,71 +119,84 @@ void rt::AcceptanceTest::advance_time_by(std::chrono::milliseconds advance)
 void rt::AcceptanceTest::client_request_disable_inactivity_timeout()
 {
     config.the_fake_client_requests()->emit_disable_inactivity_timeout();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::client_request_enable_inactivity_timeout()
 {
     config.the_fake_client_requests()->emit_enable_inactivity_timeout();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::client_request_set_inactivity_timeout(
     std::chrono::milliseconds timeout)
 {
     config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_all_notifications_done()
 {
     config.the_fake_notification_service()->emit_all_notifications_done();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_notification()
 {
     config.the_fake_notification_service()->emit_notification();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_proximity_state_far()
 {
     config.the_fake_proximity_sensor()->emit_proximity_state(
         repowerd::ProximityState::far);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_proximity_state_near()
 {
     config.the_fake_proximity_sensor()->emit_proximity_state(
         repowerd::ProximityState::near);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_active_call()
 {
     config.the_fake_voice_call_service()->emit_active_call();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_no_active_call()
 {
     config.the_fake_voice_call_service()->emit_no_active_call();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::perform_user_activity_extending_power_state()
 {
     config.the_fake_user_activity()->perform(
         repowerd::UserActivityType::extend_power_state);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::perform_user_activity_changing_power_state()
 {
     config.the_fake_user_activity()->perform(
         repowerd::UserActivityType::change_power_state);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::press_power_button()
 {
     config.the_fake_power_button()->press();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::release_power_button()
 {
     config.the_fake_power_button()->release();
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::set_proximity_state_far()
