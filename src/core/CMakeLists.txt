@@ -14,29 +14,15 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_executable(
-    repowerd-acceptance-tests
-
-    acceptance_test.cpp
-    test_client_requests.cpp
-    test_notification.cpp
-    test_power_button.cpp
-    test_proximity_sensor.cpp
-    test_user_activity.cpp
-    test_voice_call.cpp
-
-    $<TARGET_OBJECTS:repowerd-core>
-    $<TARGET_OBJECTS:repowerd-test-common>
+set(
+    REPOWERD_CORE_SRCS
+    daemon.cpp
+    default_state_machine.cpp
+    handler_registration.cpp
 )
 
-target_link_libraries(
-    repowerd-acceptance-tests
-
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARY}
-    ${GMOCK_MAIN_LIBRARY}
+add_library(
+    repowerd-core OBJECT
+    ${REPOWERD_CORE_SRCS}
 )
 
-add_test(repowerd-acceptance-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-acceptance-tests)
-
-add_dependencies(repowerd-acceptance-tests GMock)

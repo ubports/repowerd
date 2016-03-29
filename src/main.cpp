@@ -1,4 +1,4 @@
-#include "daemon.h"
+#include "core/daemon.h"
 #include "default_daemon_config.h"
 
 int main()

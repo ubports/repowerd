@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/daemon.h"
+#include "src/core/daemon.h"
 #include "daemon_config.h"
 
 #include <chrono>

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "daemon_config.h"
+#include "core/daemon_config.h"
 
 namespace repowerd
 {

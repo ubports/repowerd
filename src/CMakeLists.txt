@@ -14,24 +14,14 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-set(
-    REPOWERD_SRCS
-    daemon.cpp
-    default_daemon_config.cpp
-    default_state_machine.cpp
-    handler_registration.cpp
-)
-
-add_library(
-    repowerd-objects OBJECT
-    ${REPOWERD_SRCS}
-)
+add_subdirectory(core)
 
 add_executable(
     repowerd
 
+    default_daemon_config.cpp
     main.cpp
-    $<TARGET_OBJECTS:repowerd-objects>
+    $<TARGET_OBJECTS:repowerd-core>
 )
 
 install(

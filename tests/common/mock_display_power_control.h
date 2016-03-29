@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/display_power_control.h"
+#include "src/core/display_power_control.h"
 
 #include <gmock/gmock.h>
 

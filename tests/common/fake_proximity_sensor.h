@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/proximity_sensor.h"
+#include "src/core/proximity_sensor.h"
 
 #include <gmock/gmock.h>
 

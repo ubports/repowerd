@@ -17,18 +17,18 @@
  */
 
 #include "default_daemon_config.h"
-#include "default_state_machine.h"
+#include "core/default_state_machine.h"
 
-#include "brightness_control.h"
-#include "client_requests.h"
-#include "display_power_control.h"
-#include "notification_service.h"
-#include "power_button.h"
-#include "power_button_event_sink.h"
-#include "proximity_sensor.h"
-#include "timer.h"
-#include "user_activity.h"
-#include "voice_call_service.h"
+#include "core/brightness_control.h"
+#include "core/client_requests.h"
+#include "core/display_power_control.h"
+#include "core/notification_service.h"
+#include "core/power_button.h"
+#include "core/power_button_event_sink.h"
+#include "core/proximity_sensor.h"
+#include "core/timer.h"
+#include "core/user_activity.h"
+#include "core/voice_call_service.h"
 
 using namespace std::chrono_literals;
 

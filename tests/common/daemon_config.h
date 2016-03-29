@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/default_daemon_config.h"
+#include "src/core/daemon_config.h"
 
 #include <gmock/gmock.h>
 
@@ -38,7 +38,7 @@ class FakeTimer;
 class FakeUserActivity;
 class FakeVoiceCallService;
 
-class DaemonConfig : public repowerd::DefaultDaemonConfig
+class DaemonConfig : public repowerd::DaemonConfig
 {
 public:
     std::shared_ptr<BrightnessControl> the_brightness_control() override;
@@ -48,9 +48,15 @@ public:
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
+    std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
+
+    std::chrono::milliseconds power_button_long_press_timeout() override;
+    std::chrono::milliseconds user_inactivity_normal_display_dim_duration() override;
+    std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;
+    std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> the_mock_brightness_control();
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
@@ -64,6 +70,8 @@ public:
     std::shared_ptr<FakeVoiceCallService> the_fake_voice_call_service();
 
 private:
+    std::shared_ptr<StateMachine> state_machine;
+
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> mock_brightness_control;
     std::shared_ptr<FakeClientRequests> fake_client_requests;
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> mock_display_power_control;

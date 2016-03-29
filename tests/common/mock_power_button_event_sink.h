@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/power_button_event_sink.h"
+#include "src/core/power_button_event_sink.h"
 
 #include <gmock/gmock.h>
 

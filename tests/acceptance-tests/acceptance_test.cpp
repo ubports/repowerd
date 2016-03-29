@@ -30,7 +30,7 @@
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
 
-#include "src/daemon.h"
+#include "src/core/daemon.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

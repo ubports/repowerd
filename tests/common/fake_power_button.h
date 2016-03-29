@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/power_button.h"
+#include "src/core/power_button.h"
 
 #include <gmock/gmock.h>
 

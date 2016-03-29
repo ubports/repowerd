@@ -17,6 +17,7 @@
  */
 
 #include "daemon_config.h"
+#include "src/core/default_state_machine.h"
 
 #include "mock_brightness_control.h"
 #include "fake_client_requests.h"
@@ -31,6 +32,7 @@
 
 namespace rt = repowerd::test;
 using testing::NiceMock;
+using namespace std::chrono_literals;
 
 std::shared_ptr<repowerd::BrightnessControl> rt::DaemonConfig::the_brightness_control()
 {
@@ -67,6 +69,13 @@ std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_senso
     return the_fake_proximity_sensor();
 }
 
+std::shared_ptr<repowerd::StateMachine> rt::DaemonConfig::the_state_machine()
+{
+    if (!state_machine)
+        state_machine = std::make_shared<DefaultStateMachine>(*this);
+    return state_machine;
+}
+
 std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
 {
     return the_fake_timer();
@@ -80,6 +89,30 @@ std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
 std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_service()
 {
     return the_fake_voice_call_service();
+}
+
+std::chrono::milliseconds
+rt::DaemonConfig::power_button_long_press_timeout()
+{
+    return 2s;
+}
+
+std::chrono::milliseconds
+rt::DaemonConfig::user_inactivity_normal_display_dim_duration()
+{
+    return 10s;
+}
+
+std::chrono::milliseconds
+rt::DaemonConfig::user_inactivity_normal_display_off_timeout()
+{
+    return 60s;
+}
+
+std::chrono::milliseconds
+rt::DaemonConfig::user_inactivity_reduced_display_off_timeout()
+{
+    return 15s;
 }
 
 std::shared_ptr<NiceMock<rt::MockBrightnessControl>>

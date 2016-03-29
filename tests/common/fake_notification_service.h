@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/notification_service.h"
+#include "src/core/notification_service.h"
 
 #include <gmock/gmock.h>
 

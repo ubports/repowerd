@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/timer.h"
+#include "src/core/timer.h"
 
 #include <gmock/gmock.h>
 

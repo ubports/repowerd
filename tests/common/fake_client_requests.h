@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/client_requests.h"
+#include "src/core/client_requests.h"
 
 #include <gmock/gmock.h>
 

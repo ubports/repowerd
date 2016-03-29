@@ -26,8 +26,8 @@
 #include "fake_voice_call_service.h"
 #include "mock_brightness_control.h"
 
-#include "src/daemon.h"
-#include "src/state_machine.h"
+#include "src/core/daemon.h"
+#include "src/core/state_machine.h"
 
 #include <thread>
 

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/user_activity.h"
+#include "src/core/user_activity.h"
 
 #include <gmock/gmock.h>
 

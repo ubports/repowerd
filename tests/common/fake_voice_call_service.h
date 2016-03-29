@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/voice_call_service.h"
+#include "src/core/voice_call_service.h"
 
 #include <gmock/gmock.h>
 

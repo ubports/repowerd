@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/brightness_control.h"
+#include "src/core/brightness_control.h"
 
 #include <gmock/gmock.h>
 
