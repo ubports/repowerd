@@ -15,11 +15,19 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}
-    common
+    ${GIO_INCLUDE_DIRS}
 )
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(common/)
-add_subdirectory(integration-tests/)
-add_subdirectory(unit-tests/)
+set(
+    REPOWERD_ADAPTER_SRCS
+
+    dbus_connection_handle.cpp
+    dbus_event_loop.cpp
+    dbus_message_handle.cpp
+    unity_screen_service.cpp
+)
+
+add_library(
+    repowerd-adapters OBJECT
+    ${REPOWERD_ADAPTER_SRCS}
+)

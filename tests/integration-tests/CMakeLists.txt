@@ -15,11 +15,33 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}
-    common
+    ${GIO_INCLUDE_DIRS}
 )
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(common/)
-add_subdirectory(integration-tests/)
-add_subdirectory(unit-tests/)
+add_executable(
+    repowerd-integration-tests
+
+    dbus_bus.cpp
+    dbus_client.cpp
+    run_command.cpp
+    unity_screen_dbus_client.cpp
+
+    test_unity_screen_service.cpp
+
+    $<TARGET_OBJECTS:repowerd-adapters>
+    $<TARGET_OBJECTS:repowerd-core>
+    $<TARGET_OBJECTS:repowerd-test-common>
+)
+
+target_link_libraries(
+    repowerd-integration-tests
+
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARY}
+    ${GMOCK_MAIN_LIBRARY}
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+)
+
+add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)
+
+add_dependencies(repowerd-integration-tests GMock)

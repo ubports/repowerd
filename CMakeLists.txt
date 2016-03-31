@@ -24,6 +24,9 @@ option(REPOWERD_ENABLE_TESTS "Build repowerd tests" ON)
 enable_testing()
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(GIO REQUIRED gio-2.0)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;AddressSanitizer;ThreadSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
