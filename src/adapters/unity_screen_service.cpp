@@ -23,10 +23,20 @@
 
 namespace
 {
-struct NullHandlerRegistration : repowerd::HandlerRegistration
+struct UnityScreenServiceHandlerRegistration : repowerd::HandlerRegistration
 {
-    NullHandlerRegistration() : HandlerRegistration{[]{}} {}
+    UnityScreenServiceHandlerRegistration(
+        repowerd::DBusEventLoop& loop,
+        std::function<void()> const& register_func,
+        std::function<void()> const& unregister)
+        : HandlerRegistration{[&, unregister] { loop.enqueue(unregister).wait(); }}
+    {
+        loop.enqueue(register_func).wait();
+    }
 };
+
+auto const null_handler = []{};
+auto const null_arg_handler = [](auto){};
 
 enum class PowerStateChangeReason
 {
@@ -78,6 +88,14 @@ char const* const unity_screen_service_introspection = R"(<!DOCTYPE node PUBLIC 
 repowerd::UnityScreenService::UnityScreenService(
     std::string const& dbus_bus_address)
     : dbus_connection{dbus_bus_address},
+      disable_inactivity_timeout_handler{null_handler},
+      enable_inactivity_timeout_handler{null_handler},
+      set_inactivity_timeout_handler{null_arg_handler},
+      disable_autobrightness_handler{null_handler},
+      enable_autobrightness_handler{null_handler},
+      set_normal_brightness_value_handler{null_arg_handler},
+      notification_handler{null_handler},
+      no_notification_handler{null_handler},
       next_keep_display_on_id{1},
       active_notifications{0}
 {
@@ -129,64 +147,80 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_enable_inactivity_timeout_handler(
     EnableInactivityTimeoutHandler const& handler)
 {
-    enable_inactivity_timeout_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { enable_inactivity_timeout_handler = handler; },
+        [this] { enable_inactivity_timeout_handler = null_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_disable_inactivity_timeout_handler(
     DisableInactivityTimeoutHandler const& handler)
 {
-    disable_inactivity_timeout_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { disable_inactivity_timeout_handler = handler; },
+        [this] { disable_inactivity_timeout_handler = null_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_set_inactivity_timeout_handler(
     SetInactivityTimeoutHandler const& handler)
 {
-    set_inactivity_timeout_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { set_inactivity_timeout_handler = handler; },
+        [this] { set_inactivity_timeout_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_disable_autobrightness_handler(
     DisableAutobrightnessHandler const& handler)
 {
-    disable_autobrightness_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { disable_autobrightness_handler = handler; },
+        [this] { disable_autobrightness_handler = null_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_enable_autobrightness_handler(
     EnableAutobrightnessHandler const& handler)
 {
-    enable_autobrightness_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { enable_autobrightness_handler = handler; },
+        [this] { enable_autobrightness_handler = null_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_set_normal_brightness_value_handler(
     SetNormalBrightnessValueHandler const& handler)
 {
-    set_normal_brightness_value_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { set_normal_brightness_value_handler = handler; },
+        [this] { set_normal_brightness_value_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_notification_handler(
     NotificationHandler const& handler)
 {
-    notification_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { notification_handler = handler; },
+        [this] { notification_handler = null_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_no_notification_handler(
     NoNotificationHandler const& handler)
 {
-    no_notification_handler = handler;
-    return NullHandlerRegistration{};
+    return UnityScreenServiceHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { no_notification_handler = handler; },
+        [this] { no_notification_handler = null_handler; }};
 }
 
 void repowerd::UnityScreenService::dbus_method_call(

@@ -38,30 +38,38 @@ struct AUnityScreenService : testing::Test
 {
     AUnityScreenService()
     {
-        service.register_disable_inactivity_timeout_handler(
-            [this] { mock_handlers.disable_inactivity_timeout(); });
-        service.register_enable_inactivity_timeout_handler(
-            [this] { mock_handlers.enable_inactivity_timeout(); });
-        service.register_set_inactivity_timeout_handler(
-            [this] (std::chrono::milliseconds ms)
-            {
-                mock_handlers.set_inactivity_timeout(ms);
-            });
+        registrations.push_back(
+            service.register_disable_inactivity_timeout_handler(
+                [this] { mock_handlers.disable_inactivity_timeout(); }));
+        registrations.push_back(
+            service.register_enable_inactivity_timeout_handler(
+                [this] { mock_handlers.enable_inactivity_timeout(); }));
+        registrations.push_back(
+            service.register_set_inactivity_timeout_handler(
+                [this] (std::chrono::milliseconds ms)
+                {
+                    mock_handlers.set_inactivity_timeout(ms);
+                }));
 
-        service.register_disable_autobrightness_handler(
-            [this] { mock_handlers.disable_autobrightness(); });
-        service.register_enable_autobrightness_handler(
-            [this] { mock_handlers.enable_autobrightness(); });
-        service.register_set_normal_brightness_value_handler(
-            [this] (float v)
-            {
-                mock_handlers.set_normal_brightness_value(v);
-            });
+        registrations.push_back(
+            service.register_disable_autobrightness_handler(
+                [this] { mock_handlers.disable_autobrightness(); }));
+        registrations.push_back(
+            service.register_enable_autobrightness_handler(
+                [this] { mock_handlers.enable_autobrightness(); }));
+        registrations.push_back(
+            service.register_set_normal_brightness_value_handler(
+                [this] (float v)
+                {
+                    mock_handlers.set_normal_brightness_value(v);
+                }));
 
-        service.register_notification_handler(
-            [this] { mock_handlers.notification(); });
-        service.register_no_notification_handler(
-            [this] { mock_handlers.no_notification(); });
+        registrations.push_back(
+            service.register_notification_handler(
+                [this] { mock_handlers.notification(); }));
+        registrations.push_back(
+            service.register_no_notification_handler(
+                [this] { mock_handlers.no_notification(); }));
     }
 
     struct MockHandlers
@@ -79,10 +87,14 @@ struct AUnityScreenService : testing::Test
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
+    static int constexpr notification_reason{4};
+    static int constexpr snap_decision_reason{5};
+    std::chrono::seconds const default_timeout{3};
+
     rt::DBusBus bus;
     repowerd::UnityScreenService service{bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};
-    std::chrono::seconds const default_timeout{3};
+    std::vector<repowerd::HandlerRegistration> registrations;
 };
 
 }
@@ -262,7 +274,6 @@ TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
 TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_request)
 {
     using namespace testing;
-    static int constexpr notification_reason = 4;
 
     EXPECT_CALL(mock_handlers, notification());
 
@@ -274,7 +285,6 @@ TEST_F(AUnityScreenService,
        forwards_set_screen_power_mode_snap_decision_on_request_as_notification)
 {
     using namespace testing;
-    static int constexpr snap_decision_reason = 5;
 
     EXPECT_CALL(mock_handlers, notification());
 
@@ -286,8 +296,6 @@ TEST_F(AUnityScreenService,
        notifies_of_no_notification_if_all_notifications_and_snap_decisions_are_done)
 {
     using namespace testing;
-    static int constexpr notification_reason = 4;
-    static int constexpr snap_decision_reason = 5;
 
     EXPECT_CALL(mock_handlers, notification()).Times(3);
     client.request_set_screen_power_mode("on", notification_reason);
@@ -356,4 +364,30 @@ TEST_F(AUnityScreenService, returns_error_reply_for_set_touch_visualization_enab
     auto reply_msg = static_cast<rt::DBusAsyncReply*>(&reply)->get();
 
     EXPECT_THAT(g_dbus_message_get_message_type(reply_msg), Eq(G_DBUS_MESSAGE_TYPE_ERROR));
+}
+
+TEST_F(AUnityScreenService, does_not_call_unregistered_handlers)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout()).Times(0);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout()).Times(0);
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_)).Times(0);
+
+    EXPECT_CALL(mock_handlers, disable_autobrightness()).Times(0);
+    EXPECT_CALL(mock_handlers, enable_autobrightness()).Times(0);
+    EXPECT_CALL(mock_handlers, set_normal_brightness_value(_)).Times(0);
+
+    EXPECT_CALL(mock_handlers, notification()).Times(0);
+    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+
+    registrations.clear();
+
+    client.request_set_user_brightness(10);
+    client.request_user_auto_brightness_enable(true);
+    client.request_set_inactivity_timeouts(1, 1);
+    client.request_set_screen_power_mode("on", notification_reason);
+
+    auto reply = client.request_keep_display_on();
+    client.request_remove_display_on_request(reply.get());
 }

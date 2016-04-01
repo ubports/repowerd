@@ -25,24 +25,14 @@ repowerd::DBusEventLoop::DBusEventLoop()
     : main_context{g_main_context_new()},
       main_loop{g_main_loop_new(main_context, FALSE)}
 {
-    std::promise<void> started_promise;
-    auto started_future = started_promise.get_future();
-
     dbus_thread = std::thread{
-        [this, &started_promise]
+        [this]
         {
             g_main_context_push_thread_default(main_context);
-
-            enqueue(
-                [&started_promise]
-                {
-                    started_promise.set_value();
-                });
-
             g_main_loop_run(main_loop);
         }};
 
-    started_future.wait();
+    enqueue([]{}).wait();
 }
 
 repowerd::DBusEventLoop::~DBusEventLoop()
@@ -94,10 +84,7 @@ void repowerd::DBusEventLoop::register_object_handler(
         DBusEventLoopMethodCallHandler const handler;
     };
 
-    std::promise<void> done_promise;
-    auto done_future = done_promise.get_future();
-
-    enqueue(
+    auto done = enqueue(
         [&]
         {
             auto const introspection_data = g_dbus_node_info_new_for_xml(
@@ -123,24 +110,13 @@ void repowerd::DBusEventLoop::register_object_handler(
             g_dbus_node_info_unref(introspection_data);
             if (error.is_set())
             {
-                try
-                { 
-                    throw std::runtime_error{
-                        "Failed to register DBus object '" + std::string{dbus_path} + "': " +
-                            error.message_str()};
-                }
-                catch (...) 
-                { 
-                    done_promise.set_exception(std::current_exception());
-                }
-            }
-            else
-            {
-                done_promise.set_value();
+                throw std::runtime_error{
+                    "Failed to register DBus object '" + std::string{dbus_path} + "': " +
+                        error.message_str()};
             }
         });
 
-    done_future.wait();
+    done.wait();
 }
 
 void repowerd::DBusEventLoop::register_signal_handler(
@@ -170,10 +146,7 @@ void repowerd::DBusEventLoop::register_signal_handler(
         DBusEventLoopSignalHandler const handler;
     };
 
-    std::promise<void> done_promise;
-    auto done_future = done_promise.get_future();
-
-    enqueue(
+    auto done = enqueue(
         [&]
         {
             g_dbus_connection_signal_subscribe(
@@ -187,33 +160,51 @@ void repowerd::DBusEventLoop::register_signal_handler(
                 reinterpret_cast<GDBusSignalCallback>(&SignalContext::static_call),
                 new SignalContext{handler},
                 reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
-
-            done_promise.set_value();
         });
 
-    done_future.wait();
+    done.wait();
 }
 
-void repowerd::DBusEventLoop::enqueue(std::function<void()> const& callback)
+std::future<void> repowerd::DBusEventLoop::enqueue(std::function<void()> const& callback)
 {
     struct IdleContext
     {
+        IdleContext(std::function<void()> const& callback)
+            : callback{callback}
+        {
+        }
+
         static gboolean static_call(IdleContext* ctx)
         {
-            ctx->callback();
+            try
+            {
+                ctx->callback();
+                ctx->done.set_value();
+            }
+            catch (...)
+            {
+                ctx->done.set_exception(std::current_exception());
+            }
             return G_SOURCE_REMOVE;
         }
+
         static void static_destroy(IdleContext* ctx) { delete ctx; }
         std::function<void()> const callback;
+        std::promise<void> done;
     };
 
     auto const gsource = g_idle_source_new();
+    auto const ctx = new IdleContext{callback};
     g_source_set_callback(
             gsource,
             reinterpret_cast<GSourceFunc>(&IdleContext::static_call),
-            new IdleContext{callback},
+            ctx,
             reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
+
+    auto future = ctx->done.get_future();
 
     g_source_attach(gsource, main_context);
     g_source_unref(gsource);
+
+    return future;
 }

@@ -20,6 +20,7 @@
 
 #include <thread>
 #include <functional>
+#include <future>
 
 #include <gio/gio.h>
 
@@ -69,7 +70,7 @@ public:
         char const* dbus_path,
         DBusEventLoopSignalHandler const& handler);
 
-    void enqueue(std::function<void()> const& callback);
+    std::future<void> enqueue(std::function<void()> const& callback);
 
 private:
     std::thread dbus_thread;
