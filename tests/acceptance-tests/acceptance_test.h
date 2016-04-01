@@ -49,7 +49,7 @@ struct AcceptanceTest : testing::Test
     void client_request_disable_inactivity_timeout();
     void client_request_enable_inactivity_timeout();
     void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
-    void emit_all_notifications_done();
+    void emit_no_notification();
     void emit_notification();
     void emit_proximity_state_far();
     void emit_proximity_state_near();

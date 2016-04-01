@@ -115,7 +115,7 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(std::chrono::m
     user_inactivity_normal_display_off_timeout = timeout;
 }
 
-void repowerd::DefaultStateMachine::handle_all_notifications_done()
+void repowerd::DefaultStateMachine::handle_no_notification()
 {
     if (display_power_mode == DisplayPowerMode::on)
     {

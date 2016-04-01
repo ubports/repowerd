@@ -52,7 +52,7 @@ TEST_F(ANotification, turns_off_display_after_reduced_timeout_when_done)
     verify_expectations();
 
     expect_no_display_power_change();
-    emit_all_notifications_done();
+    emit_no_notification();
     verify_expectations();
 
     expect_display_turns_off();
@@ -83,7 +83,7 @@ TEST_F(ANotification, does_not_dim_display_after_timeout)
     verify_expectations();
 
     expect_no_display_brightness_change();
-    emit_all_notifications_done();
+    emit_no_notification();
     advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
 }
 
@@ -93,7 +93,7 @@ TEST_F(ANotification, extends_existing_shorter_timeout)
     advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
 
     emit_notification();
-    emit_all_notifications_done();
+    emit_no_notification();
 
     expect_no_display_power_change();
     advance_time_by(1ms);
@@ -112,7 +112,7 @@ TEST_F(ANotification, does_not_reduce_existing_longer_timeout)
         1ms);
 
     emit_notification();
-    emit_all_notifications_done();
+    emit_no_notification();
 
     expect_no_display_power_change();
     advance_time_by(user_inactivity_reduced_display_off_timeout);
@@ -133,7 +133,7 @@ TEST_F(ANotification, does_not_schedule_inactivity_timeout_when_proximity_is_nea
 
     expect_no_display_power_change();
     emit_notification();
-    emit_all_notifications_done();
+    emit_no_notification();
     advance_time_by(user_inactivity_reduced_display_off_timeout);
 }
 
@@ -141,7 +141,7 @@ TEST_F(ANotification, reduced_timeout_is_extended_by_user_activity)
 {
     expect_display_turns_on();
     emit_notification();
-    emit_all_notifications_done();
+    emit_no_notification();
     verify_expectations();
 
     expect_no_display_power_change();
@@ -183,7 +183,7 @@ TEST_F(ANotification,
     expect_display_turns_on();
     emit_notification();
     client_request_disable_inactivity_timeout();
-    emit_all_notifications_done();
+    emit_no_notification();
     verify_expectations();
 
     expect_no_display_power_change();

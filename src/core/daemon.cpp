@@ -161,11 +161,11 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
-        notification_service->register_all_notifications_done_handler(
+        notification_service->register_no_notification_handler(
             [this]
             {
                 enqueue_event(
-                    [this] { state_machine->handle_all_notifications_done(); });
+                    [this] { state_machine->handle_no_notification(); });
             }));
 
     registrations.push_back(

@@ -97,8 +97,8 @@ struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 
 struct NullNotificationService : repowerd::NotificationService
 {
-    repowerd::HandlerRegistration register_all_notifications_done_handler(
-        repowerd::AllNotificationsDoneHandler const&)
+    repowerd::HandlerRegistration register_no_notification_handler(
+        repowerd::NoNotificationHandler const&)
     {
         return NullHandlerRegistration{};
     }

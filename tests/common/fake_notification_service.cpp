@@ -21,7 +21,7 @@
 namespace rt = repowerd::test;
 
 rt::FakeNotificationService::FakeNotificationService()
-    : all_notifications_done_handler{[]{}},
+    : no_notification_handler{[]{}},
       notification_handler{[]{}}
 {
 }
@@ -44,20 +44,20 @@ void rt::FakeNotificationService::emit_notification()
     notification_handler();
 }
 
-repowerd::HandlerRegistration rt::FakeNotificationService::register_all_notifications_done_handler(
-    AllNotificationsDoneHandler const& handler)
+repowerd::HandlerRegistration rt::FakeNotificationService::register_no_notification_handler(
+    NoNotificationHandler const& handler)
 {
-    mock.register_all_notifications_done_handler(handler);
-    all_notifications_done_handler = handler;
+    mock.register_no_notification_handler(handler);
+    no_notification_handler = handler;
     return HandlerRegistration{
         [this]
         {
-            mock.unregister_all_notifications_done_handler();
-            all_notifications_done_handler = []{};
+            mock.unregister_no_notification_handler();
+            no_notification_handler = []{};
         }};
 }
 
-void rt::FakeNotificationService::emit_all_notifications_done()
+void rt::FakeNotificationService::emit_no_notification()
 {
-    all_notifications_done_handler();
+    no_notification_handler();
 }

@@ -57,6 +57,11 @@ struct AUnityScreenService : testing::Test
             {
                 mock_handlers.set_normal_brightness_value(v);
             });
+
+        service.register_notification_handler(
+            [this] { mock_handlers.notification(); });
+        service.register_no_notification_handler(
+            [this] { mock_handlers.no_notification(); });
     }
 
     struct MockHandlers
@@ -68,6 +73,9 @@ struct AUnityScreenService : testing::Test
         MOCK_METHOD0(disable_autobrightness, void());
         MOCK_METHOD0(enable_autobrightness, void());
         MOCK_METHOD1(set_normal_brightness_value, void(float));
+
+        MOCK_METHOD0(notification, void());
+        MOCK_METHOD0(no_notification, void());
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
@@ -249,6 +257,65 @@ TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
 
     EXPECT_CALL(mock_handlers, set_normal_brightness_value(brightness_normalized));
     client.request_set_user_brightness(brightness);
+}
+
+TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_request)
+{
+    using namespace testing;
+    static int constexpr notification_reason = 4;
+
+    EXPECT_CALL(mock_handlers, notification());
+
+    auto reply = client.request_set_screen_power_mode("on", notification_reason);
+    EXPECT_THAT(reply.get(), Eq(true));
+}
+
+TEST_F(AUnityScreenService,
+       forwards_set_screen_power_mode_snap_decision_on_request_as_notification)
+{
+    using namespace testing;
+    static int constexpr snap_decision_reason = 5;
+
+    EXPECT_CALL(mock_handlers, notification());
+
+    auto reply = client.request_set_screen_power_mode("on", snap_decision_reason);
+    EXPECT_THAT(reply.get(), Eq(true));
+}
+
+TEST_F(AUnityScreenService,
+       notifies_of_no_notification_if_all_notifications_and_snap_decisions_are_done)
+{
+    using namespace testing;
+    static int constexpr notification_reason = 4;
+    static int constexpr snap_decision_reason = 5;
+
+    EXPECT_CALL(mock_handlers, notification()).Times(3);
+    client.request_set_screen_power_mode("on", notification_reason);
+    client.request_set_screen_power_mode("on", snap_decision_reason);
+    client.request_set_screen_power_mode("on", notification_reason);
+    Mock::VerifyAndClearExpectations(&mock_handlers);
+
+    EXPECT_CALL(mock_handlers, notification()).Times(0);
+    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    client.request_set_screen_power_mode("off", notification_reason);
+    client.request_set_screen_power_mode("off", notification_reason);
+    Mock::VerifyAndClearExpectations(&mock_handlers);
+
+    EXPECT_CALL(mock_handlers, no_notification());
+    client.request_set_screen_power_mode("off", snap_decision_reason);
+}
+
+
+TEST_F(AUnityScreenService, returns_false_for_unsupported_set_screen_power_mode_request)
+{
+    using namespace testing;
+    static int constexpr unknown_reason = 0;
+
+    auto reply1 = client.request_set_screen_power_mode("on", unknown_reason);
+    auto reply2 = client.request_set_screen_power_mode("off", unknown_reason);
+
+    EXPECT_THAT(reply1.get(), Eq(false));
+    EXPECT_THAT(reply2.get(), Eq(false));
 }
 
 TEST_F(AUnityScreenService, returns_error_reply_for_invalid_method)

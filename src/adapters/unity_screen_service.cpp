@@ -28,6 +28,17 @@ struct NullHandlerRegistration : repowerd::HandlerRegistration
     NullHandlerRegistration() : HandlerRegistration{[]{}} {}
 };
 
+enum class PowerStateChangeReason
+{
+    unknown = 0,
+    inactivity = 1,
+    power_key = 2,
+    proximity = 3,
+    notification = 4,
+    snap_decision = 5,
+    call_done = 6
+};
+
 char const* const dbus_screen_interface = "com.canonical.Unity.Screen";
 char const* const dbus_screen_path = "/com/canonical/Unity/Screen";
 char const* const dbus_screen_service_name = "com.canonical.Unity.Screen";
@@ -67,7 +78,8 @@ char const* const unity_screen_service_introspection = R"(<!DOCTYPE node PUBLIC 
 repowerd::UnityScreenService::UnityScreenService(
     std::string const& dbus_bus_address)
     : dbus_connection{dbus_bus_address},
-      next_keep_display_on_id{1}
+      next_keep_display_on_id{1},
+      active_notifications{0}
 {
     dbus_connection.request_name(dbus_screen_service_name);
     dbus_event_loop.register_object_handler(
@@ -161,6 +173,22 @@ repowerd::UnityScreenService::register_set_normal_brightness_value_handler(
     return NullHandlerRegistration{};
 }
 
+repowerd::HandlerRegistration
+repowerd::UnityScreenService::register_notification_handler(
+    NotificationHandler const& handler)
+{
+    notification_handler = handler;
+    return NullHandlerRegistration{};
+}
+
+repowerd::HandlerRegistration
+repowerd::UnityScreenService::register_no_notification_handler(
+    NoNotificationHandler const& handler)
+{
+    no_notification_handler = handler;
+    return NullHandlerRegistration{};
+}
+
 void repowerd::UnityScreenService::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* sender_cstr,
@@ -215,6 +243,18 @@ void repowerd::UnityScreenService::dbus_method_call(
         dbus_userAutobrightnessEnable(enable == TRUE);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
+    }
+    else if (method_name == "setScreenPowerMode")
+    {
+        char const* mode{""};
+        int32_t reason{-1};
+        g_variant_get(parameters, "(&si)", &mode, &reason);
+
+        auto const result = dbus_setScreenPowerMode(mode, reason);
+
+        g_dbus_method_invocation_return_value(
+            invocation,
+            g_variant_new("(b)", result ? TRUE : FALSE));
     }
     else
     {
@@ -315,4 +355,30 @@ void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
     int32_t poweroff_timeout, int32_t /*dimmer_timeout*/)
 {
     set_inactivity_timeout_handler(std::chrono::seconds{poweroff_timeout});
+}
+
+bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
+    std::string const& mode, int32_t reason)
+{
+    if (reason == static_cast<int32_t>(PowerStateChangeReason::notification) ||
+        reason == static_cast<int32_t>(PowerStateChangeReason::snap_decision))
+    {
+        if (mode == "on")
+        {
+            ++active_notifications;
+            notification_handler();
+        }
+        else if (mode == "off")
+        {
+            if (active_notifications > 0)
+            {
+                --active_notifications;
+                if (active_notifications == 0)
+                    no_notification_handler();
+            }
+        }
+        return true;
+    }
+
+    return false;
 }

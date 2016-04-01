@@ -40,7 +40,7 @@ public:
     void handle_disable_inactivity_timeout() override;
     void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) override;
 
-    void handle_all_notifications_done() override;
+    void handle_no_notification() override;
     void handle_notification() override;
 
     void handle_power_button_press() override;

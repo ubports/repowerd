@@ -17,6 +17,7 @@
  */
 
 #include "src/core/client_requests.h"
+#include "src/core/notification_service.h"
 
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
@@ -30,7 +31,7 @@
 namespace repowerd
 {
 
-class UnityScreenService : public ClientRequests
+class UnityScreenService : public ClientRequests, public NotificationService
 {
 public:
     UnityScreenService(std::string const& dbus_bus_address);
@@ -49,6 +50,11 @@ public:
         EnableAutobrightnessHandler const& handler) override;
     HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) override;
+
+    HandlerRegistration register_notification_handler(
+        NotificationHandler const& handler) override;
+    HandlerRegistration register_no_notification_handler(
+        NoNotificationHandler const& handler) override;
 
 private:
     void dbus_method_call(
@@ -75,6 +81,7 @@ private:
         std::string const& name,
         std::string const& old_owner,
         std::string const& new_owner);
+    bool dbus_setScreenPowerMode(std::string const& mode, int32_t reason);
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
@@ -85,9 +92,12 @@ private:
     DisableAutobrightnessHandler disable_autobrightness_handler;
     EnableAutobrightnessHandler enable_autobrightness_handler;
     SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
+    NotificationHandler notification_handler;
+    NoNotificationHandler no_notification_handler;
 
     std::unordered_multimap<std::string,int32_t> keep_display_on_ids;
     int32_t next_keep_display_on_id;
+    int active_notifications;
 };
 
 }

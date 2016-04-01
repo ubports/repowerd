@@ -47,7 +47,7 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_active_call, void());
     MOCK_METHOD0(handle_no_active_call, void());
 
-    MOCK_METHOD0(handle_all_notifications_done, void());
+    MOCK_METHOD0(handle_no_notification, void());
     MOCK_METHOD0(handle_notification, void());
 
     MOCK_METHOD0(handle_power_button_press, void());
@@ -384,26 +384,26 @@ TEST_F(ADaemon, notifies_state_machine_of_notification)
     config.the_fake_notification_service()->emit_notification();
 }
 
-TEST_F(ADaemon, registers_and_unregisters_all_notifications_done_handler)
+TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 {
     using namespace testing;
 
-    EXPECT_CALL(config.the_fake_notification_service()->mock, register_all_notifications_done_handler(_));
+    EXPECT_CALL(config.the_fake_notification_service()->mock, register_no_notification_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 
-    EXPECT_CALL(config.the_fake_notification_service()->mock, unregister_all_notifications_done_handler());
+    EXPECT_CALL(config.the_fake_notification_service()->mock, unregister_no_notification_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 }
 
-TEST_F(ADaemon, notifies_state_machine_of_all_notifications_done)
+TEST_F(ADaemon, notifies_state_machine_of_no_notification)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_all_notifications_done());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_no_notification());
 
-    config.the_fake_notification_service()->emit_all_notifications_done();
+    config.the_fake_notification_service()->emit_no_notification();
 }
 
 TEST_F(ADaemon, registers_and_unregisters_active_call_handler)

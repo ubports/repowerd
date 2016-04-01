@@ -135,9 +135,9 @@ void rt::AcceptanceTest::client_request_set_inactivity_timeout(
     daemon.flush();
 }
 
-void rt::AcceptanceTest::emit_all_notifications_done()
+void rt::AcceptanceTest::emit_no_notification()
 {
-    config.the_fake_notification_service()->emit_all_notifications_done();
+    config.the_fake_notification_service()->emit_no_notification();
     daemon.flush();
 }
 
