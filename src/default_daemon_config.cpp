@@ -22,6 +22,7 @@
 #include "core/brightness_control.h"
 #include "core/client_requests.h"
 #include "core/display_power_control.h"
+#include "core/display_power_event_sink.h"
 #include "core/notification_service.h"
 #include "core/power_button.h"
 #include "core/power_button_event_sink.h"
@@ -93,6 +94,16 @@ struct NullDisplayPowerControl : repowerd::DisplayPowerControl
 {
     void turn_on() override {}
     void turn_off() override {}
+};
+
+struct NullDisplayPowerEventSink : repowerd::DisplayPowerEventSink
+{
+    void notify_display_power_off(repowerd::DisplayPowerChangeReason) override
+    {
+    }
+    void notify_display_power_on(repowerd::DisplayPowerChangeReason) override
+    {
+    }
 };
 
 struct NullNotificationService : repowerd::NotificationService
@@ -195,6 +206,14 @@ repowerd::DefaultDaemonConfig::the_display_power_control()
     if (!display_power_control)
         display_power_control = std::make_shared<NullDisplayPowerControl>();
     return display_power_control;
+}
+
+std::shared_ptr<repowerd::DisplayPowerEventSink>
+repowerd::DefaultDaemonConfig::the_display_power_event_sink()
+{
+    if (!display_power_event_sink)
+        display_power_event_sink = std::make_shared<NullDisplayPowerEventSink>();
+    return display_power_event_sink;
 }
 
 std::shared_ptr<repowerd::NotificationService>

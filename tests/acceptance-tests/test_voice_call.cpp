@@ -159,3 +159,18 @@ TEST_F(AVoiceCall, when_done_disables_proximity_events)
     emit_proximity_state_far_if_enabled();
     verify_expectations();
 }
+
+TEST_F(AVoiceCall, event_notifies_of_display_power_change)
+{
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::call);
+    emit_active_call();
+    verify_expectations();
+
+    turn_off_display();
+
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::call_done);
+    emit_no_active_call();
+    verify_expectations();
+}

@@ -19,6 +19,7 @@
 #pragma once
 
 #include "src/core/daemon.h"
+#include "src/core/display_power_change_reason.h"
 #include "daemon_config.h"
 
 #include <chrono>
@@ -43,6 +44,8 @@ struct AcceptanceTest : testing::Test
     void expect_long_press_notification();
     void expect_no_display_power_change();
     void expect_no_display_brightness_change();
+    void expect_display_power_off_notification(DisplayPowerChangeReason);
+    void expect_display_power_on_notification(DisplayPowerChangeReason);
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);

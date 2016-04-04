@@ -121,3 +121,19 @@ TEST_F(APowerButton, short_press_can_change_display_power_state_after_long_press
     release_power_button();
     verify_expectations();
 }
+
+TEST_F(APowerButton, event_notifies_of_display_power_change)
+{
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::power_button);
+
+    press_power_button();
+    release_power_button();
+    verify_expectations();
+
+    expect_display_power_off_notification(
+        repowerd::DisplayPowerChangeReason::power_button);
+
+    press_power_button();
+    release_power_button();
+}

@@ -189,3 +189,17 @@ TEST_F(ANotification,
     expect_no_display_power_change();
     advance_time_by(user_inactivity_reduced_display_off_timeout);
 }
+
+TEST_F(ANotification, event_notifies_of_display_power_change)
+{
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::notification);
+    emit_notification();
+    verify_expectations();
+
+    emit_no_notification();
+
+    expect_display_power_off_notification(
+        repowerd::DisplayPowerChangeReason::activity);
+    advance_time_by(user_inactivity_reduced_display_off_timeout);
+}

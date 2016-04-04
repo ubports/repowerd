@@ -20,6 +20,7 @@
 
 #include "brightness_control.h"
 #include "display_power_control.h"
+#include "display_power_event_sink.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
 #include "timer.h"
@@ -27,6 +28,7 @@
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
     : brightness_control{config.the_brightness_control()},
       display_power_control{config.the_display_power_control()},
+      display_power_event_sink{config.the_display_power_event_sink()},
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
@@ -65,7 +67,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     {
         user_inactivity_display_off_alarm_id = AlarmId::invalid;
         if (is_inactivity_timeout_allowed())
-            turn_off_display();
+            turn_off_display(DisplayPowerChangeReason::activity);
     }
 }
 
@@ -78,7 +80,7 @@ void repowerd::DefaultStateMachine::handle_active_call()
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
-        turn_on_display_with_normal_timeout();
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::call);
     }
 
     proximity_sensor->enable_proximity_events();
@@ -93,7 +95,7 @@ void repowerd::DefaultStateMachine::handle_no_active_call()
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
-        turn_on_display_without_timeout();
+        turn_on_display_without_timeout(DisplayPowerChangeReason::call_done);
         schedule_reduced_user_inactivity_alarm();
     }
 
@@ -135,7 +137,7 @@ void repowerd::DefaultStateMachine::handle_notification()
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
-        turn_on_display_without_timeout();
+        turn_on_display_without_timeout(DisplayPowerChangeReason::notification);
     }
 }
 
@@ -145,7 +147,7 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
 
     if (display_power_mode == DisplayPowerMode::off)
     {
-        turn_on_display_with_normal_timeout();
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::power_button);
     }
 
     power_button_long_press_alarm_id =
@@ -160,7 +162,7 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     }
     else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
     {
-        turn_off_display();
+        turn_off_display(DisplayPowerChangeReason::power_button);
     }
 
     display_power_mode_at_power_button_press = DisplayPowerMode::unknown;
@@ -170,13 +172,13 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
     if (display_power_mode == DisplayPowerMode::off)
-        turn_on_display_with_normal_timeout();
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::proximity);
 }
 
 void repowerd::DefaultStateMachine::handle_proximity_near()
 {
     if (display_power_mode == DisplayPowerMode::on)
-        turn_off_display();
+        turn_off_display(DisplayPowerChangeReason::proximity);
 }
 
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
@@ -188,7 +190,7 @@ void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
-        turn_on_display_with_normal_timeout();
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::activity);
     }
 }
 
@@ -237,27 +239,33 @@ void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
     }
 }
 
-void repowerd::DefaultStateMachine::turn_off_display()
+void repowerd::DefaultStateMachine::turn_off_display(
+    DisplayPowerChangeReason reason)
 {
     brightness_control->set_off_brightness();
     display_power_control->turn_off();
     display_power_mode = DisplayPowerMode::off;
     cancel_user_inactivity_alarm();
+    display_power_event_sink->notify_display_power_off(reason);
 }
 
-void repowerd::DefaultStateMachine::turn_on_display_with_normal_timeout()
+void repowerd::DefaultStateMachine::turn_on_display_with_normal_timeout(
+    DisplayPowerChangeReason reason)
 {
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;
     brighten_display();
     schedule_normal_user_inactivity_alarm();
+    display_power_event_sink->notify_display_power_on(reason);
 }
 
-void repowerd::DefaultStateMachine::turn_on_display_without_timeout()
+void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
+    DisplayPowerChangeReason reason)
 {
     display_power_control->turn_on();
     brightness_control->set_normal_brightness();
     display_power_mode = DisplayPowerMode::on;
+    display_power_event_sink->notify_display_power_on(reason);
 }
 
 void repowerd::DefaultStateMachine::brighten_display()
@@ -281,7 +289,7 @@ void repowerd::DefaultStateMachine::allow_inactivity_timeout(
             display_power_mode == DisplayPowerMode::on &&
             user_inactivity_display_off_alarm_id == AlarmId::invalid)
         {
-            turn_off_display();
+            turn_off_display(DisplayPowerChangeReason::activity);
         }
     }
 }

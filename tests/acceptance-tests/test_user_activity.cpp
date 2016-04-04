@@ -152,3 +152,16 @@ TEST_F(AUserActivity, changing_power_state_brightens_dim_display)
     expect_display_brightens();
     perform_user_activity_changing_power_state();
 }
+
+TEST_F(AUserActivity, event_notifies_of_display_power_change)
+{
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::activity);
+    perform_user_activity_changing_power_state();
+    verify_expectations();
+
+    expect_display_power_off_notification(
+        repowerd::DisplayPowerChangeReason::activity);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    verify_expectations();
+}

@@ -78,3 +78,17 @@ TEST_F(APromixitySensor, near_event_has_no_effect_if_display_is_off)
 
     emit_proximity_state_near();
 }
+
+TEST_F(APromixitySensor, event_notifies_of_display_power_change)
+{
+    turn_on_display();
+
+    expect_display_power_off_notification(
+        repowerd::DisplayPowerChangeReason::proximity);
+    emit_proximity_state_near();
+    verify_expectations();
+
+    expect_display_power_on_notification(
+        repowerd::DisplayPowerChangeReason::proximity);
+    emit_proximity_state_far();
+}

@@ -21,6 +21,7 @@
 #include "daemon_config.h"
 #include "mock_brightness_control.h"
 #include "mock_display_power_control.h"
+#include "mock_display_power_event_sink.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_client_requests.h"
 #include "fake_notification_service.h"
@@ -99,6 +100,22 @@ void rt::AcceptanceTest::expect_no_display_power_change()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off()).Times(0);
+}
+
+void rt::AcceptanceTest::expect_display_power_off_notification(
+    DisplayPowerChangeReason reason)
+{
+    EXPECT_CALL(*config.the_mock_display_power_event_sink(),
+                notify_display_power_off(reason));
+
+}
+
+void rt::AcceptanceTest::expect_display_power_on_notification(
+    DisplayPowerChangeReason reason)
+{
+    EXPECT_CALL(*config.the_mock_display_power_event_sink(),
+                notify_display_power_on(reason));
+
 }
 
 void rt::AcceptanceTest::verify_expectations()

@@ -20,6 +20,7 @@
 
 #include "state_machine.h"
 #include "daemon_config.h"
+#include "display_power_change_reason.h"
 
 #include <array>
 
@@ -62,9 +63,9 @@ private:
     void cancel_user_inactivity_alarm();
     void schedule_normal_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
-    void turn_off_display();
-    void turn_on_display_with_normal_timeout();
-    void turn_on_display_without_timeout();
+    void turn_off_display(DisplayPowerChangeReason reason);
+    void turn_on_display_with_normal_timeout(DisplayPowerChangeReason reason);
+    void turn_on_display_without_timeout(DisplayPowerChangeReason reason);
     void brighten_display();
     void dim_display();
     void allow_inactivity_timeout(InactivityTimeoutAllowance allowance);
@@ -73,6 +74,7 @@ private:
 
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
+    std::shared_ptr<DisplayPowerEventSink> const display_power_event_sink;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<Timer> const timer;
