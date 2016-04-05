@@ -112,3 +112,27 @@ rt::DBusAsyncReply rt::UnityScreenDBusClient::request_method_with_invalid_interf
         "com.invalid.Interface", "setUserBrightness",
         g_variant_new("(i)", brightness));
 }
+
+void rt::UnityScreenDBusClient::register_display_power_state_change_handler(
+    std::function<void(DisplayPowerStateChangeParams)> const& func)
+{
+    event_loop.register_signal_handler(
+        connection,
+        nullptr,
+        "com.canonical.Unity.Screen",
+        "DisplayPowerStateChange",
+        "/com/canonical/Unity/Screen",
+        [func] (
+            GDBusConnection* /*connection*/,
+            gchar const* /*sender*/,
+            gchar const* /*object_path*/,
+            gchar const* /*interface_name*/,
+            gchar const* /*signal_name*/,
+            GVariant* parameters)
+        {
+            int32_t power_state{-1};
+            int32_t reason{-1};
+            g_variant_get(parameters, "(ii)", &power_state, &reason);
+            func({power_state, reason});
+        });
+}

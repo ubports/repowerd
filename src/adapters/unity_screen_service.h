@@ -17,6 +17,7 @@
  */
 
 #include "src/core/client_requests.h"
+#include "src/core/display_power_event_sink.h"
 #include "src/core/notification_service.h"
 
 #include "dbus_connection_handle.h"
@@ -31,7 +32,9 @@
 namespace repowerd
 {
 
-class UnityScreenService : public ClientRequests, public NotificationService
+class UnityScreenService : public ClientRequests,
+                           public DisplayPowerEventSink,
+                           public NotificationService
 {
 public:
     UnityScreenService(std::string const& dbus_bus_address);
@@ -55,6 +58,9 @@ public:
         NotificationHandler const& handler) override;
     HandlerRegistration register_no_notification_handler(
         NoNotificationHandler const& handler) override;
+
+    void notify_display_power_on(DisplayPowerChangeReason reason) override;
+    void notify_display_power_off(DisplayPowerChangeReason reason) override;
 
 private:
     void dbus_method_call(
@@ -82,6 +88,7 @@ private:
         std::string const& old_owner,
         std::string const& new_owner);
     bool dbus_setScreenPowerMode(std::string const& mode, int32_t reason);
+    void dbus_emit_DisplayPowerStateChange(int32_t power_state, int32_t reason);
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;

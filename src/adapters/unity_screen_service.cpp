@@ -17,9 +17,7 @@
  */
 
 #include "unity_screen_service.h"
-#include "scoped_g_error.h"
-
-#include <future>
+#include "unity_screen_power_state_change_reason.h"
 
 namespace
 {
@@ -38,16 +36,43 @@ struct UnityScreenServiceHandlerRegistration : repowerd::HandlerRegistration
 auto const null_handler = []{};
 auto const null_arg_handler = [](auto){};
 
-enum class PowerStateChangeReason
+int32_t reason_to_dbus_param(repowerd::DisplayPowerChangeReason reason)
 {
-    unknown = 0,
-    inactivity = 1,
-    power_key = 2,
-    proximity = 3,
-    notification = 4,
-    snap_decision = 5,
-    call_done = 6
-};
+    repowerd::UnityScreenPowerStateChangeReason unity_screen_reason{
+        repowerd::UnityScreenPowerStateChangeReason::unknown};
+
+    switch (reason)
+    {
+    case repowerd::DisplayPowerChangeReason::power_button:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::power_key;
+        break;
+
+    case repowerd::DisplayPowerChangeReason::activity:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::inactivity;
+        break;
+
+    case repowerd::DisplayPowerChangeReason::proximity:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::proximity;
+        break;
+
+    case repowerd::DisplayPowerChangeReason::notification:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::notification;
+        break;
+
+    case repowerd::DisplayPowerChangeReason::call:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::unknown;
+        break;
+
+    case repowerd::DisplayPowerChangeReason::call_done:
+        unity_screen_reason = repowerd::UnityScreenPowerStateChangeReason::call_done;
+        break;
+
+    default:
+        break;
+    };
+
+    return static_cast<int32_t>(unity_screen_reason);
+}
 
 char const* const dbus_screen_interface = "com.canonical.Unity.Screen";
 char const* const dbus_screen_path = "/com/canonical/Unity/Screen";
@@ -223,6 +248,24 @@ repowerd::UnityScreenService::register_no_notification_handler(
         [this] { no_notification_handler = null_handler; }};
 }
 
+void repowerd::UnityScreenService::notify_display_power_on(
+    DisplayPowerChangeReason reason)
+{
+    int32_t const power_state_on = 1;
+    int32_t const reason_param = reason_to_dbus_param(reason);
+
+    dbus_emit_DisplayPowerStateChange(power_state_on, reason_param);
+}
+
+void repowerd::UnityScreenService::notify_display_power_off(
+    DisplayPowerChangeReason reason)
+{
+    int32_t const power_state_off = 0;
+    int32_t const reason_param = reason_to_dbus_param(reason);
+
+    dbus_emit_DisplayPowerStateChange(power_state_off, reason_param);
+}
+
 void repowerd::UnityScreenService::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* sender_cstr,
@@ -394,8 +437,8 @@ void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
 bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
     std::string const& mode, int32_t reason)
 {
-    if (reason == static_cast<int32_t>(PowerStateChangeReason::notification) ||
-        reason == static_cast<int32_t>(PowerStateChangeReason::snap_decision))
+    if (reason == static_cast<int32_t>(UnityScreenPowerStateChangeReason::notification) ||
+        reason == static_cast<int32_t>(UnityScreenPowerStateChangeReason::snap_decision))
     {
         if (mode == "on")
         {
@@ -415,4 +458,17 @@ bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
     }
 
     return false;
+}
+
+void repowerd::UnityScreenService::dbus_emit_DisplayPowerStateChange(
+    int32_t power_state, int32_t reason)
+{
+    g_dbus_connection_emit_signal(
+        dbus_connection,
+        nullptr,
+        dbus_screen_path,
+        dbus_screen_interface,
+        "DisplayPowerStateChange",
+        g_variant_new("(ii)", power_state, reason),
+        nullptr);
 }

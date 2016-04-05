@@ -45,6 +45,14 @@ public:
     DBusAsyncReply request_method_with_invalid_arguments();
     DBusAsyncReply request_method_with_invalid_interface();
     char const* const unity_screen_interface = "com.canonical.Unity.Screen";
+
+    struct DisplayPowerStateChangeParams
+    {
+        int32_t power_state;
+        int32_t reason;
+    };
+    void register_display_power_state_change_handler(
+        std::function<void(DisplayPowerStateChangeParams)> const& f);
 };
 
 }

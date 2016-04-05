@@ -20,6 +20,7 @@
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
+#include "src/adapters/unity_screen_power_state_change_reason.h"
 #include "src/adapters/unity_screen_service.h"
 
 #include "wait_condition.h"
@@ -390,4 +391,60 @@ TEST_F(AUnityScreenService, does_not_call_unregistered_handlers)
 
     auto reply = client.request_keep_display_on();
     client.request_remove_display_on_request(reply.get());
+}
+
+TEST_F(AUnityScreenService, emits_display_power_state_change_signal)
+{
+    using namespace testing;
+
+    std::promise<rt::UnityScreenDBusClient::DisplayPowerStateChangeParams> promise;
+
+    client.register_display_power_state_change_handler(
+        [&promise] (auto v) { promise.set_value(v); });
+
+    struct TestValues
+    {
+        repowerd::DisplayPowerChangeReason reason;
+        repowerd::UnityScreenPowerStateChangeReason unity_screen_reason;
+    };
+
+    std::vector<TestValues> const test_values =
+    {
+        {repowerd::DisplayPowerChangeReason::activity,
+         repowerd::UnityScreenPowerStateChangeReason::inactivity},
+        {repowerd::DisplayPowerChangeReason::power_button,
+         repowerd::UnityScreenPowerStateChangeReason::power_key},
+        {repowerd::DisplayPowerChangeReason::proximity,
+         repowerd::UnityScreenPowerStateChangeReason::proximity},
+        {repowerd::DisplayPowerChangeReason::notification,
+         repowerd::UnityScreenPowerStateChangeReason::notification},
+        {repowerd::DisplayPowerChangeReason::call_done,
+         repowerd::UnityScreenPowerStateChangeReason::call_done},
+        {repowerd::DisplayPowerChangeReason::call,
+         repowerd::UnityScreenPowerStateChangeReason::unknown},
+    };
+
+    for (auto const& v : test_values)
+    {
+        promise = {};
+        auto future = promise.get_future();
+
+        service.notify_display_power_on(v.reason);
+
+        auto const params = future.get();
+        EXPECT_THAT(params.power_state, Eq(1));
+        EXPECT_THAT(params.reason, Eq(static_cast<int32_t>(v.unity_screen_reason)));
+    }
+
+    for (auto const& v : test_values)
+    {
+        promise = {};
+        auto future = promise.get_future();
+
+        service.notify_display_power_off(v.reason);
+
+        auto const params = future.get();
+        EXPECT_THAT(params.power_state, Eq(0));
+        EXPECT_THAT(params.reason, Eq(static_cast<int32_t>(v.unity_screen_reason)));
+    }
 }
