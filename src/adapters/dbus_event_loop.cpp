@@ -19,45 +19,6 @@
 #include "dbus_event_loop.h"
 #include "scoped_g_error.h"
 
-#include <future>
-
-repowerd::DBusEventLoop::DBusEventLoop()
-    : main_context{g_main_context_new()},
-      main_loop{g_main_loop_new(main_context, FALSE)}
-{
-    dbus_thread = std::thread{
-        [this]
-        {
-            g_main_context_push_thread_default(main_context);
-            g_main_loop_run(main_loop);
-        }};
-
-    enqueue([]{}).wait();
-}
-
-repowerd::DBusEventLoop::~DBusEventLoop()
-{
-    stop();
-}
-
-void repowerd::DBusEventLoop::stop()
-{
-    if (main_loop)
-        g_main_loop_quit(main_loop);
-    if (dbus_thread.joinable())
-        dbus_thread.join();
-    if (main_loop)
-    {
-        g_main_loop_unref(main_loop);
-        main_loop = nullptr;
-    }
-    if (main_context)
-    {
-        g_main_context_unref(main_context);
-        main_context = nullptr;
-    }
-}
-
 void repowerd::DBusEventLoop::register_object_handler(
     GDBusConnection* dbus_connection,
     char const* dbus_path,
@@ -163,48 +124,4 @@ void repowerd::DBusEventLoop::register_signal_handler(
         });
 
     done.wait();
-}
-
-std::future<void> repowerd::DBusEventLoop::enqueue(std::function<void()> const& callback)
-{
-    struct IdleContext
-    {
-        IdleContext(std::function<void()> const& callback)
-            : callback{callback}
-        {
-        }
-
-        static gboolean static_call(IdleContext* ctx)
-        {
-            try
-            {
-                ctx->callback();
-                ctx->done.set_value();
-            }
-            catch (...)
-            {
-                ctx->done.set_exception(std::current_exception());
-            }
-            return G_SOURCE_REMOVE;
-        }
-
-        static void static_destroy(IdleContext* ctx) { delete ctx; }
-        std::function<void()> const callback;
-        std::promise<void> done;
-    };
-
-    auto const gsource = g_idle_source_new();
-    auto const ctx = new IdleContext{callback};
-    g_source_set_callback(
-            gsource,
-            reinterpret_cast<GSourceFunc>(&IdleContext::static_call),
-            ctx,
-            reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
-
-    auto future = ctx->done.get_future();
-
-    g_source_attach(gsource, main_context);
-    g_source_unref(gsource);
-
-    return future;
 }

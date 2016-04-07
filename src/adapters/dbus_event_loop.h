@@ -18,9 +18,7 @@
 
 #pragma once
 
-#include <thread>
-#include <functional>
-#include <future>
+#include "event_loop.h"
 
 #include <gio/gio.h>
 
@@ -48,14 +46,9 @@ using DBusEventLoopSignalHandler =
             char const* signal_name,
             GVariant* parameters)>;
 
-class DBusEventLoop
+class DBusEventLoop : public EventLoop
 {
 public:
-    DBusEventLoop();
-    ~DBusEventLoop();
-
-    void stop();
-
     void register_object_handler(
         GDBusConnection* dbus_connection,
         char const* dbus_path,
@@ -69,13 +62,6 @@ public:
         char const* dbus_member,
         char const* dbus_path,
         DBusEventLoopSignalHandler const& handler);
-
-    std::future<void> enqueue(std::function<void()> const& callback);
-
-private:
-    std::thread dbus_thread;
-    GMainContext* main_context;
-    GMainLoop* main_loop;
 };
 
 }

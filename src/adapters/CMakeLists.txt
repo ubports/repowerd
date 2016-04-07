@@ -16,14 +16,17 @@
 
 include_directories(
     ${GIO_INCLUDE_DIRS}
+    ${UA_INCLUDE_DIRS}
 )
 
 set(
     REPOWERD_ADAPTER_SRCS
 
+    event_loop.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
+    ubuntu_proximity_sensor.cpp
     unity_screen_service.cpp
 )
 

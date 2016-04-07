@@ -4,7 +4,8 @@ Section: admin
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                cmake,
-               libglib2.0-dev
+               libglib2.0-dev,
+               libubuntu-application-api-dev
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/repowerd
 Vcs-Git: https://code.launchpad.net/repowerd

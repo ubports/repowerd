@@ -18,20 +18,10 @@
 
 #include "unity_screen_service.h"
 #include "unity_screen_power_state_change_reason.h"
+#include "event_loop_handler_registration.h"
 
 namespace
 {
-struct UnityScreenServiceHandlerRegistration : repowerd::HandlerRegistration
-{
-    UnityScreenServiceHandlerRegistration(
-        repowerd::DBusEventLoop& loop,
-        std::function<void()> const& register_func,
-        std::function<void()> const& unregister)
-        : HandlerRegistration{[&, unregister] { loop.enqueue(unregister).wait(); }}
-    {
-        loop.enqueue(register_func).wait();
-    }
-};
 
 auto const null_handler = []{};
 auto const null_arg_handler = [](auto){};
@@ -172,7 +162,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_enable_inactivity_timeout_handler(
     EnableInactivityTimeoutHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { enable_inactivity_timeout_handler = handler; },
         [this] { enable_inactivity_timeout_handler = null_handler; }};
@@ -182,7 +172,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_disable_inactivity_timeout_handler(
     DisableInactivityTimeoutHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { disable_inactivity_timeout_handler = handler; },
         [this] { disable_inactivity_timeout_handler = null_handler; }};
@@ -192,7 +182,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_set_inactivity_timeout_handler(
     SetInactivityTimeoutHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { set_inactivity_timeout_handler = handler; },
         [this] { set_inactivity_timeout_handler = null_arg_handler; }};
@@ -202,7 +192,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_disable_autobrightness_handler(
     DisableAutobrightnessHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { disable_autobrightness_handler = handler; },
         [this] { disable_autobrightness_handler = null_handler; }};
@@ -212,7 +202,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_enable_autobrightness_handler(
     EnableAutobrightnessHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { enable_autobrightness_handler = handler; },
         [this] { enable_autobrightness_handler = null_handler; }};
@@ -222,7 +212,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_set_normal_brightness_value_handler(
     SetNormalBrightnessValueHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { set_normal_brightness_value_handler = handler; },
         [this] { set_normal_brightness_value_handler = null_arg_handler; }};
@@ -232,7 +222,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_notification_handler(
     NotificationHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { notification_handler = handler; },
         [this] { notification_handler = null_handler; }};
@@ -242,7 +232,7 @@ repowerd::HandlerRegistration
 repowerd::UnityScreenService::register_no_notification_handler(
     NoNotificationHandler const& handler)
 {
-    return UnityScreenServiceHandlerRegistration{
+    return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { no_notification_handler = handler; },
         [this] { no_notification_handler = null_handler; }};

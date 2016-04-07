@@ -18,23 +18,23 @@
 
 #pragma once
 
-#include <memory>
-#include <functional>
+#include "src/core/handler_registration.h"
+#include "event_loop.h"
 
 namespace repowerd
 {
 
-class HandlerRegistration
+class EventLoopHandlerRegistration : public HandlerRegistration
 {
 public:
-    HandlerRegistration() = default;
-    HandlerRegistration(std::function<void()> const& unregister);
-    ~HandlerRegistration();
-    HandlerRegistration(HandlerRegistration&& reg) = default;
-    HandlerRegistration& operator=(HandlerRegistration&& reg) = default;
-
-private:
-    std::unique_ptr<std::function<void()>> unregister;
+    EventLoopHandlerRegistration(
+        repowerd::EventLoop& loop,
+        std::function<void()> const& register_func,
+        std::function<void()> const& unregister)
+        : HandlerRegistration{[&, unregister] { loop.enqueue(unregister).wait(); }}
+    {
+        loop.enqueue(register_func).wait();
+    }
 };
 
 }

@@ -16,6 +16,7 @@
 
 include_directories(
     ${GIO_INCLUDE_DIRS}
+    ${UA_INCLUDE_DIRS}
 )
 
 add_executable(
@@ -26,6 +27,7 @@ add_executable(
     run_command.cpp
     unity_screen_dbus_client.cpp
 
+    test_ubuntu_proximity_sensor.cpp
     test_unity_screen_service.cpp
 
     $<TARGET_OBJECTS:repowerd-adapters>
@@ -40,6 +42,7 @@ target_link_libraries(
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
 
 add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)

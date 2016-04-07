@@ -18,23 +18,31 @@
 
 #pragma once
 
-#include <memory>
+#include <thread>
 #include <functional>
+#include <future>
+
+#include <glib.h>
 
 namespace repowerd
 {
 
-class HandlerRegistration
+class EventLoop
 {
 public:
-    HandlerRegistration() = default;
-    HandlerRegistration(std::function<void()> const& unregister);
-    ~HandlerRegistration();
-    HandlerRegistration(HandlerRegistration&& reg) = default;
-    HandlerRegistration& operator=(HandlerRegistration&& reg) = default;
+    EventLoop();
+    ~EventLoop();
 
-private:
-    std::unique_ptr<std::function<void()>> unregister;
+    void stop();
+
+    std::future<void> enqueue(std::function<void()> const& callback);
+    std::future<void> schedule_in(
+        std::chrono::milliseconds, std::function<void()> const& callback);
+
+protected:
+    std::thread loop_thread;
+    GMainContext* main_context;
+    GMainLoop* main_loop;
 };
 
 }
