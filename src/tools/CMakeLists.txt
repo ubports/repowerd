@@ -15,22 +15,22 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}
+    ${GIO_INCLUDE_DIRS}
+    ${UA_INCLUDE_DIRS}
 )
 
-add_subdirectory(core)
-add_subdirectory(adapters)
-add_subdirectory(tools)
-
 add_executable(
-    repowerd
+    repowerd-proximity-tool
 
-    default_daemon_config.cpp
-    main.cpp
+    proximity_tool.cpp
+
+    $<TARGET_OBJECTS:repowerd-adapters>
     $<TARGET_OBJECTS:repowerd-core>
 )
 
-install(
-  TARGETS repowerd
-  RUNTIME DESTINATION bin
+target_link_libraries(
+    repowerd-proximity-tool
+
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
