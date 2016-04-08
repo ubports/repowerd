@@ -17,6 +17,7 @@
  */
 
 #include "src/adapters/ubuntu_proximity_sensor.h"
+#include "src/adapters/device_quirks.h"
 
 #include "wait_condition.h"
 
@@ -97,6 +98,15 @@ private:
     std::string filename;
 };
 
+struct StubDeviceQuirks : repowerd::DeviceQuirks
+{
+    std::chrono::milliseconds synthentic_initial_far_event_delay() const override
+    {
+        // Set a high delay to account for valgrind slowness
+        return std::chrono::milliseconds{1000};
+    }
+};
+
 struct AUbuntuProximitySensor : testing::Test
 {
     void set_up_sensor(std::string const& script)
@@ -106,9 +116,7 @@ struct AUbuntuProximitySensor : testing::Test
         TemporaryEnvironmentValue test_file{"UBUNTU_PLATFORM_API_SENSOR_TEST", command_file.name().c_str()};
         command_file.write(script);
 
-        sensor = std::make_unique<repowerd::UbuntuProximitySensor>();
-        // Increase synthetic event delay, to cater for valgrind slowness
-        sensor->set_synthetic_event_delay(std::chrono::milliseconds{1000});
+        sensor = std::make_unique<repowerd::UbuntuProximitySensor>(StubDeviceQuirks());
         registration = sensor->register_proximity_handler(
             [this](repowerd::ProximityState state) {
             std::cerr << "Handler called " << (int)state << std::endl;

@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "src/adapters/android_device_quirks.h"
 #include "src/adapters/ubuntu_proximity_sensor.h"
 
 #include <iostream>
@@ -31,7 +32,8 @@ void print_proximity(std::string const& s, repowerd::ProximityState state)
 
 int main()
 {
-    repowerd::UbuntuProximitySensor sensor;
+    repowerd::AndroidDeviceQuirks quirks;
+    repowerd::UbuntuProximitySensor sensor{quirks};
 
     auto registration = sensor.register_proximity_handler(
         [] (repowerd::ProximityState state)

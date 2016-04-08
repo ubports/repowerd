@@ -31,10 +31,12 @@
 namespace repowerd
 {
 
+class DeviceQuirks;
+
 class UbuntuProximitySensor : public ProximitySensor
 {
 public:
-    UbuntuProximitySensor();
+    UbuntuProximitySensor(DeviceQuirks const& device_quirks);
 
     HandlerRegistration register_proximity_handler(
         ProximityHandler const& handler) override;
@@ -42,8 +44,6 @@ public:
 
     void enable_proximity_events() override;
     void disable_proximity_events() override;
-
-    void set_synthetic_event_delay(std::chrono::milliseconds delay);
 
 private:
     enum class EnablementMode{with_handler, without_handler};

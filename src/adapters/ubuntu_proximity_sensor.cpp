@@ -17,6 +17,7 @@
  */
 
 #include "ubuntu_proximity_sensor.h"
+#include "device_quirks.h"
 #include "event_loop_handler_registration.h"
 
 #include <stdexcept>
@@ -27,12 +28,13 @@ namespace
 auto const null_handler = [](repowerd::ProximityState){};
 }
 
-repowerd::UbuntuProximitySensor::UbuntuProximitySensor()
+repowerd::UbuntuProximitySensor::UbuntuProximitySensor(
+    DeviceQuirks const& device_quirks)
     : sensor{ua_sensors_proximity_new()},
       handler{null_handler},
       is_state_valid{false},
       synthetic_event_seqno{1},
-      synthetic_event_delay{250}
+      synthetic_event_delay{device_quirks.synthentic_initial_far_event_delay()}
 {
     if (!sensor)
         throw std::runtime_error("Failed to allocate proximity sensor");
@@ -84,12 +86,6 @@ void repowerd::UbuntuProximitySensor::disable_proximity_events()
         {
             disable_proximity_events_unqueued(EnablementMode::with_handler);
         }).get();
-}
-
-void repowerd::UbuntuProximitySensor::set_synthetic_event_delay(
-    std::chrono::milliseconds delay)
-{
-    event_loop.enqueue([this,delay] { synthetic_event_delay = delay; });
 }
 
 void repowerd::UbuntuProximitySensor::static_sensor_reading_callback(
@@ -161,11 +157,16 @@ void repowerd::UbuntuProximitySensor::wait_for_valid_state()
 
 void repowerd::UbuntuProximitySensor::schedule_synthetic_far_event()
 {
+    if (synthetic_event_delay.count() < 0 ||
+        synthetic_event_delay == std::chrono::milliseconds::max())
+    {
+        return;
+    }
+
     // Some proximity sensors don't send an initial event when
     // enabled and the state is 'far'. Work around this by
     // sending a synthetic far event if no events have been
-    // emitted for 250ms after enabling the sensor.
-    // TODO: Quirkify
+    // emitted "soon" after enabling the sensor.
     event_loop.schedule_in(synthetic_event_delay,
         [this, expected_seqno = synthetic_event_seqno]
         {

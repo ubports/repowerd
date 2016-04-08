@@ -15,6 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
+    ${ANDROID_PROPERTIES_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
 )
@@ -31,6 +32,7 @@ add_executable(
 target_link_libraries(
     repowerd-proximity-tool
 
+    ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
 )

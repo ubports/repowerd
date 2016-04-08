@@ -15,6 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
+    ${ANDROID_PROPERTIES_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
 )
@@ -22,6 +23,7 @@ include_directories(
 set(
     REPOWERD_ADAPTER_SRCS
 
+    android_device_quirks.cpp
     event_loop.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
