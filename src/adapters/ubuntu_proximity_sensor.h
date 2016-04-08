@@ -52,7 +52,7 @@ private:
     void handle_proximity_event(ProximityState state);
     void enable_proximity_events_unqueued(EnablementMode mode);
     void disable_proximity_events_unqueued(EnablementMode mode);
-    void wait_for_valid_state();
+    ProximityState wait_for_valid_state();
     void schedule_synthetic_far_event();
     void invalidate_synthetic_far_event();
 
@@ -66,12 +66,13 @@ private:
 
     ProximityHandler handler;
     bool handler_enabled;
-    ProximityState state;
-    std::mutex is_state_valid_mutex;
-    std::condition_variable is_state_valid_cv;
-    bool is_state_valid;
     int synthetic_event_seqno;
     std::chrono::milliseconds synthetic_event_delay;
+
+    std::mutex state_mutex;
+    std::condition_variable state_cv;
+    bool is_state_valid;
+    ProximityState state;
 };
 
 }

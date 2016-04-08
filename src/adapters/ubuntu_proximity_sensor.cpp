@@ -32,9 +32,10 @@ repowerd::UbuntuProximitySensor::UbuntuProximitySensor(
     DeviceQuirks const& device_quirks)
     : sensor{ua_sensors_proximity_new()},
       handler{null_handler},
-      is_state_valid{false},
       synthetic_event_seqno{1},
-      synthetic_event_delay{device_quirks.synthentic_initial_far_event_delay()}
+      synthetic_event_delay{device_quirks.synthentic_initial_far_event_delay()},
+      is_state_valid{false},
+      state{ProximityState::far}
 {
     if (!sensor)
         throw std::runtime_error("Failed to allocate proximity sensor");
@@ -57,9 +58,9 @@ repowerd::ProximityState repowerd::UbuntuProximitySensor::proximity_state()
         [this]
         {
             enable_proximity_events_unqueued(EnablementMode::without_handler);
-        });
+        }).get();
 
-    wait_for_valid_state();
+    auto const valid_state = wait_for_valid_state();
 
     event_loop.enqueue(
         [this]
@@ -67,7 +68,7 @@ repowerd::ProximityState repowerd::UbuntuProximitySensor::proximity_state()
             disable_proximity_events_unqueued(EnablementMode::without_handler);
         });
 
-    return state;
+    return valid_state;
 }
 
 void repowerd::UbuntuProximitySensor::enable_proximity_events()
@@ -105,10 +106,10 @@ void repowerd::UbuntuProximitySensor::handle_proximity_event(ProximityState new_
     invalidate_synthetic_far_event();
 
     {
-        std::lock_guard<std::mutex> lock{is_state_valid_mutex};
+        std::lock_guard<std::mutex> lock{state_mutex};
         state = new_state;
         is_state_valid = true;
-        is_state_valid_cv.notify_all();
+        state_cv.notify_all();
     }
 
     if (should_invoke_handler())
@@ -140,19 +141,21 @@ void repowerd::UbuntuProximitySensor::disable_proximity_events_unqueued(
         if (!is_enabled())
         {
             ua_sensors_proximity_disable(sensor);
-            std::lock_guard<std::mutex> lock{is_state_valid_mutex};
+            std::lock_guard<std::mutex> lock{state_mutex};
             is_state_valid = false;
         }
     }
 }
 
-void repowerd::UbuntuProximitySensor::wait_for_valid_state()
+repowerd::ProximityState repowerd::UbuntuProximitySensor::wait_for_valid_state()
 {
-    std::unique_lock<std::mutex> lock{is_state_valid_mutex};
+    std::unique_lock<std::mutex> lock{state_mutex};
 
-    is_state_valid_cv.wait(
+    state_cv.wait(
         lock,
         [this] { return is_state_valid; });
+
+    return state;
 }
 
 void repowerd::UbuntuProximitySensor::schedule_synthetic_far_event()
