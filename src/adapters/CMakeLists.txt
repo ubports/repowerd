@@ -29,6 +29,7 @@ set(
     dbus_event_loop.cpp
     dbus_message_handle.cpp
     ubuntu_proximity_sensor.cpp
+    unity_display_power_control.cpp
     unity_screen_service.cpp
 )
 
