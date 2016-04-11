@@ -30,6 +30,7 @@ set(
     dbus_message_handle.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
+    unity_power_button.cpp
     unity_screen_service.cpp
 )
 

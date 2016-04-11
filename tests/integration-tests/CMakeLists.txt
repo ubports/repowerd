@@ -29,6 +29,7 @@ add_executable(
 
     test_ubuntu_proximity_sensor.cpp
     test_unity_display_power_control.cpp
+    test_unity_power_button.cpp
     test_unity_screen_service.cpp
 
     $<TARGET_OBJECTS:repowerd-adapters>

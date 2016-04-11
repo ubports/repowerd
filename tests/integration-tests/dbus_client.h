@@ -108,6 +108,8 @@ public:
         return t;
     }
 
+    void emit_signal(char const* interface, char const* name, GVariant* args);
+
 protected:
     void invoke_async(
         DBusAsyncReply* reply, char const* interface, char const* method, GVariant* args);
