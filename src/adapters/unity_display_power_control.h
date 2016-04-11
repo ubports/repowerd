@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#pragma once
+
 #include "src/core/display_power_control.h"
 
 #include "dbus_connection_handle.h"
