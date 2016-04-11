@@ -19,6 +19,7 @@
 #pragma once
 
 #include "src/core/power_button.h"
+#include "src/core/power_button_event_sink.h"
 
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
@@ -26,13 +27,15 @@
 namespace repowerd
 {
 
-class UnityPowerButton : public PowerButton
+class UnityPowerButton : public PowerButton, public PowerButtonEventSink
 {
 public:
     UnityPowerButton(std::string const& dbus_bus_address);
 
     HandlerRegistration register_power_button_handler(
         PowerButtonHandler const& handler) override;
+
+    void notify_long_press() override;
 
 private:
     void handle_dbus_signal(

@@ -22,6 +22,9 @@
 namespace
 {
 auto const null_handler = [](repowerd::PowerButtonState){};
+char const* const dbus_power_button_name = "com.canonical.Unity.PowerButton";
+char const* const dbus_power_button_path = "/com/canonical/Unity/PowerButton";
+char const* const dbus_power_button_interface = "com.canonical.Unity.PowerButton";
 }
 
 repowerd::UnityPowerButton::UnityPowerButton(
@@ -31,10 +34,10 @@ repowerd::UnityPowerButton::UnityPowerButton(
 {
     dbus_event_loop.register_signal_handler(
         dbus_connection,
+        dbus_power_button_name,
+        dbus_power_button_interface,
         nullptr,
-        "com.canonical.Unity.PowerButton",
-        nullptr,
-        "/com/canonical/Unity/PowerButton",
+        dbus_power_button_path,
         [this] (
             GDBusConnection* connection,
             gchar const* sender,
@@ -57,6 +60,18 @@ repowerd::HandlerRegistration repowerd::UnityPowerButton::register_power_button_
         dbus_event_loop,
             [this, &handler] { this->power_button_handler = handler; },
             [this] { this->power_button_handler = null_handler; }};
+}
+
+void repowerd::UnityPowerButton::notify_long_press()
+{
+    g_dbus_connection_emit_signal(
+        dbus_connection,
+        nullptr,
+        dbus_power_button_path,
+        dbus_power_button_interface,
+        "LongPress",
+        nullptr,
+        nullptr);
 }
 
 void repowerd::UnityPowerButton::handle_dbus_signal(

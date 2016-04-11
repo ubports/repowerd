@@ -41,6 +41,7 @@ struct UnityPowerButtonDBusClient : rt::DBusClient
             "com.canonical.Unity.PowerButton",
             "/com/canonical/Unity/PowerButton"}
     {
+        connection.request_name("com.canonical.Unity.PowerButton");
     }
 
     void emit_power_button_press()
@@ -51,6 +52,26 @@ struct UnityPowerButtonDBusClient : rt::DBusClient
     void emit_power_button_release()
     {
         emit_signal("com.canonical.Unity.PowerButton", "Release", nullptr);
+    }
+
+    void register_long_press_handler(std::function<void()> const& func)
+    {
+        event_loop.register_signal_handler(
+            connection,
+            nullptr,
+            "com.canonical.Unity.PowerButton",
+            "LongPress",
+            "/com/canonical/Unity/PowerButton",
+            [func] (
+                GDBusConnection* /*connection*/,
+                gchar const* /*sender*/,
+                gchar const* /*object_path*/,
+                gchar const* /*interface_name*/,
+                gchar const* /*signal_name*/,
+                GVariant* /*parameters*/)
+            {
+                func();
+            });
     }
 };
 
@@ -121,4 +142,19 @@ TEST_F(AUnityPowerButton, does_not_calls_unregistered_handlers)
 
     // Give some time for dbus signals to be delivered
     std::this_thread::sleep_for(10ms);
+}
+
+TEST_F(AUnityPowerButton, emits_long_press_signal)
+{
+    using namespace testing;
+
+    std::promise<void> promise;
+    auto future = promise.get_future();
+
+    client.register_long_press_handler(
+        [&promise] { promise.set_value(); });
+
+    unity_power_button.notify_long_press();
+
+    EXPECT_THAT(future.wait_for(default_timeout), std::future_status::ready);
 }
