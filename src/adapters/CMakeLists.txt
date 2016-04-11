@@ -32,6 +32,7 @@ set(
     unity_display_power_control.cpp
     unity_power_button.cpp
     unity_screen_service.cpp
+    unity_user_activity.cpp
 )
 
 add_library(
