@@ -18,6 +18,37 @@
 
 #include "event_loop.h"
 
+namespace
+{
+
+struct GSourceContext
+{
+    GSourceContext(std::function<void()> const& callback)
+        : callback{callback}
+    {
+    }
+
+    static gboolean static_call(GSourceContext* ctx)
+    {
+        try
+        {
+            ctx->callback();
+            ctx->done.set_value();
+        }
+        catch (...)
+        {
+            ctx->done.set_exception(std::current_exception());
+        }
+        return G_SOURCE_REMOVE;
+    }
+
+    static void static_destroy(GSourceContext* ctx) { delete ctx; }
+    std::function<void()> const callback;
+    std::promise<void> done;
+};
+
+}
+
 repowerd::EventLoop::EventLoop()
     : main_context{g_main_context_new()},
       main_loop{g_main_loop_new(main_context, FALSE)}
@@ -57,39 +88,13 @@ void repowerd::EventLoop::stop()
 
 std::future<void> repowerd::EventLoop::enqueue(std::function<void()> const& callback)
 {
-    struct IdleContext
-    {
-        IdleContext(std::function<void()> const& callback)
-            : callback{callback}
-        {
-        }
-
-        static gboolean static_call(IdleContext* ctx)
-        {
-            try
-            {
-                ctx->callback();
-                ctx->done.set_value();
-            }
-            catch (...)
-            {
-                ctx->done.set_exception(std::current_exception());
-            }
-            return G_SOURCE_REMOVE;
-        }
-
-        static void static_destroy(IdleContext* ctx) { delete ctx; }
-        std::function<void()> const callback;
-        std::promise<void> done;
-    };
-
     auto const gsource = g_idle_source_new();
-    auto const ctx = new IdleContext{callback};
+    auto const ctx = new GSourceContext{callback};
     g_source_set_callback(
             gsource,
-            reinterpret_cast<GSourceFunc>(&IdleContext::static_call),
+            reinterpret_cast<GSourceFunc>(&GSourceContext::static_call),
             ctx,
-            reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
+            reinterpret_cast<GDestroyNotify>(&GSourceContext::static_destroy));
 
     auto future = ctx->done.get_future();
 
@@ -103,39 +108,13 @@ std::future<void> repowerd::EventLoop::schedule_in(
     std::chrono::milliseconds timeout,
     std::function<void()> const& callback)
 {
-    struct TimeoutContext
-    {
-        TimeoutContext(std::function<void()> const& callback)
-            : callback{callback}
-        {
-        }
-
-        static gboolean static_call(TimeoutContext* ctx)
-        {
-            try
-            {
-                ctx->callback();
-                ctx->done.set_value();
-            }
-            catch (...)
-            {
-                ctx->done.set_exception(std::current_exception());
-            }
-            return G_SOURCE_REMOVE;
-        }
-
-        static void static_destroy(TimeoutContext* ctx) { delete ctx; }
-        std::function<void()> const callback;
-        std::promise<void> done;
-    };
-
     auto const gsource = g_timeout_source_new(timeout.count());
-    auto const ctx = new TimeoutContext{callback};
+    auto const ctx = new GSourceContext{callback};
     g_source_set_callback(
             gsource,
-            reinterpret_cast<GSourceFunc>(&TimeoutContext::static_call),
+            reinterpret_cast<GSourceFunc>(&GSourceContext::static_call),
             ctx,
-            reinterpret_cast<GDestroyNotify>(&TimeoutContext::static_destroy));
+            reinterpret_cast<GDestroyNotify>(&GSourceContext::static_destroy));
 
     auto future = ctx->done.get_future();
 
@@ -143,4 +122,33 @@ std::future<void> repowerd::EventLoop::schedule_in(
     g_source_unref(gsource);
 
     return future;
+}
+
+void repowerd::EventLoop::schedule_with_cancellation_in(
+    std::chrono::milliseconds timeout,
+    std::function<void()> const& callback,
+    std::function<void(EventLoopCancellation const&)> const& cancellation_ready)
+{
+    auto const gsource = g_timeout_source_new(timeout.count());
+    auto const ctx = new GSourceContext{callback};
+    g_source_set_callback(
+            gsource,
+            reinterpret_cast<GSourceFunc>(&GSourceContext::static_call),
+            ctx,
+            reinterpret_cast<GDestroyNotify>(&GSourceContext::static_destroy));
+
+    auto const cancellation =
+        [this, gsource]
+        {
+            g_source_destroy(gsource);
+            g_source_unref(gsource);
+        };
+
+    enqueue(
+        [cancellation, cancellation_ready]
+        {
+            cancellation_ready(cancellation);
+        });
+
+    g_source_attach(gsource, main_context);
 }

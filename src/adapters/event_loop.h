@@ -27,6 +27,8 @@
 namespace repowerd
 {
 
+using EventLoopCancellation = std::function<void()>;
+
 class EventLoop
 {
 public:
@@ -38,6 +40,11 @@ public:
     std::future<void> enqueue(std::function<void()> const& callback);
     std::future<void> schedule_in(
         std::chrono::milliseconds, std::function<void()> const& callback);
+
+    void schedule_with_cancellation_in(
+        std::chrono::milliseconds,
+        std::function<void()> const& callback,
+        std::function<void(EventLoopCancellation const&)> const& cancellation_ready);
 
 protected:
     std::thread loop_thread;

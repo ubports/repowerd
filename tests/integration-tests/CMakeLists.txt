@@ -27,6 +27,7 @@ add_executable(
     run_command.cpp
     unity_screen_dbus_client.cpp
 
+    test_event_loop_timer.cpp
     test_ubuntu_proximity_sensor.cpp
     test_unity_display_power_control.cpp
     test_unity_power_button.cpp

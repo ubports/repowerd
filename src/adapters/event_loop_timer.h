@@ -18,50 +18,35 @@
 
 #pragma once
 
-#include <functional>
-#include <limits>
+#include "src/core/timer.h"
+#include "event_loop.h"
+
+#include <mutex>
+#include <unordered_map>
 
 namespace repowerd
 {
 
-class AlarmId
+class EventLoopTimer : public Timer
 {
 public:
-    AlarmId() : AlarmId{invalid} {}
-    AlarmId(int id) : id{id} {}
+    EventLoopTimer();
+    ~EventLoopTimer();
 
-    AlarmId operator++(int)
-    {
-        if (id == std::numeric_limits<decltype(id)>::max())
-        {
-            auto const old_id = id;
-            id = 0;
-            return AlarmId{old_id};
-        }
-        else
-        {
-            return AlarmId{id++};
-        }
-    }
-    operator int() const { return id; }
-
-    static int constexpr invalid{-1};
+    HandlerRegistration register_alarm_handler(AlarmHandler const& handler) override;
+    AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
+    void cancel_alarm(AlarmId id) override;
+    std::chrono::steady_clock::time_point now() override;
 
 private:
-    int id;
-};
+    void cancel_alarm_unqueued(AlarmId id);
 
-}
+    EventLoop event_loop;
+    AlarmHandler alarm_handler;
 
-namespace std
-{
-
-template <> struct hash<repowerd::AlarmId>
-{
-    size_t operator()(repowerd::AlarmId const& x) const
-    {
-        return std::hash<int>{}(static_cast<int>(x));
-    }
+    std::mutex alarms_mutex;
+    std::unordered_map<AlarmId,EventLoopCancellation> alarms;
+    AlarmId next_alarm_id;
 };
 
 }

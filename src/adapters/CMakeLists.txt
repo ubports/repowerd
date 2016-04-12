@@ -25,6 +25,7 @@ set(
 
     android_device_quirks.cpp
     event_loop.cpp
+    event_loop_timer.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
