@@ -48,6 +48,16 @@ repowerd::AlarmId rt::FakeTimer::schedule_alarm_in(std::chrono::milliseconds t)
     return next_alarm_id++;
 }
 
+void rt::FakeTimer::cancel_alarm(AlarmId id)
+{
+    alarms.erase(
+        std::remove_if(
+            alarms.begin(),
+            alarms.end(),
+            [id](auto const& alarm) { return alarm.id == id; }),
+        alarms.end());
+}
+
 std::chrono::steady_clock::time_point rt::FakeTimer::now()
 {
     return std::chrono::steady_clock::time_point{now_ms};

@@ -155,6 +155,7 @@ struct NullTimer : repowerd::Timer
         return NullHandlerRegistration{};
     }
     repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; }
+    void cancel_alarm(repowerd::AlarmId) override {}
     std::chrono::steady_clock::time_point now() { return {}; }
 };
 

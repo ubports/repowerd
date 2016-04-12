@@ -36,6 +36,7 @@ public:
 
     HandlerRegistration register_alarm_handler(AlarmHandler const& handler) override;
     AlarmId schedule_alarm_in(std::chrono::milliseconds t) override;
+    void cancel_alarm(AlarmId id) override;
     std::chrono::steady_clock::time_point now() override;
 
     void advance_by(std::chrono::milliseconds advance);

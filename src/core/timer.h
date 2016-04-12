@@ -36,6 +36,7 @@ public:
 
     virtual HandlerRegistration register_alarm_handler(AlarmHandler const& handler) = 0;
     virtual AlarmId schedule_alarm_in(std::chrono::milliseconds t) = 0;
+    virtual void cancel_alarm(AlarmId id) = 0;
     virtual std::chrono::steady_clock::time_point now() = 0;
 
 protected:

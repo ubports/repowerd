@@ -205,8 +205,18 @@ void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
 
 void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
 {
-    user_inactivity_display_dim_alarm_id = AlarmId::invalid;
-    user_inactivity_display_off_alarm_id = AlarmId::invalid;
+    if (user_inactivity_display_dim_alarm_id != AlarmId::invalid)
+    {
+        timer->cancel_alarm(user_inactivity_display_dim_alarm_id);
+        user_inactivity_display_dim_alarm_id = AlarmId::invalid;
+    }
+
+    if (user_inactivity_display_off_alarm_id != AlarmId::invalid)
+    {
+        timer->cancel_alarm(user_inactivity_display_off_alarm_id);
+        user_inactivity_display_off_alarm_id = AlarmId::invalid;
+    }
+
     user_inactivity_display_off_time_point = {};
 }
 

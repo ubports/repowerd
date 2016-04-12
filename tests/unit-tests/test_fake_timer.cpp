@@ -117,3 +117,22 @@ TEST_F(AFakeTimer, updates_now_when_advanced)
     auto const now = fake_timer.now();
     EXPECT_THAT(now - then, testing::Eq(advance));
 }
+
+TEST_F(AFakeTimer, does_not_notify_for_cancelled_alarms)
+{
+    auto const id1 = fake_timer.schedule_alarm_in(10s);
+    auto const id2 = fake_timer.schedule_alarm_in(10s);
+    auto const id3 = fake_timer.schedule_alarm_in(20s);
+    auto const id4 = fake_timer.schedule_alarm_in(30s);
+
+    testing::InSequence s;
+    EXPECT_CALL(*this, alarm_handler(id1));
+    EXPECT_CALL(*this, alarm_handler(id2)).Times(0);
+    EXPECT_CALL(*this, alarm_handler(id3));
+    EXPECT_CALL(*this, alarm_handler(id4)).Times(0);
+
+    fake_timer.cancel_alarm(id4);
+    fake_timer.cancel_alarm(id2);
+
+    fake_timer.advance_by(30s);
+}
