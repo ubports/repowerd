@@ -15,9 +15,12 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 include_directories(
+    ${FUSE_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
 )
+
+add_definitions(${FUSE_CFLAGS})
 
 add_executable(
     repowerd-integration-tests
@@ -26,6 +29,7 @@ add_executable(
     dbus_client.cpp
     run_command.cpp
     unity_screen_dbus_client.cpp
+    virtual_filesystem.cpp
 
     test_event_loop_timer.cpp
     test_ubuntu_proximity_sensor.cpp
@@ -33,6 +37,7 @@ add_executable(
     test_unity_power_button.cpp
     test_unity_screen_service.cpp
     test_unity_user_activity.cpp
+    test_virtual_filesystem.cpp
 
     $<TARGET_OBJECTS:repowerd-adapters>
     $<TARGET_OBJECTS:repowerd-core>
@@ -46,6 +51,7 @@ target_link_libraries(
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
     ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
+    ${FUSE_LDFLAGS} ${FUSE_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
