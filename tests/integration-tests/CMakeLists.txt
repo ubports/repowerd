@@ -14,6 +14,8 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+pkg_check_modules(FUSE REQUIRED fuse)
+
 include_directories(
     ${FUSE_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
