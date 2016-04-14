@@ -16,6 +16,9 @@
 
 include_directories(
     ${CMAKE_SOURCE_DIR}
+    ${FUSE_INCLUDE_DIRS}
+    ${GIO_INCLUDE_DIRS}
+    ${UA_INCLUDE_DIRS}
 )
 
 add_subdirectory(core)
@@ -28,7 +31,18 @@ add_executable(
     default_daemon_config.cpp
     main.cpp
     $<TARGET_OBJECTS:repowerd-core>
+    $<TARGET_OBJECTS:repowerd-adapters>
 )
+
+target_link_libraries(
+    repowerd
+
+    ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
+    ${FUSE_LDFLAGS} ${FUSE_LIBRARIES}
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UA_LDFLAGS} ${UA_LIBRARIES}
+)
+
 
 install(
   TARGETS repowerd

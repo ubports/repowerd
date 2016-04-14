@@ -23,6 +23,9 @@
 namespace repowerd
 {
 
+class UnityScreenService;
+class UnityPowerButton;
+
 class DefaultDaemonConfig : public DaemonConfig
 {
 public:
@@ -45,16 +48,17 @@ public:
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
 private:
+    std::string the_dbus_bus_address();
+    std::shared_ptr<UnityScreenService> the_unity_screen_service();
+    std::shared_ptr<UnityPowerButton> the_unity_power_button();
+
     std::shared_ptr<BrightnessControl> brightness_control;
-    std::shared_ptr<ClientRequests> client_requests;
     std::shared_ptr<DisplayPowerControl> display_power_control;
-    std::shared_ptr<DisplayPowerEventSink> display_power_event_sink;
-    std::shared_ptr<NotificationService> notification_service;
-    std::shared_ptr<PowerButton> power_button;
-    std::shared_ptr<PowerButtonEventSink> power_button_event_sink;
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;
+    std::shared_ptr<UnityPowerButton> unity_power_button;
+    std::shared_ptr<UnityScreenService> unity_screen_service;
     std::shared_ptr<UserActivity> user_activity;
     std::shared_ptr<VoiceCallService> voice_call_service;
 };

@@ -19,16 +19,15 @@
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
 
-#include "core/brightness_control.h"
-#include "core/client_requests.h"
-#include "core/display_power_control.h"
-#include "core/display_power_event_sink.h"
-#include "core/notification_service.h"
-#include "core/power_button.h"
-#include "core/power_button_event_sink.h"
-#include "core/proximity_sensor.h"
-#include "core/timer.h"
-#include "core/user_activity.h"
+#include "adapters/android_device_quirks.h"
+#include "adapters/event_loop_timer.h"
+#include "adapters/sysfs_brightness_control.h"
+#include "adapters/ubuntu_proximity_sensor.h"
+#include "adapters/unity_display_power_control.h"
+#include "adapters/unity_power_button.h"
+#include "adapters/unity_screen_service.h"
+#include "adapters/unity_user_activity.h"
+
 #include "core/voice_call_service.h"
 
 using namespace std::chrono_literals;
@@ -51,90 +50,6 @@ struct NullBrightnessControl : repowerd::BrightnessControl
     void set_off_brightness() override {}
 };
 
-struct NullClientRequests : repowerd::ClientRequests
-{
-    repowerd::HandlerRegistration register_disable_inactivity_timeout_handler(
-        repowerd::DisableInactivityTimeoutHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_enable_inactivity_timeout_handler(
-        repowerd::EnableInactivityTimeoutHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_set_inactivity_timeout_handler(
-        repowerd::SetInactivityTimeoutHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_disable_autobrightness_handler(
-        repowerd::DisableAutobrightnessHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_enable_autobrightness_handler(
-        repowerd::EnableAutobrightnessHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_set_normal_brightness_value_handler(
-        repowerd::SetNormalBrightnessValueHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-};
-
-struct NullDisplayPowerControl : repowerd::DisplayPowerControl
-{
-    void turn_on() override {}
-    void turn_off() override {}
-};
-
-struct NullDisplayPowerEventSink : repowerd::DisplayPowerEventSink
-{
-    void notify_display_power_off(repowerd::DisplayPowerChangeReason) override
-    {
-    }
-    void notify_display_power_on(repowerd::DisplayPowerChangeReason) override
-    {
-    }
-};
-
-struct NullNotificationService : repowerd::NotificationService
-{
-    repowerd::HandlerRegistration register_no_notification_handler(
-        repowerd::NoNotificationHandler const&)
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_notification_handler(
-        repowerd::NotificationHandler const&)
-    {
-        return NullHandlerRegistration{};
-    }
-};
-
-struct NullPowerButton : repowerd::PowerButton
-{
-    repowerd::HandlerRegistration register_power_button_handler(
-        repowerd::PowerButtonHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-};
-
-struct NullPowerButtonEventSink : repowerd::PowerButtonEventSink
-{
-    void notify_long_press() override {}
-};
-
 struct NullProximitySensor : repowerd::ProximitySensor
 {
     repowerd::HandlerRegistration register_proximity_handler(
@@ -145,27 +60,6 @@ struct NullProximitySensor : repowerd::ProximitySensor
     repowerd::ProximityState proximity_state() override { return {}; }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
-};
-
-struct NullTimer : repowerd::Timer
-{
-    repowerd::HandlerRegistration register_alarm_handler(
-        repowerd::AlarmHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-    repowerd::AlarmId schedule_alarm_in(std::chrono::milliseconds) override { return {}; }
-    void cancel_alarm(repowerd::AlarmId) override {}
-    std::chrono::steady_clock::time_point now() { return {}; }
-};
-
-struct NullUserActivity : repowerd::UserActivity
-{
-    repowerd::HandlerRegistration register_user_activity_handler(
-        repowerd::UserActivityHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
 };
 
 struct NullVoiceCallService : repowerd::VoiceCallService
@@ -189,63 +83,69 @@ std::shared_ptr<repowerd::BrightnessControl>
 repowerd::DefaultDaemonConfig::the_brightness_control()
 {
     if (!brightness_control)
+    try
+    {
+        brightness_control = std::make_shared<SysfsBrightnessControl>("/sys");
+    }
+    catch(...)
+    {
         brightness_control = std::make_shared<NullBrightnessControl>();
+    }
+
     return brightness_control;
 }
 
 std::shared_ptr<repowerd::ClientRequests>
 repowerd::DefaultDaemonConfig::the_client_requests()
 {
-    if (!client_requests)
-        client_requests = std::make_shared<NullClientRequests>();
-    return client_requests;
+    return the_unity_screen_service();
 }
 
 std::shared_ptr<repowerd::DisplayPowerControl>
 repowerd::DefaultDaemonConfig::the_display_power_control()
 {
     if (!display_power_control)
-        display_power_control = std::make_shared<NullDisplayPowerControl>();
+        display_power_control = std::make_shared<UnityDisplayPowerControl>(the_dbus_bus_address());
     return display_power_control;
 }
 
 std::shared_ptr<repowerd::DisplayPowerEventSink>
 repowerd::DefaultDaemonConfig::the_display_power_event_sink()
 {
-    if (!display_power_event_sink)
-        display_power_event_sink = std::make_shared<NullDisplayPowerEventSink>();
-    return display_power_event_sink;
+    return the_unity_screen_service();
 }
 
 std::shared_ptr<repowerd::NotificationService>
 repowerd::DefaultDaemonConfig::the_notification_service()
 {
-    if (!notification_service)
-        notification_service = std::make_shared<NullNotificationService>();
-    return notification_service;
+    return the_unity_screen_service();
 }
 
 std::shared_ptr<repowerd::PowerButton>
 repowerd::DefaultDaemonConfig::the_power_button()
 {
-    if (!power_button)
-        power_button = std::make_shared<NullPowerButton>();
-    return power_button;
+    return the_unity_power_button();
 }
 
 std::shared_ptr<repowerd::PowerButtonEventSink>
 repowerd::DefaultDaemonConfig::the_power_button_event_sink()
 {
-    if (!power_button_event_sink)
-        power_button_event_sink = std::make_shared<NullPowerButtonEventSink>();
-    return power_button_event_sink;
+    return the_unity_power_button();
 }
 
 std::shared_ptr<repowerd::ProximitySensor>
 repowerd::DefaultDaemonConfig::the_proximity_sensor()
 {
     if (!proximity_sensor)
+    try
+    {
+        proximity_sensor = std::make_shared<UbuntuProximitySensor>(AndroidDeviceQuirks());
+    }
+    catch (...)
+    {
         proximity_sensor = std::make_shared<NullProximitySensor>();
+    }
+
     return proximity_sensor;
 }
 
@@ -261,7 +161,7 @@ std::shared_ptr<repowerd::Timer>
 repowerd::DefaultDaemonConfig::the_timer()
 {
     if (!timer)
-        timer = std::make_shared<NullTimer>();
+        timer = std::make_shared<EventLoopTimer>();
     return timer;
 }
 
@@ -269,7 +169,7 @@ std::shared_ptr<repowerd::UserActivity>
 repowerd::DefaultDaemonConfig::the_user_activity()
 {
     if (!user_activity)
-        user_activity = std::make_shared<NullUserActivity>();
+        user_activity = std::make_shared<UnityUserActivity>(the_dbus_bus_address());
     return user_activity;
 }
 
@@ -303,4 +203,29 @@ std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
 {
     return 15s;
+}
+
+std::string repowerd::DefaultDaemonConfig::the_dbus_bus_address()
+{
+    auto const address = std::unique_ptr<gchar, decltype(&g_free)>{
+        g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr),
+        g_free};
+
+    return address ? address.get() : std::string{};
+}
+
+std::shared_ptr<repowerd::UnityScreenService>
+repowerd::DefaultDaemonConfig::the_unity_screen_service()
+{
+    if (!unity_screen_service)
+        unity_screen_service = std::make_shared<UnityScreenService>(the_dbus_bus_address());
+    return unity_screen_service;
+}
+
+std::shared_ptr<repowerd::UnityPowerButton>
+repowerd::DefaultDaemonConfig::the_unity_power_button()
+{
+    if (!unity_power_button)
+        unity_power_button = std::make_shared<UnityPowerButton>(the_dbus_bus_address());
+    return unity_power_button;
 }
