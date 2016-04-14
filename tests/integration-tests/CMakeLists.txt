@@ -32,6 +32,7 @@ add_executable(
     virtual_filesystem.cpp
 
     test_event_loop_timer.cpp
+    test_sysfs_brightness_control.cpp
     test_ubuntu_proximity_sensor.cpp
     test_unity_display_power_control.cpp
     test_unity_power_button.cpp

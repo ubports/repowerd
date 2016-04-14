@@ -38,6 +38,11 @@ void* vfs_init(fuse_conn_info* /*conn*/)
     return vfs();
 }
 
+int vfs_truncate(char const*, off_t)
+{
+    return 0;
+}
+
 std::string make_temp_dir()
 {
     char dir_tmpl[] = "/tmp/repowerd-test-vfs-XXXXXX";
@@ -78,6 +83,7 @@ rt::VirtualFilesystem::VirtualFilesystem()
     fuse_ops.open = vfs_open;
     fuse_ops.read = vfs_read;
     fuse_ops.write = vfs_write;
+    fuse_ops.truncate = vfs_truncate;
 
     auto fuse_chan_handle = fuse_mount(mount_point_.c_str(), &args);
     if (!fuse_chan_handle)

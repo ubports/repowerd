@@ -29,6 +29,7 @@ set(
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
+    sysfs_brightness_control.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
     unity_power_button.cpp
