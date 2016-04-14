@@ -4,6 +4,7 @@ Section: admin
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                cmake,
+               fuse,
                google-mock,
                libandroid-properties-dev,
                libfuse-dev,
