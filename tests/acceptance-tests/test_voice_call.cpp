@@ -32,17 +32,6 @@ namespace
 
 struct AVoiceCall : rt::AcceptanceTest
 {
-    void emit_proximity_state_far_if_enabled()
-    {
-        config.the_fake_proximity_sensor()->emit_proximity_state_if_enabled(
-            repowerd::ProximityState::far);
-    }
-
-    void emit_proximity_state_near_if_enabled()
-    {
-        config.the_fake_proximity_sensor()->emit_proximity_state_if_enabled(
-            repowerd::ProximityState::near);
-    }
 };
 
 }

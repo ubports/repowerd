@@ -48,6 +48,8 @@ rt::AcceptanceTest::AcceptanceTest()
           config.user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_off_timeout{
           config.user_inactivity_normal_display_off_timeout()},
+      user_inactivity_post_notification_display_off_timeout{
+          config.user_inactivity_post_notification_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
           config.user_inactivity_reduced_display_off_timeout()}
 {
@@ -171,11 +173,23 @@ void rt::AcceptanceTest::emit_proximity_state_far()
     daemon.flush();
 }
 
+void rt::AcceptanceTest::emit_proximity_state_far_if_enabled()
+{
+    config.the_fake_proximity_sensor()->emit_proximity_state_if_enabled(
+        repowerd::ProximityState::far);
+}
+
 void rt::AcceptanceTest::emit_proximity_state_near()
 {
     config.the_fake_proximity_sensor()->emit_proximity_state(
         repowerd::ProximityState::near);
     daemon.flush();
+}
+
+void rt::AcceptanceTest::emit_proximity_state_near_if_enabled()
+{
+    config.the_fake_proximity_sensor()->emit_proximity_state_if_enabled(
+        repowerd::ProximityState::near);
 }
 
 void rt::AcceptanceTest::emit_active_call()

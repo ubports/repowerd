@@ -55,7 +55,9 @@ struct AcceptanceTest : testing::Test
     void emit_no_notification();
     void emit_notification();
     void emit_proximity_state_far();
+    void emit_proximity_state_far_if_enabled();
     void emit_proximity_state_near();
+    void emit_proximity_state_near_if_enabled();
     void emit_active_call();
     void emit_no_active_call();
     void perform_user_activity_extending_power_state();
@@ -75,6 +77,7 @@ struct AcceptanceTest : testing::Test
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_timeout;
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
+    std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
 };
 

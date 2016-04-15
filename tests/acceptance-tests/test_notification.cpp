@@ -45,7 +45,7 @@ TEST_F(ANotification, turns_on_display_and_keeps_it_on)
     advance_time_by(10h);
 }
 
-TEST_F(ANotification, turns_off_display_after_reduced_timeout_when_done)
+TEST_F(ANotification, turns_off_display_after_post_notification_timeout_when_done)
 {
     expect_display_turns_on();
     emit_notification();
@@ -56,7 +56,7 @@ TEST_F(ANotification, turns_off_display_after_reduced_timeout_when_done)
     verify_expectations();
 
     expect_display_turns_off();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
 TEST_F(ANotification, does_not_turn_on_display_if_display_is_already_on)
@@ -84,7 +84,7 @@ TEST_F(ANotification, does_not_dim_display_after_timeout)
 
     expect_no_display_brightness_change();
     emit_no_notification();
-    advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout - 1ms);
 }
 
 TEST_F(ANotification, extends_existing_shorter_timeout)
@@ -100,7 +100,7 @@ TEST_F(ANotification, extends_existing_shorter_timeout)
     verify_expectations();
 
     expect_display_turns_off();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
 TEST_F(ANotification, does_not_reduce_existing_longer_timeout)
@@ -108,14 +108,14 @@ TEST_F(ANotification, does_not_reduce_existing_longer_timeout)
     turn_on_display();
     advance_time_by(
         user_inactivity_normal_display_off_timeout -
-        user_inactivity_reduced_display_off_timeout -
+        user_inactivity_post_notification_display_off_timeout -
         1ms);
 
     emit_notification();
     emit_no_notification();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
     verify_expectations();
 }
 
@@ -134,10 +134,10 @@ TEST_F(ANotification, does_not_schedule_inactivity_timeout_when_proximity_is_nea
     expect_no_display_power_change();
     emit_notification();
     emit_no_notification();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
-TEST_F(ANotification, reduced_timeout_is_extended_by_user_activity)
+TEST_F(ANotification, timeout_is_extended_by_user_activity)
 {
     expect_display_turns_on();
     emit_notification();
@@ -187,7 +187,7 @@ TEST_F(ANotification,
     verify_expectations();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
 TEST_F(ANotification, event_notifies_of_display_power_change)
@@ -201,5 +201,53 @@ TEST_F(ANotification, event_notifies_of_display_power_change)
 
     expect_display_power_off_notification(
         repowerd::DisplayPowerChangeReason::activity);
-    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
+}
+
+TEST_F(ANotification, turns_display_on_for_reduced_timeout_if_proximity_uncovered)
+{
+    set_proximity_state_near();
+
+    emit_notification();
+
+    expect_display_turns_on();
+    emit_proximity_state_far_if_enabled();
+    emit_no_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+}
+
+TEST_F(ANotification, disables_proximity_handling_after_proximity_uncovered)
+{
+    set_proximity_state_near();
+    emit_notification();
+    emit_proximity_state_far_if_enabled();
+
+    expect_no_display_power_change();
+    emit_proximity_state_near_if_enabled();
+    emit_proximity_state_far_if_enabled();
+    emit_proximity_state_near_if_enabled();
+}
+
+TEST_F(ANotification,
+       does_not_disable_proximity_handling_after_proximity_uncovered_if_call_is_active)
+{
+    set_proximity_state_near();
+    emit_active_call();
+    emit_notification();
+    emit_proximity_state_far_if_enabled();
+
+    expect_display_turns_off();
+    emit_proximity_state_near_if_enabled();
+    verify_expectations();
+
+    expect_display_turns_on();
+    emit_proximity_state_far_if_enabled();
+    verify_expectations();
 }

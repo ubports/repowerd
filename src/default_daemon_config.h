@@ -45,6 +45,7 @@ public:
     std::chrono::milliseconds power_button_long_press_timeout() override;
     std::chrono::milliseconds user_inactivity_normal_display_dim_duration() override;
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;
+    std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
     bool turn_on_display_at_startup() override;

@@ -44,9 +44,12 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       user_inactivity_normal_display_off_timeout{
           config.user_inactivity_normal_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
-          config.user_inactivity_reduced_display_off_timeout()}
+          config.user_inactivity_reduced_display_off_timeout()},
+      user_inactivity_post_notification_display_off_timeout{
+          config.user_inactivity_post_notification_display_off_timeout()}
 {
       inactivity_timeout_allowances.fill(true);
+      proximity_enablements.fill(false);
 }
 
 void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
@@ -83,7 +86,7 @@ void repowerd::DefaultStateMachine::handle_active_call()
         turn_on_display_with_normal_timeout(DisplayPowerChangeReason::call);
     }
 
-    proximity_sensor->enable_proximity_events();
+    enable_proximity(ProximityEnablement::until_disabled);
 }
 
 void repowerd::DefaultStateMachine::handle_no_active_call()
@@ -99,7 +102,7 @@ void repowerd::DefaultStateMachine::handle_no_active_call()
         schedule_reduced_user_inactivity_alarm();
     }
 
-    proximity_sensor->disable_proximity_events();
+    disable_proximity(ProximityEnablement::until_disabled);
 }
 
 void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
@@ -121,10 +124,11 @@ void repowerd::DefaultStateMachine::handle_no_notification()
 {
     if (display_power_mode == DisplayPowerMode::on)
     {
-        schedule_reduced_user_inactivity_alarm();
+        schedule_post_notification_user_inactivity_alarm();
     }
 
     allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+    disable_proximity(ProximityEnablement::until_far_event);
 }
 
 void repowerd::DefaultStateMachine::handle_notification()
@@ -135,9 +139,16 @@ void repowerd::DefaultStateMachine::handle_notification()
     {
         brighten_display();
     }
-    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    else
     {
-        turn_on_display_without_timeout(DisplayPowerChangeReason::notification);
+        if (proximity_sensor->proximity_state() == ProximityState::far)
+        {
+            turn_on_display_without_timeout(DisplayPowerChangeReason::notification);
+        }
+        else
+        {
+            enable_proximity(ProximityEnablement::until_far_event);
+        }
     }
 }
 
@@ -171,8 +182,21 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
 
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
+    auto const use_reduced_timeout = is_proximity_enabled_only_until_far_event();
+    disable_proximity(ProximityEnablement::until_far_event);
+
     if (display_power_mode == DisplayPowerMode::off)
-        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::proximity);
+    {
+        if (use_reduced_timeout)
+        {
+            turn_on_display_without_timeout(DisplayPowerChangeReason::proximity);
+            schedule_reduced_user_inactivity_alarm();
+        }
+        else
+        {
+            turn_on_display_with_normal_timeout(DisplayPowerChangeReason::proximity);
+        }
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_proximity_near()
@@ -241,6 +265,18 @@ void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
 
     user_inactivity_display_off_alarm_id =
         timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout);
+}
+
+void repowerd::DefaultStateMachine::schedule_post_notification_user_inactivity_alarm()
+{
+    auto const tp = timer->now() + user_inactivity_post_notification_display_off_timeout;
+    if (tp > user_inactivity_display_off_time_point)
+    {
+        cancel_user_inactivity_alarm();
+        user_inactivity_display_off_alarm_id =
+            timer->schedule_alarm_in(user_inactivity_post_notification_display_off_timeout);
+        user_inactivity_display_off_time_point = tp;
+    }
 }
 
 void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
@@ -321,4 +357,46 @@ bool repowerd::DefaultStateMachine::is_inactivity_timeout_allowed()
     for (auto const& allowed : inactivity_timeout_allowances)
         if (!allowed) return false;
     return true;
+}
+
+void repowerd::DefaultStateMachine::enable_proximity(
+    ProximityEnablement enablement)
+{
+    auto const proximity_previously_enabled = is_proximity_enabled();
+
+    proximity_enablements[enablement] = true;
+
+    if (!proximity_previously_enabled && is_proximity_enabled())
+    {
+        proximity_sensor->enable_proximity_events();
+    }
+}
+
+void repowerd::DefaultStateMachine::disable_proximity(
+    ProximityEnablement enablement)
+{
+    auto const proximity_previously_enabled = is_proximity_enabled();
+
+    proximity_enablements[enablement] = false;
+
+    if (proximity_previously_enabled && !is_proximity_enabled())
+    {
+        proximity_sensor->disable_proximity_events();
+    }
+}
+
+bool repowerd::DefaultStateMachine::is_proximity_enabled()
+{
+    for (auto const& enabled : proximity_enablements)
+        if (enabled) return true;
+    return false;
+}
+
+bool repowerd::DefaultStateMachine::is_proximity_enabled_only_until_far_event()
+{
+    auto num_enabled = 0;
+    for (auto const& enabled : proximity_enablements)
+        if (enabled) ++num_enabled;
+
+    return num_enabled == 1 && proximity_enablements[ProximityEnablement::until_far_event];
 }
