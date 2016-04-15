@@ -76,7 +76,8 @@ rt::VirtualFilesystem::VirtualFilesystem()
     auto const args_raii = std::unique_ptr<fuse_args,decltype(&fuse_opt_free_args)>{
         &args, fuse_opt_free_args};
 
-    fuse_operations fuse_ops{};
+    fuse_operations fuse_ops;
+    memset(&fuse_ops, 0, sizeof(fuse_ops));
     fuse_ops.init = vfs_init;
     fuse_ops.getattr = vfs_getattr;
     fuse_ops.readdir = vfs_readdir;
