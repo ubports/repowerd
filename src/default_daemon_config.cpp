@@ -205,6 +205,11 @@ repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
     return 15s;
 }
 
+bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()
+{
+    return true;
+}
+
 std::string repowerd::DefaultDaemonConfig::the_dbus_bus_address()
 {
     auto const address = std::unique_ptr<gchar, decltype(&g_free)>{

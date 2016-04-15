@@ -48,8 +48,11 @@ public:
     virtual void handle_proximity_far() = 0;
     virtual void handle_proximity_near() = 0;
 
+    virtual void handle_turn_on_display() = 0;
+
     virtual void handle_user_activity_changing_power_state() = 0;
     virtual void handle_user_activity_extending_power_state() = 0;
+
 
 protected:
     StateMachine() = default;

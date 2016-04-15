@@ -60,6 +60,8 @@ public:
     virtual std::chrono::milliseconds user_inactivity_normal_display_off_timeout() = 0;
     virtual std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() = 0;
 
+    virtual bool turn_on_display_at_startup() = 0;
+
 protected:
     DaemonConfig() = default;
     DaemonConfig(DaemonConfig const&) = delete;

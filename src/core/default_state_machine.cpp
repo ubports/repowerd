@@ -181,6 +181,12 @@ void repowerd::DefaultStateMachine::handle_proximity_near()
         turn_off_display(DisplayPowerChangeReason::proximity);
 }
 
+void repowerd::DefaultStateMachine::handle_turn_on_display()
+{
+    if (display_power_mode == DisplayPowerMode::off)
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
+}
+
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
 {
     if (display_power_mode == DisplayPowerMode::on)

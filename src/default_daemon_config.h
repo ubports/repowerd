@@ -47,6 +47,8 @@ public:
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
+    bool turn_on_display_at_startup() override;
+
 private:
     std::string the_dbus_bus_address();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();

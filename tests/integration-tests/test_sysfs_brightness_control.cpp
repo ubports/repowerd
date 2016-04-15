@@ -175,7 +175,7 @@ TEST_F(ASysfsBrightnessControl, prefers_sysfs_backlight_over_led_backlight_if_bo
     create_sysfs_brightness_control();
 }
 
-TEST_F(ASysfsBrightnessControl, writes_normal_brightness_half_of_max_on_startup)
+TEST_F(ASysfsBrightnessControl, writes_normal_brightness_half_of_max)
 {
     set_up_sysfs_backlight();
     set_sysfs_backlight_max_brightness(max_brightness);
@@ -183,6 +183,7 @@ TEST_F(ASysfsBrightnessControl, writes_normal_brightness_half_of_max_on_startup)
     expect_brightness_value(max_brightness * 0.5);
 
     auto const bc = create_sysfs_brightness_control();
+    bc->set_normal_brightness();
 }
 
 TEST_F(ASysfsBrightnessControl, writes_zero_brightness_value_for_off_brightness)
@@ -216,6 +217,8 @@ TEST_F(ASysfsBrightnessControl, sets_write_normal_brightness_value_immediately_i
     set_sysfs_backlight_max_brightness(max_brightness);
 
     auto const bc = create_sysfs_brightness_control();
+
+    bc->set_normal_brightness();
 
     expect_brightness_value(max_brightness * 0.7);
 

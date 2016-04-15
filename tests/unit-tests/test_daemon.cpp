@@ -60,6 +60,8 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_disable_inactivity_timeout, void());
     MOCK_METHOD1(handle_set_inactivity_timeout, void(std::chrono::milliseconds));
 
+    MOCK_METHOD0(handle_turn_on_display, void());
+
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
 };
@@ -84,7 +86,7 @@ struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
 struct ADaemon : testing::Test
 {
     DaemonConfigWithMockStateMachine config;
-    repowerd::Daemon daemon{config};
+    std::unique_ptr<repowerd::Daemon> daemon;
     std::thread daemon_thread;
 
     ~ADaemon()
@@ -95,14 +97,20 @@ struct ADaemon : testing::Test
 
     void start_daemon()
     {
-        daemon_thread = std::thread{ [this] { daemon.run(); }};
-        daemon.flush();
+        start_daemon_with_config(config);
+    }
+
+    void start_daemon_with_config(repowerd::DaemonConfig& config)
+    {
+        daemon = std::make_unique<repowerd::Daemon>(config);
+        daemon_thread = std::thread{ [this] { daemon->run(); }};
+        daemon->flush();
     }
 
     void stop_daemon()
     {
-        daemon.flush();
-        daemon.stop();
+        daemon->flush();
+        daemon->stop();
         daemon_thread.join();
     }
 };
@@ -448,4 +456,25 @@ TEST_F(ADaemon, notifies_state_machine_of_no_active_call)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_no_active_call());
 
     config.the_fake_voice_call_service()->emit_no_active_call();
+}
+
+TEST_F(ADaemon, does_not_turn_on_display_at_startup_if_not_configured)
+{
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_turn_on_display()).Times(0);
+
+    start_daemon();
+}
+
+TEST_F(ADaemon, turns_on_display_at_startup_if_configured)
+{
+    struct DaemonConfigWithTurnOnDisplay : DaemonConfigWithMockStateMachine
+    {
+        bool turn_on_display_at_startup() override { return true; }
+    };
+    DaemonConfigWithTurnOnDisplay config_with_turn_on_display;
+
+    EXPECT_CALL(*config_with_turn_on_display.the_mock_state_machine(),
+                handle_turn_on_display());
+
+    start_daemon_with_config(config_with_turn_on_display);
 }

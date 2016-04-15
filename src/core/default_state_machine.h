@@ -50,6 +50,8 @@ public:
     void handle_proximity_far() override;
     void handle_proximity_near() override;
 
+    void handle_turn_on_display() override;
+
     void handle_user_activity_changing_power_state() override;
     void handle_user_activity_extending_power_state() override;
 

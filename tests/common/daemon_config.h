@@ -60,6 +60,8 @@ public:
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
+    bool turn_on_display_at_startup() override;
+
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> the_mock_brightness_control();
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> the_mock_display_power_control();

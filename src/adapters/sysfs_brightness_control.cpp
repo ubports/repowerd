@@ -89,7 +89,6 @@ repowerd::SysfsBrightnessControl::SysfsBrightnessControl(std::string const& sysf
       dim_brightness{static_cast<int>(0.1 * max_brightness)},
       normal_brightness{static_cast<int>(0.5 * max_brightness)}
 {
-    set_normal_brightness();
 }
 
 void repowerd::SysfsBrightnessControl::disable_autobrightness()

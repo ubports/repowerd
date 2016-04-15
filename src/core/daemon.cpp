@@ -44,6 +44,8 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       voice_call_service{config.the_voice_call_service()},
       running{false}
 {
+    if (config.turn_on_display_at_startup())
+        enqueue_event([this] { state_machine->handle_turn_on_display(); });
 }
 
 void repowerd::Daemon::run()

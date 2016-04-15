@@ -121,6 +121,11 @@ rt::DaemonConfig::user_inactivity_reduced_display_off_timeout()
     return 15s;
 }
 
+bool rt::DaemonConfig::turn_on_display_at_startup()
+{
+    return false;
+}
+
 std::shared_ptr<NiceMock<rt::MockBrightnessControl>>
 rt::DaemonConfig::the_mock_brightness_control()
 {
