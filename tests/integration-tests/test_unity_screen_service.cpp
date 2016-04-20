@@ -17,6 +17,7 @@
  */
 
 #include "dbus_bus.h"
+#include "fake_device_config.h"
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
@@ -93,7 +94,8 @@ struct AUnityScreenService : testing::Test
     std::chrono::seconds const default_timeout{3};
 
     rt::DBusBus bus;
-    repowerd::UnityScreenService service{bus.address()};
+    rt::FakeDeviceConfig fake_device_config;
+    repowerd::UnityScreenService service{fake_device_config, bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
@@ -266,7 +268,8 @@ TEST_F(AUnityScreenService, forwards_user_auto_brightness_enable_request)
 TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
 {
     int const brightness = 10;
-    float const brightness_normalized = brightness/255.0f;
+    float const brightness_normalized =
+        brightness / static_cast<float>(fake_device_config.brightness_max_value);
 
     EXPECT_CALL(mock_handlers, set_normal_brightness_value(brightness_normalized));
     client.request_set_user_brightness(brightness);

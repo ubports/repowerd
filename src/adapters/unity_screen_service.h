@@ -20,6 +20,7 @@
 #include "src/core/display_power_event_sink.h"
 #include "src/core/notification_service.h"
 
+#include "brightness_params.h"
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
 
@@ -31,13 +32,16 @@
 
 namespace repowerd
 {
+class DeviceConfig;
 
 class UnityScreenService : public ClientRequests,
                            public DisplayPowerEventSink,
                            public NotificationService
 {
 public:
-    UnityScreenService(std::string const& dbus_bus_address);
+    UnityScreenService(
+        DeviceConfig const& device_config,
+        std::string const& dbus_bus_address);
     ~UnityScreenService();
 
     HandlerRegistration register_disable_inactivity_timeout_handler(
@@ -108,6 +112,7 @@ private:
     std::unordered_multimap<std::string,int32_t> keep_display_on_ids;
     int32_t next_keep_display_on_id;
     int active_notifications;
+    BrightnessParams brightness_params;
 };
 
 }

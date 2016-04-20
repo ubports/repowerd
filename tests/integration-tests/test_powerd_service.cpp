@@ -24,6 +24,7 @@
 
 #include "dbus_bus.h"
 #include "dbus_client.h"
+#include "fake_device_config.h"
 
 #include "wait_condition.h"
 
@@ -79,32 +80,6 @@ struct PowerdDBusClient : rt::DBusClient
         return invoke_with_reply<rt::DBusAsyncReply>(
             powerd_interface, "getBrightnessParams", nullptr);
     }
-};
-
-struct FakeDeviceConfig : repowerd::DeviceConfig
-{
-    std::string get(
-        std::string const& name, std::string const& default_prop_value) const override
-    {
-        if (name == "screenBrightnessDim")
-            return std::to_string(dim_value);
-        else if (name == "screenBrightnessSettingMininum")
-            return std::to_string(min_value);
-        else if (name == "screenBrightnessSettingMaximum")
-            return std::to_string(max_value);
-        else if (name == "screenBrightnessSettingDefault")
-            return std::to_string(default_value);
-        else if (name == "automatic_brightness_available")
-            return "true";
-        else
-            return default_prop_value;
-    }
-
-    int const dim_value = 5;
-    int const min_value = 2;
-    int const max_value = 100;
-    int const default_value = 50;
-    bool const autobrightness_supported = true;
 };
 
 struct APowerdService : testing::Test
@@ -164,10 +139,11 @@ struct APowerdService : testing::Test
     std::chrono::seconds const default_timeout{3};
 
     rt::DBusBus bus;
-    repowerd::UnityScreenService unity_screen_service{bus.address()};
+    rt::FakeDeviceConfig fake_device_config;
+    repowerd::UnityScreenService unity_screen_service{
+        fake_device_config, bus.address()};
     std::shared_ptr<repowerd::UnityScreenService> unity_screen_service_ptr{
         &unity_screen_service, [](void*){}};
-    FakeDeviceConfig fake_device_config;
     repowerd::PowerdService powerd_service{
         unity_screen_service_ptr, fake_device_config, bus.address()};
     PowerdDBusClient client{bus.address()};
@@ -232,9 +208,10 @@ TEST_F(APowerdService, replies_to_get_brightness_params_request)
         body, "((iiiib))", &dim_value, &min_value, &max_value,
         &default_value, &autobrightness_supported);
 
-    EXPECT_THAT(dim_value, Eq(fake_device_config.dim_value));
-    EXPECT_THAT(min_value, Eq(fake_device_config.min_value));
-    EXPECT_THAT(max_value, Eq(fake_device_config.max_value));
-    EXPECT_THAT(default_value, Eq(fake_device_config.default_value));
-    EXPECT_THAT(autobrightness_supported, Eq(fake_device_config.autobrightness_supported));
+    EXPECT_THAT(dim_value, Eq(fake_device_config.brightness_dim_value));
+    EXPECT_THAT(min_value, Eq(fake_device_config.brightness_min_value));
+    EXPECT_THAT(max_value, Eq(fake_device_config.brightness_max_value));
+    EXPECT_THAT(default_value, Eq(fake_device_config.brightness_default_value));
+    EXPECT_THAT(autobrightness_supported,
+                Eq(fake_device_config.brightness_autobrightness_supported));
 }

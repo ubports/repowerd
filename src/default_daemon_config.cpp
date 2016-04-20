@@ -228,6 +228,18 @@ std::string repowerd::DefaultDaemonConfig::the_dbus_bus_address()
     return address ? address.get() : std::string{};
 }
 
+std::shared_ptr<repowerd::DeviceConfig>
+repowerd::DefaultDaemonConfig::the_device_config()
+{
+    if (!device_config)
+    {
+        device_config = std::make_shared<AndroidDeviceConfig>(
+            "/usr/share/powerd/device_configs");
+    }
+
+    return device_config;
+}
+
 std::shared_ptr<repowerd::PowerdService>
 repowerd::DefaultDaemonConfig::the_powerd_service()
 {
@@ -235,7 +247,7 @@ repowerd::DefaultDaemonConfig::the_powerd_service()
     {
         powerd_service = std::make_shared<PowerdService>(
             the_unity_screen_service(),
-            AndroidDeviceConfig{"/usr/share/powerd/device_configs"},
+            *the_device_config(),
             the_dbus_bus_address());
     }
 
@@ -246,7 +258,12 @@ std::shared_ptr<repowerd::UnityScreenService>
 repowerd::DefaultDaemonConfig::the_unity_screen_service()
 {
     if (!unity_screen_service)
-        unity_screen_service = std::make_shared<UnityScreenService>(the_dbus_bus_address());
+    {
+        unity_screen_service = std::make_shared<UnityScreenService>(
+            *the_device_config(),
+            the_dbus_bus_address());
+    }
+
     return unity_screen_service;
 }
 

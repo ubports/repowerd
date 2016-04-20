@@ -101,6 +101,7 @@ char const* const unity_screen_service_introspection = R"(<!DOCTYPE node PUBLIC 
 }
 
 repowerd::UnityScreenService::UnityScreenService(
+    DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_handler},
@@ -112,7 +113,8 @@ repowerd::UnityScreenService::UnityScreenService(
       notification_handler{null_handler},
       no_notification_handler{null_handler},
       next_keep_display_on_id{1},
-      active_notifications{0}
+      active_notifications{0},
+      brightness_params(BrightnessParams::from_device_config(device_config))
 {
     dbus_connection.request_name(dbus_screen_service_name);
     dbus_event_loop.register_object_handler(
@@ -434,7 +436,8 @@ void repowerd::UnityScreenService::dbus_userAutobrightnessEnable(bool enable)
 
 void repowerd::UnityScreenService::dbus_setUserBrightness(int32_t brightness)
 {
-    set_normal_brightness_value_handler(brightness/255.0f);
+    set_normal_brightness_value_handler(
+        brightness/static_cast<float>(brightness_params.max_value));
 }
 
 void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
