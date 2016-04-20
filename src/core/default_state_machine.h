@@ -71,8 +71,9 @@ private:
     void schedule_post_notification_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
     void turn_off_display(DisplayPowerChangeReason reason);
-    void turn_on_display_with_normal_timeout(DisplayPowerChangeReason reason);
     void turn_on_display_without_timeout(DisplayPowerChangeReason reason);
+    void turn_on_display_with_normal_timeout(DisplayPowerChangeReason reason);
+    void turn_on_display_with_reduced_timeout(DisplayPowerChangeReason reason);
     void brighten_display();
     void dim_display();
     void allow_inactivity_timeout(InactivityTimeoutAllowance allowance);
