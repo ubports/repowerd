@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#pragma once
+
 #include "src/core/client_requests.h"
 #include "src/core/display_power_event_sink.h"
 #include "src/core/notification_service.h"
