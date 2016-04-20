@@ -51,6 +51,9 @@ public:
         std::string const& path,
         VirtualFilesystemReadHandler const& read_handler,
         VirtualFilesystemWriteHandler const& write_handler);
+    void add_file_with_contents(
+        std::string const& path,
+        std::string const& contents);
 
 private:
     static int vfs_getattr(char const* path, struct stat* stbuf);

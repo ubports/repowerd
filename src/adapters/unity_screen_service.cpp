@@ -256,6 +256,25 @@ void repowerd::UnityScreenService::notify_display_power_off(
     dbus_emit_DisplayPowerStateChange(power_state_off, reason_param);
 }
 
+int32_t repowerd::UnityScreenService::forward_keep_display_on(
+    std::string const& sender)
+{
+    std::promise<int32_t> promise;
+    auto future = promise.get_future();
+
+    dbus_event_loop.enqueue(
+        [&] { promise.set_value(dbus_keepDisplayOn(sender)); });
+
+    return future.get();
+}
+
+void repowerd::UnityScreenService::forward_remove_display_on_request(
+    std::string const& sender, int32_t id)
+{
+    dbus_event_loop.enqueue(
+        [&] { dbus_removeDisplayOnRequest(sender, id); }).get();
+}
+
 void repowerd::UnityScreenService::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* sender_cstr,

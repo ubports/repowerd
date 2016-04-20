@@ -23,12 +23,15 @@ include_directories(
 set(
     REPOWERD_ADAPTER_SRCS
 
+    android_device_config.cpp
     android_device_quirks.cpp
+    brightness_params.cpp
     event_loop.cpp
     event_loop_timer.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
+    powerd_service.cpp
     sysfs_brightness_control.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp

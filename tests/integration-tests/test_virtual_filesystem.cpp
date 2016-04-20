@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 
 #include <dirent.h>
+#include <fstream>
 
 namespace rt = repowerd::test;
 
@@ -152,4 +153,19 @@ TEST_F(AVirtualFilesystem, supports_file_writes)
     EXPECT_THAT(file_contents, ContainerEq(buf));
 
     close(fd);
+}
+
+TEST_F(AVirtualFilesystem, supports_file_reads_with_contents)
+{
+    std::string const file_contents{"abcd1234"};
+
+    vfs.add_file_with_contents("/file", file_contents);
+
+    std::ifstream ifs{vfs.full_path("/file")};
+
+    std::string contents_read{
+        std::istreambuf_iterator<char>{ifs},
+        std::istreambuf_iterator<char>{}};
+
+    EXPECT_THAT(contents_read, StrEq(file_contents));
 }

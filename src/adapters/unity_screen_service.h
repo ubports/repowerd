@@ -62,6 +62,9 @@ public:
     void notify_display_power_on(DisplayPowerChangeReason reason) override;
     void notify_display_power_off(DisplayPowerChangeReason reason) override;
 
+    int32_t forward_keep_display_on(std::string const& sender);
+    void forward_remove_display_on_request(std::string const& sender, int32_t id);
+
 private:
     void dbus_method_call(
         GDBusConnection* connection,

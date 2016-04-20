@@ -144,6 +144,24 @@ void rt::VirtualFilesystem::add_file(
     files[path] = {read_handler, write_handler};
 }
 
+void rt::VirtualFilesystem::add_file_with_contents(
+    std::string const& path,
+    std::string const& contents)
+{
+    auto components = split_path(path);
+    directories[components.first].insert(components.second);
+    files[path] = {
+            [contents](auto /*path*/, auto buf, auto size, auto offset)
+            {
+                auto const len = std::max(
+                    std::min(contents.size() - static_cast<decltype(size)>(offset), size),
+                    static_cast<decltype(size)>(0));
+                std::copy(contents.begin() + offset, contents.begin() + offset + len, buf);
+                return len;
+            },
+            [](auto, auto, auto, auto) { return 0; }};
+}
+
 int rt::VirtualFilesystem::vfs_getattr(char const* path, struct stat* stbuf)
 {
     return vfs()->getattr(path, stbuf);
