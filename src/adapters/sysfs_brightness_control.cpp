@@ -17,6 +17,7 @@
  */
 
 #include "sysfs_brightness_control.h"
+#include "brightness_params.h"
 
 #include <vector>
 #include <string>
@@ -81,13 +82,29 @@ int determine_max_brightness(std::string const& backlight_dir)
     return max_brightness;
 }
 
+float normal_brightness_percent(repowerd::DeviceConfig const& device_config)
+{
+    auto brightness_params = repowerd::BrightnessParams::from_device_config(device_config);
+    return static_cast<float>(brightness_params.default_value) / brightness_params.max_value;
 }
 
-repowerd::SysfsBrightnessControl::SysfsBrightnessControl(std::string const& sysfs_base_dir)
+float dim_brightness_percent(repowerd::DeviceConfig const& device_config)
+{
+    auto const brightness_params = repowerd::BrightnessParams::from_device_config(device_config);
+    return static_cast<float>(brightness_params.dim_value) / brightness_params.max_value;
+}
+
+}
+
+repowerd::SysfsBrightnessControl::SysfsBrightnessControl(
+    std::string const& sysfs_base_dir,
+    DeviceConfig const& device_config)
     : sysfs_backlight_dir{determine_sysfs_backlight_dir(sysfs_base_dir)},
       max_brightness{determine_max_brightness(sysfs_backlight_dir)},
-      dim_brightness{static_cast<int>(0.1 * max_brightness)},
-      normal_brightness{static_cast<int>(0.5 * max_brightness)}
+      dim_brightness{
+          static_cast<int>(dim_brightness_percent(device_config) * max_brightness)},
+      normal_brightness{
+          static_cast<int>(normal_brightness_percent(device_config) * max_brightness)}
 {
 }
 

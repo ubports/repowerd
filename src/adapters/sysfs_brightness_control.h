@@ -23,10 +23,14 @@
 namespace repowerd
 {
 
+class DeviceConfig;
+
 class SysfsBrightnessControl : public BrightnessControl
 {
 public:
-    SysfsBrightnessControl(std::string const& sysfs_base_dir);
+    SysfsBrightnessControl(
+        std::string const& sysfs_base_dir,
+        DeviceConfig const& device_config);
 
     void disable_autobrightness() override;
     void enable_autobrightness() override;

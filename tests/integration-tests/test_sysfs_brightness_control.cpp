@@ -18,6 +18,7 @@
 
 #include "src/adapters/sysfs_brightness_control.h"
 
+#include "fake_device_config.h"
 #include "wait_condition.h"
 #include "virtual_filesystem.h"
 
@@ -108,7 +109,8 @@ struct ASysfsBrightnessControl : Test
 
     std::unique_ptr<repowerd::SysfsBrightnessControl> create_sysfs_brightness_control()
     {
-        return std::make_unique<repowerd::SysfsBrightnessControl>(vfs.mount_point());
+        return std::make_unique<repowerd::SysfsBrightnessControl>(
+            vfs.mount_point(), fake_device_config);
     }
 
     void set_sysfs_backlight_max_brightness(int max)
@@ -134,6 +136,7 @@ struct ASysfsBrightnessControl : Test
     }
 
     rt::VirtualFilesystem vfs;
+    rt::FakeDeviceConfig fake_device_config;
     int const max_brightness = 255;
 };
 
@@ -175,12 +178,17 @@ TEST_F(ASysfsBrightnessControl, prefers_sysfs_backlight_over_led_backlight_if_bo
     create_sysfs_brightness_control();
 }
 
-TEST_F(ASysfsBrightnessControl, writes_normal_brightness_half_of_max)
+TEST_F(ASysfsBrightnessControl,
+       writes_normal_brightness_based_on_device_config)
 {
     set_up_sysfs_backlight();
     set_sysfs_backlight_max_brightness(max_brightness);
 
-    expect_brightness_value(max_brightness * 0.5);
+    auto const normal_percent =
+        static_cast<float>(fake_device_config.brightness_default_value) /
+            fake_device_config.brightness_max_value;
+
+    expect_brightness_value(max_brightness * normal_percent);
 
     auto const bc = create_sysfs_brightness_control();
     bc->set_normal_brightness();
@@ -199,14 +207,17 @@ TEST_F(ASysfsBrightnessControl, writes_zero_brightness_value_for_off_brightness)
 }
 
 TEST_F(ASysfsBrightnessControl,
-       writes_one_tenth_max_brightness_value_for_dim_brightness_by_default)
+       writes_default_dim_brightness_based_on_device_config)
 {
     set_up_sysfs_backlight();
     set_sysfs_backlight_max_brightness(max_brightness);
 
     auto const bc = create_sysfs_brightness_control();
 
-    expect_brightness_value(max_brightness * 0.1);
+    auto const dim_percent =
+        static_cast<float>(fake_device_config.brightness_dim_value) /
+            fake_device_config.brightness_max_value;
+    expect_brightness_value(max_brightness * dim_percent);
 
     bc->set_dim_brightness();
 }

@@ -88,7 +88,9 @@ repowerd::DefaultDaemonConfig::the_brightness_control()
     if (!brightness_control)
     try
     {
-        brightness_control = std::make_shared<SysfsBrightnessControl>("/sys");
+        brightness_control = std::make_shared<SysfsBrightnessControl>(
+            "/sys",
+            *the_device_config());
     }
     catch(...)
     {
