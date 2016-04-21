@@ -72,6 +72,8 @@ struct AUnityScreenService : testing::Test
         registrations.push_back(
             service.register_no_notification_handler(
                 [this] { mock_handlers.no_notification(); }));
+
+        service.start_processing();
     }
 
     struct MockHandlers

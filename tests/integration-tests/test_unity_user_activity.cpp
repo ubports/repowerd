@@ -65,6 +65,8 @@ struct AUnityUserActivity : testing::Test
                 {
                     mock_handlers.user_activity(type);
                 }));
+
+        unity_user_activity.start_processing();
     }
 
     struct MockHandlers

@@ -26,6 +26,11 @@ rt::FakeNotificationService::FakeNotificationService()
 {
 }
 
+void rt::FakeNotificationService::start_processing()
+{
+    mock.start_processing();
+}
+
 repowerd::HandlerRegistration rt::FakeNotificationService::register_notification_handler(
     NotificationHandler const& handler)
 {

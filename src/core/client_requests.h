@@ -38,6 +38,8 @@ class ClientRequests
 public:
     virtual ~ClientRequests() = default;
 
+    virtual void start_processing() = 0;
+
     virtual HandlerRegistration register_enable_inactivity_timeout_handler(
         EnableInactivityTimeoutHandler const& handler) = 0;
     virtual HandlerRegistration register_disable_inactivity_timeout_handler(

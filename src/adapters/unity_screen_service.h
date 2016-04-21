@@ -46,6 +46,8 @@ public:
         std::string const& dbus_bus_address);
     ~UnityScreenService();
 
+    void start_processing() override;
+
     HandlerRegistration register_disable_inactivity_timeout_handler(
         DisableInactivityTimeoutHandler const& handler) override;
     HandlerRegistration register_enable_inactivity_timeout_handler(
@@ -111,6 +113,7 @@ private:
     NotificationHandler notification_handler;
     NoNotificationHandler no_notification_handler;
 
+    bool started;
     std::unordered_multimap<std::string,int32_t> keep_display_on_ids;
     int32_t next_keep_display_on_id;
     int active_notifications;

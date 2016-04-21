@@ -32,6 +32,8 @@ class FakeClientRequests : public ClientRequests
 public:
     FakeClientRequests();
 
+    void start_processing() override;
+
     HandlerRegistration register_disable_inactivity_timeout_handler(
         DisableInactivityTimeoutHandler const& handler) override;
     HandlerRegistration register_enable_inactivity_timeout_handler(
@@ -55,6 +57,7 @@ public:
 
     struct Mock
     {
+        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_disable_inactivity_timeout_handler, void(DisableInactivityTimeoutHandler const&));
         MOCK_METHOD0(unregister_disable_inactivity_timeout_handler, void());
         MOCK_METHOD1(register_enable_inactivity_timeout_handler, void(EnableInactivityTimeoutHandler const&));

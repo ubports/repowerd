@@ -33,6 +33,8 @@ class PowerButton
 public:
     virtual ~PowerButton() = default;
 
+    virtual void start_processing() = 0;
+
     virtual HandlerRegistration register_power_button_handler(
         PowerButtonHandler const& handler) = 0;
 

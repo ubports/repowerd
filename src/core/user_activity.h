@@ -33,6 +33,8 @@ class UserActivity
 public:
     virtual ~UserActivity() = default;
 
+    virtual void start_processing() = 0;
+
     virtual HandlerRegistration register_user_activity_handler(
         UserActivityHandler const& handler) = 0;
 

@@ -32,6 +32,8 @@ class FakeVoiceCallService : public VoiceCallService
 public:
     FakeVoiceCallService();
 
+    void start_processing() override;
+
     HandlerRegistration register_active_call_handler(
         ActiveCallHandler const& handler) override;
     HandlerRegistration register_no_active_call_handler(
@@ -42,6 +44,7 @@ public:
 
     struct Mock
     {
+        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_active_call_handler, void(ActiveCallHandler const&));
         MOCK_METHOD0(unregister_active_call_handler, void());
         MOCK_METHOD1(register_no_active_call_handler, void(NoActiveCallHandler const&));

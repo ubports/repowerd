@@ -33,6 +33,8 @@ class VoiceCallService
 public:
     virtual ~VoiceCallService() = default;
 
+    virtual void start_processing() = 0;
+
     virtual HandlerRegistration register_active_call_handler(
         ActiveCallHandler const& handler) = 0;
 

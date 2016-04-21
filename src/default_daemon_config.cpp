@@ -54,6 +54,7 @@ struct NullBrightnessControl : repowerd::BrightnessControl
 
 struct NullProximitySensor : repowerd::ProximitySensor
 {
+    void start_processing() override {}
     repowerd::HandlerRegistration register_proximity_handler(
         repowerd::ProximityHandler const&) override
     {
@@ -66,6 +67,7 @@ struct NullProximitySensor : repowerd::ProximitySensor
 
 struct NullVoiceCallService : repowerd::VoiceCallService
 {
+    void start_processing() override {}
     repowerd::HandlerRegistration register_active_call_handler(
         repowerd::ActiveCallHandler const&) override
     {

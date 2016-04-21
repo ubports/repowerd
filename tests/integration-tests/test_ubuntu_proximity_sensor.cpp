@@ -118,9 +118,8 @@ struct AUbuntuProximitySensor : testing::Test
 
         sensor = std::make_unique<repowerd::UbuntuProximitySensor>(StubDeviceQuirks());
         registration = sensor->register_proximity_handler(
-            [this](repowerd::ProximityState state) {
-            std::cerr << "Handler called " << (int)state << std::endl;
-            mock_handlers.proximity_handler(state); });
+            [this](repowerd::ProximityState state) { mock_handlers.proximity_handler(state); });
+        sensor->start_processing();
     }
 
     struct MockHandlers
@@ -128,7 +127,6 @@ struct AUbuntuProximitySensor : testing::Test
         MOCK_METHOD1(proximity_handler, void(repowerd::ProximityState));
     };
     NiceMock<MockHandlers> mock_handlers;
-
 
     std::unique_ptr<repowerd::UbuntuProximitySensor> sensor;
     repowerd::HandlerRegistration registration;

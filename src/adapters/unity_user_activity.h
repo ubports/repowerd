@@ -31,6 +31,7 @@ class UnityUserActivity : public UserActivity
 public:
     UnityUserActivity(std::string const& dbus_bus_address);
 
+    void start_processing() override;
     HandlerRegistration register_user_activity_handler(
         UserActivityHandler const& handler) override;
 

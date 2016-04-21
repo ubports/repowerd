@@ -26,6 +26,11 @@ rt::FakeVoiceCallService::FakeVoiceCallService()
 {
 }
 
+void rt::FakeVoiceCallService::start_processing()
+{
+    mock.start_processing();
+}
+
 repowerd::HandlerRegistration rt::FakeVoiceCallService::register_active_call_handler(
     ActiveCallHandler const& handler)
 {

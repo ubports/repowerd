@@ -32,6 +32,8 @@ class UnityPowerButton : public PowerButton, public PowerButtonEventSink
 public:
     UnityPowerButton(std::string const& dbus_bus_address);
 
+    void start_processing() override;
+
     HandlerRegistration register_power_button_handler(
         PowerButtonHandler const& handler) override;
 

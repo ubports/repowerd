@@ -33,6 +33,8 @@ class NotificationService
 public:
     virtual ~NotificationService() = default;
 
+    virtual void start_processing() = 0;
+
     virtual HandlerRegistration register_no_notification_handler(
         NoNotificationHandler const& handler) = 0;
 

@@ -44,6 +44,7 @@ private:
     using Event = std::function<void()>;
 
     std::vector<HandlerRegistration> register_event_handlers();
+    void start_event_processing();
     void enqueue_event(Event const& event);
     void enqueue_priority_event(Event const& event);
     Event dequeue_event();

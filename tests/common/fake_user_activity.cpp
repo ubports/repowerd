@@ -25,6 +25,11 @@ rt::FakeUserActivity::FakeUserActivity()
 {
 }
 
+void rt::FakeUserActivity::start_processing()
+{
+    mock.start_processing();
+}
+
 repowerd::HandlerRegistration rt::FakeUserActivity::register_user_activity_handler(
     UserActivityHandler const& handler)
 {

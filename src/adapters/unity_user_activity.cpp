@@ -41,6 +41,10 @@ repowerd::UnityUserActivity::UnityUserActivity(
     : dbus_connection{dbus_bus_address},
       user_activity_handler{null_handler}
 {
+}
+
+void repowerd::UnityUserActivity::start_processing()
+{
     dbus_event_loop.register_signal_handler(
         dbus_connection,
         dbus_user_activity_name,
@@ -60,7 +64,6 @@ repowerd::UnityUserActivity::UnityUserActivity(
                 signal_name, parameters);
         });
 }
-
 
 repowerd::HandlerRegistration repowerd::UnityUserActivity::register_user_activity_handler(
     UserActivityHandler const& handler)

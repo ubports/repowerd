@@ -32,6 +32,8 @@ class FakeUserActivity : public UserActivity
 public:
     FakeUserActivity();
 
+    void start_processing() override;
+
     HandlerRegistration register_user_activity_handler(
         UserActivityHandler const& handler) override;
 
@@ -39,6 +41,7 @@ public:
 
     struct Mock
     {
+        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_user_activity_handler, void(UserActivityHandler const&));
         MOCK_METHOD0(unregister_user_activity_handler, void());
     };

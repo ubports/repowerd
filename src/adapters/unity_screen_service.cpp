@@ -112,11 +112,17 @@ repowerd::UnityScreenService::UnityScreenService(
       set_normal_brightness_value_handler{null_arg_handler},
       notification_handler{null_handler},
       no_notification_handler{null_handler},
+      started{false},
       next_keep_display_on_id{1},
       active_notifications{0},
       brightness_params(BrightnessParams::from_device_config(device_config))
 {
-    dbus_connection.request_name(dbus_screen_service_name);
+}
+
+void repowerd::UnityScreenService::start_processing()
+{
+    if (started) return;
+
     dbus_event_loop.register_object_handler(
         dbus_connection,
         dbus_screen_path,
@@ -153,6 +159,10 @@ repowerd::UnityScreenService::UnityScreenService(
                 connection, sender, object_path, interface_name,
                 signal_name, parameters);
         });
+
+    dbus_connection.request_name(dbus_screen_service_name);
+
+    started = true;
 }
 
 repowerd::UnityScreenService::~UnityScreenService()

@@ -20,6 +20,11 @@
 
 namespace rt = repowerd::test;
 
+void rt::FakePowerButton::start_processing()
+{
+    mock.start_processing();
+}
+
 repowerd::HandlerRegistration rt::FakePowerButton::register_power_button_handler(
     PowerButtonHandler const& handler)
 {

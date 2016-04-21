@@ -30,6 +30,8 @@ namespace test
 class FakePowerButton : public PowerButton
 {
 public:
+    void start_processing() override;
+
     HandlerRegistration register_power_button_handler(PowerButtonHandler const& handler) override;
 
     void press();
@@ -37,6 +39,7 @@ public:
 
     struct Mock
     {
+        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_power_button_handler, void(PowerButtonHandler const&));
         MOCK_METHOD0(unregister_power_button_handler, void());
     };

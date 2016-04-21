@@ -85,6 +85,7 @@ struct AUnityPowerButton : testing::Test
                 {
                     mock_handlers.power_button(state);
                 }));
+        unity_power_button.start_processing();
     }
 
     struct MockHandlers

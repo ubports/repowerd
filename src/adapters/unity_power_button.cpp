@@ -32,6 +32,10 @@ repowerd::UnityPowerButton::UnityPowerButton(
     : dbus_connection{dbus_bus_address},
       power_button_handler{null_handler}
 {
+}
+
+void repowerd::UnityPowerButton::start_processing()
+{
     dbus_event_loop.register_signal_handler(
         dbus_connection,
         dbus_power_button_name,
@@ -51,7 +55,6 @@ repowerd::UnityPowerButton::UnityPowerButton(
                 signal_name, parameters);
         });
 }
-
 
 repowerd::HandlerRegistration repowerd::UnityPowerButton::register_power_button_handler(
     PowerButtonHandler const& handler)

@@ -141,11 +141,13 @@ TEST_F(ADaemon, notifies_state_machine_of_timer_alarm)
     config.the_fake_timer()->advance_by(1s);
 }
 
-TEST_F(ADaemon, registers_and_unregisters_power_button_handler)
+TEST_F(ADaemon, registers_starts_and_unregisters_power_button_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_power_button()->mock, register_power_button_handler(_));
+    EXPECT_CALL(config.the_fake_power_button()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_power_button().get());
 
@@ -170,11 +172,13 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_release)
     config.the_fake_power_button()->release();
 }
 
-TEST_F(ADaemon, registers_and_unregisters_user_activity_handler)
+TEST_F(ADaemon, registers_starts_and_unregisters_user_activity_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_user_activity()->mock, register_user_activity_handler(_));
+    EXPECT_CALL(config.the_fake_user_activity()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_user_activity().get());
 
@@ -205,11 +209,13 @@ TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
     config.the_fake_user_activity()->perform(repowerd::UserActivityType::extend_power_state);
 }
 
-TEST_F(ADaemon, registers_and_unregisters_proximity_handler)
+TEST_F(ADaemon, registers_starts_and_unregisters_proximity_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_proximity_sensor()->mock, register_proximity_handler(_));
+    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
 
@@ -236,11 +242,13 @@ TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
     config.the_fake_proximity_sensor()->emit_proximity_state(repowerd::ProximityState::near);
 }
 
-TEST_F(ADaemon, registers_and_unregisters_enable_inactivity_timeout_handler)
+TEST_F(ADaemon, registers_starts_and_unregisters_enable_inactivity_timeout_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_inactivity_timeout_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -262,7 +270,9 @@ TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_inactivity_timeout_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -284,7 +294,9 @@ TEST_F(ADaemon, registers_and_unregisters_set_inactivity_timeout_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_inactivity_timeout_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -307,7 +319,9 @@ TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_autobrightness_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -329,7 +343,9 @@ TEST_F(ADaemon, registers_and_unregisters_enable_autobrightness)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_autobrightness_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -351,7 +367,9 @@ TEST_F(ADaemon, registers_and_unregisters_set_normal_brightness_value)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_normal_brightness_value_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 
@@ -374,7 +392,9 @@ TEST_F(ADaemon, registers_and_unregisters_notification_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_notification_service()->mock, register_notification_handler(_));
+    EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 
@@ -396,7 +416,9 @@ TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_notification_service()->mock, register_no_notification_handler(_));
+    EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 
@@ -418,7 +440,9 @@ TEST_F(ADaemon, registers_and_unregisters_active_call_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_active_call_handler(_));
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
 
@@ -440,7 +464,9 @@ TEST_F(ADaemon, registers_and_unregisters_no_active_call_handler)
 {
     using namespace testing;
 
+    InSequence s;
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_no_active_call_handler(_));
+    EXPECT_CALL(config.the_fake_voice_call_service()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
 

@@ -30,6 +30,11 @@ rt::FakeClientRequests::FakeClientRequests()
 {
 }
 
+void rt::FakeClientRequests::start_processing()
+{
+    mock.start_processing();
+}
+
 repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivity_timeout_handler(
     DisableInactivityTimeoutHandler const& handler)
 {

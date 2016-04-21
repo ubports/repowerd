@@ -38,6 +38,8 @@ class UbuntuProximitySensor : public ProximitySensor
 public:
     UbuntuProximitySensor(DeviceQuirks const& device_quirks);
 
+    void start_processing() override;
+
     HandlerRegistration register_proximity_handler(
         ProximityHandler const& handler) override;
     ProximityState proximity_state() override;

@@ -32,6 +32,8 @@ class FakeNotificationService : public NotificationService
 public:
     FakeNotificationService();
 
+    void start_processing() override;
+
     HandlerRegistration register_no_notification_handler(
         NoNotificationHandler const& handler) override;
     HandlerRegistration register_notification_handler(
@@ -42,6 +44,7 @@ public:
 
     struct Mock
     {
+        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_no_notification_handler,
                      void(NoNotificationHandler const&));
         MOCK_METHOD0(unregister_no_notification_handler, void());
