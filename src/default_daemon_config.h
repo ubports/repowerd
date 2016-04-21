@@ -24,7 +24,6 @@ namespace repowerd
 {
 
 class DeviceConfig;
-class PowerdService;
 class UnityScreenService;
 class UnityPowerButton;
 
@@ -55,14 +54,12 @@ public:
 private:
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
-    std::shared_ptr<PowerdService> the_powerd_service();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
 
     std::shared_ptr<BrightnessControl> brightness_control;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DisplayPowerControl> display_power_control;
-    std::shared_ptr<PowerdService> powerd_service;
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;

@@ -22,7 +22,6 @@
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
 #include "adapters/event_loop_timer.h"
-#include "adapters/powerd_service.h"
 #include "adapters/sysfs_brightness_control.h"
 #include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display_power_control.h"
@@ -102,7 +101,6 @@ repowerd::DefaultDaemonConfig::the_brightness_control()
 std::shared_ptr<repowerd::ClientRequests>
 repowerd::DefaultDaemonConfig::the_client_requests()
 {
-    the_powerd_service();
     return the_unity_screen_service();
 }
 
@@ -240,20 +238,6 @@ repowerd::DefaultDaemonConfig::the_device_config()
     }
 
     return device_config;
-}
-
-std::shared_ptr<repowerd::PowerdService>
-repowerd::DefaultDaemonConfig::the_powerd_service()
-{
-    if (!powerd_service)
-    {
-        powerd_service = std::make_shared<PowerdService>(
-            the_unity_screen_service(),
-            *the_device_config(),
-            the_dbus_bus_address());
-    }
-
-    return powerd_service;
 }
 
 std::shared_ptr<repowerd::UnityScreenService>

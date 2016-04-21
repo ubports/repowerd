@@ -18,8 +18,6 @@
 
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
-#include "src/adapters/device_config.h"
-#include "src/adapters/powerd_service.h"
 #include "src/adapters/unity_screen_service.h"
 
 #include "dbus_bus.h"
@@ -92,32 +90,6 @@ struct APowerdService : testing::Test
         registrations.push_back(
             unity_screen_service.register_enable_inactivity_timeout_handler(
                 [this] { mock_handlers.enable_inactivity_timeout(); }));
-        registrations.push_back(
-            unity_screen_service.register_set_inactivity_timeout_handler(
-                [this] (std::chrono::milliseconds ms)
-                {
-                    mock_handlers.set_inactivity_timeout(ms);
-                }));
-
-        registrations.push_back(
-            unity_screen_service.register_disable_autobrightness_handler(
-                [this] { mock_handlers.disable_autobrightness(); }));
-        registrations.push_back(
-            unity_screen_service.register_enable_autobrightness_handler(
-                [this] { mock_handlers.enable_autobrightness(); }));
-        registrations.push_back(
-            unity_screen_service.register_set_normal_brightness_value_handler(
-                [this] (float v)
-                {
-                    mock_handlers.set_normal_brightness_value(v);
-                }));
-
-        registrations.push_back(
-            unity_screen_service.register_notification_handler(
-                [this] { mock_handlers.notification(); }));
-        registrations.push_back(
-            unity_screen_service.register_no_notification_handler(
-                [this] { mock_handlers.no_notification(); }));
 
         unity_screen_service.start_processing();
     }
@@ -126,14 +98,6 @@ struct APowerdService : testing::Test
     {
         MOCK_METHOD0(disable_inactivity_timeout, void());
         MOCK_METHOD0(enable_inactivity_timeout, void());
-        MOCK_METHOD1(set_inactivity_timeout, void(std::chrono::milliseconds));
-
-        MOCK_METHOD0(disable_autobrightness, void());
-        MOCK_METHOD0(enable_autobrightness, void());
-        MOCK_METHOD1(set_normal_brightness_value, void(float));
-
-        MOCK_METHOD0(notification, void());
-        MOCK_METHOD0(no_notification, void());
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
@@ -144,10 +108,6 @@ struct APowerdService : testing::Test
     rt::FakeDeviceConfig fake_device_config;
     repowerd::UnityScreenService unity_screen_service{
         fake_device_config, bus.address()};
-    std::shared_ptr<repowerd::UnityScreenService> unity_screen_service_ptr{
-        &unity_screen_service, [](void*){}};
-    repowerd::PowerdService powerd_service{
-        unity_screen_service_ptr, fake_device_config, bus.address()};
     PowerdDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
@@ -164,8 +124,7 @@ TEST_F(APowerdService, forwards_request_sys_state_request)
 {
     EXPECT_CALL(mock_handlers, disable_inactivity_timeout());
 
-    auto cookie = client.request_request_sys_state(active_state).get();
-    EXPECT_THAT(cookie, StrNe(""));
+    client.request_request_sys_state(active_state);
 }
 
 TEST_F(APowerdService, returns_different_cookies_for_request_sys_state_requests)
@@ -187,12 +146,116 @@ TEST_F(APowerdService, returns_error_for_invalid_request_sys_state_request)
     EXPECT_THAT(g_dbus_message_get_message_type(reply_msg), Eq(G_DBUS_MESSAGE_TYPE_ERROR));
 }
 
-TEST_F(APowerdService, forwards_clear_sys_state_request)
+TEST_F(APowerdService,
+       reenables_inactivity_timeout_when_single_request_sys_state_request_is_cleared)
 {
-    auto cookie = client.request_request_sys_state(active_state).get();
+    using namespace testing;
 
+    InSequence s;
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout());
     EXPECT_CALL(mock_handlers, enable_inactivity_timeout());
-    client.request_clear_sys_state(cookie);
+
+    auto reply1 = client.request_request_sys_state(active_state);
+    client.request_clear_sys_state(reply1.get());
+}
+
+TEST_F(APowerdService,
+       reenables_inactivity_timeout_when_all_request_sys_state_request_are_cleared)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout()).Times(3);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout()).Times(0);
+
+    auto reply1 = client.request_request_sys_state(active_state);
+    auto reply2 = client.request_request_sys_state(active_state);
+    auto reply3 = client.request_request_sys_state(active_state);
+
+    client.request_clear_sys_state(reply1.get());
+    client.request_clear_sys_state(reply2.get());
+    auto cookie3 = reply3.get();
+
+    // Display should still be kept on at this point
+    Mock::VerifyAndClearExpectations(&mock_handlers);
+
+    // keep_display_on should be disable only when the last request is removed
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout());
+
+    client.request_clear_sys_state(cookie3);
+}
+
+TEST_F(APowerdService,
+       reenables_inactivity_timeout_when_single_client_disconnects)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout()).Times(3);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_request_sys_state(active_state);
+    client.request_request_sys_state(active_state);
+    client.request_request_sys_state(active_state);
+
+    client.disconnect();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(APowerdService,
+       reenables_inactivity_timeout_when_all_clients_disconnect_or_remove_requests)
+{
+    using namespace testing;
+
+    PowerdDBusClient other_client{bus.address()};
+
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout()).Times(4);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout()).Times(0);
+
+    auto reply1 = client.request_request_sys_state(active_state);
+    auto reply2 = client.request_request_sys_state(active_state);
+    other_client.request_request_sys_state(active_state);
+    other_client.request_request_sys_state(active_state);
+
+    other_client.disconnect();
+    client.request_clear_sys_state(reply1.get());
+    auto cookie2 = reply2.get();
+
+    // Display should still be kept on at this point
+    Mock::VerifyAndClearExpectations(&mock_handlers);
+
+    // keep_display_on should be disabled only when the last request is removed
+    rt::WaitCondition request_processed;
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_clear_sys_state(cookie2);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(APowerdService, ignores_invalid_clear_sys_state_request)
+{
+    std::string const invalid_cookie{"aaa"};
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout()).Times(0);
+
+    client.request_clear_sys_state(invalid_cookie);
+    client.disconnect();
+
+    // Allow some time for dbus calls to reach UnityScreenService
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+TEST_F(APowerdService, ignores_disconnects_from_clients_without_sys_state_request)
+{
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout()).Times(0);
+
+    client.disconnect();
+
+    // Allow some time for disconnect notification to reach UnityScreenService
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 TEST_F(APowerdService, replies_to_get_brightness_params_request)

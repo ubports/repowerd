@@ -70,9 +70,6 @@ public:
     void notify_display_power_on(DisplayPowerChangeReason reason) override;
     void notify_display_power_off(DisplayPowerChangeReason reason) override;
 
-    int32_t forward_keep_display_on(std::string const& sender);
-    void forward_remove_display_on_request(std::string const& sender, int32_t id);
-
 private:
     void dbus_method_call(
         GDBusConnection* connection,
@@ -89,6 +86,7 @@ private:
         gchar const* interface_name,
         gchar const* signal_name,
         GVariant* parameters);
+
     int32_t dbus_keepDisplayOn(std::string const& sender);
     void dbus_removeDisplayOnRequest(std::string const& sender, int32_t id);
     void dbus_setUserBrightness(int32_t brightness);
@@ -100,6 +98,15 @@ private:
         std::string const& new_owner);
     bool dbus_setScreenPowerMode(std::string const& mode, int32_t reason);
     void dbus_emit_DisplayPowerStateChange(int32_t power_state, int32_t reason);
+
+    std::string dbus_requestSysState(
+        std::string const& sender,
+        std::string const& name,
+        int32_t state);
+    void dbus_clearSysState(
+        std::string const& sender,
+        std::string const& cookie);
+    BrightnessParams dbus_getBrightnessParams();
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;

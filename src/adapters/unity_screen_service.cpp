@@ -98,6 +98,29 @@ char const* const unity_screen_service_introspection = R"(<!DOCTYPE node PUBLIC 
   </interface>
 </node>)";
 
+char const* const dbus_powerd_interface = "com.canonical.powerd";
+char const* const dbus_powerd_path = "/com/canonical/powerd";
+char const* const dbus_powerd_service_name = "com.canonical.powerd";
+
+char const* const unity_powerd_service_introspection = R"(
+<node>
+  <interface name='com.canonical.powerd'>
+    <method name='requestSysState'>
+      <arg type='s' name='name' direction='in' />
+      <arg type='i' name='state' direction='in' />
+      <arg type='s' name='cookie' direction='out' />
+    </method>
+    <method name='clearSysState'>
+      <arg type='s' name='cookie' direction='in' />
+    </method>
+    <method name='getBrightnessParams'>
+      <!-- Returns dim, min, max, and default brighness and whether or not
+           autobrightness is supported, in that order -->
+      <arg type='(iiiib)' name='params' direction="out" />
+    </method>
+  </interface>
+</node>)";
+
 }
 
 repowerd::UnityScreenService::UnityScreenService(
@@ -160,7 +183,26 @@ void repowerd::UnityScreenService::start_processing()
                 signal_name, parameters);
         });
 
+    dbus_event_loop.register_object_handler(
+        dbus_connection,
+        dbus_powerd_path,
+        unity_powerd_service_introspection,
+        [this] (
+            GDBusConnection* connection,
+            gchar const* sender,
+            gchar const* object_path,
+            gchar const* interface_name,
+            gchar const* method_name,
+            GVariant* parameters,
+            GDBusMethodInvocation* invocation)
+        {
+            dbus_method_call(
+                connection, sender, object_path, interface_name,
+                method_name, parameters, invocation);
+        });
+
     dbus_connection.request_name(dbus_screen_service_name);
+    dbus_connection.request_name(dbus_powerd_service_name);
 
     started = true;
 }
@@ -268,25 +310,6 @@ void repowerd::UnityScreenService::notify_display_power_off(
     dbus_emit_DisplayPowerStateChange(power_state_off, reason_param);
 }
 
-int32_t repowerd::UnityScreenService::forward_keep_display_on(
-    std::string const& sender)
-{
-    std::promise<int32_t> promise;
-    auto future = promise.get_future();
-
-    dbus_event_loop.enqueue(
-        [&] { promise.set_value(dbus_keepDisplayOn(sender)); });
-
-    return future.get();
-}
-
-void repowerd::UnityScreenService::forward_remove_display_on_request(
-    std::string const& sender, int32_t id)
-{
-    dbus_event_loop.enqueue(
-        [&] { dbus_removeDisplayOnRequest(sender, id); }).get();
-}
-
 void repowerd::UnityScreenService::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* sender_cstr,
@@ -353,6 +376,46 @@ void repowerd::UnityScreenService::dbus_method_call(
         g_dbus_method_invocation_return_value(
             invocation,
             g_variant_new("(b)", result ? TRUE : FALSE));
+    }
+    else if (method_name == "requestSysState")
+    {
+        char const* name{""};
+        int32_t state{-1};
+        g_variant_get(parameters, "(&si)", &name, &state);
+
+        try
+        {
+            auto const cookie = dbus_requestSysState(sender, name, state);
+            g_dbus_method_invocation_return_value(
+                invocation, g_variant_new("(s)", cookie.c_str()));
+        }
+        catch (std::exception const& e)
+        {
+            g_dbus_method_invocation_return_error_literal(
+                invocation, G_DBUS_ERROR, G_DBUS_ERROR_INVALID_ARGS, e.what());
+        }
+    }
+    else if (method_name == "clearSysState")
+    {
+        char const* cookie{""};
+        g_variant_get(parameters, "(&s)", &cookie);
+
+        dbus_clearSysState(sender, cookie);
+
+        g_dbus_method_invocation_return_value(invocation, NULL);
+    }
+    else if (method_name == "getBrightnessParams")
+    {
+        auto params = dbus_getBrightnessParams();
+
+        g_dbus_method_invocation_return_value(
+            invocation,
+            g_variant_new("((iiiib))",
+                params.dim_value,
+                params.min_value,
+                params.max_value,
+                params.default_value,
+                params.autobrightness_supported));
     }
     else
     {
@@ -493,4 +556,37 @@ void repowerd::UnityScreenService::dbus_emit_DisplayPowerStateChange(
         "DisplayPowerStateChange",
         g_variant_new("(ii)", power_state, reason),
         nullptr);
+}
+
+std::string repowerd::UnityScreenService::dbus_requestSysState(
+    std::string const& sender,
+    std::string const& /*name*/,
+    int32_t state)
+{
+    int32_t const active_state{1};
+
+    if (state != active_state)
+        throw std::runtime_error{"Invalid state"};
+
+    auto const id = dbus_keepDisplayOn(sender);
+    return std::to_string(id);
+}
+
+void repowerd::UnityScreenService::dbus_clearSysState(
+        std::string const& sender,
+        std::string const& cookie)
+{
+    try
+    {
+        auto const id = std::stoi(cookie);
+        dbus_removeDisplayOnRequest(sender, id);
+    }
+    catch(...)
+    {
+    }
+}
+
+repowerd::BrightnessParams repowerd::UnityScreenService::dbus_getBrightnessParams()
+{
+    return brightness_params;
 }
