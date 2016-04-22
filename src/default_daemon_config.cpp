@@ -28,7 +28,7 @@
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
-#include "adapters/wakeup_service.h"
+#include "adapters/dev_alarm_wakeup_service.h"
 
 #include "core/voice_call_service.h"
 
@@ -285,7 +285,14 @@ std::shared_ptr<repowerd::WakeupService>
 repowerd::DefaultDaemonConfig::the_wakeup_service()
 {
     if (!wakeup_service)
+    try
+    {
+        wakeup_service = std::make_shared<DevAlarmWakeupService>("/dev");
+    }
+    catch (...)
+    {
         wakeup_service = std::make_shared<NullWakeupService>();
+    }
 
     return wakeup_service;
 }

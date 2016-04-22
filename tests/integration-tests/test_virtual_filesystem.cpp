@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 
 #include <dirent.h>
+#include <sys/ioctl.h>
 #include <fstream>
 
 namespace rt = repowerd::test;
@@ -168,4 +169,28 @@ TEST_F(AVirtualFilesystem, supports_file_reads_with_contents)
         std::istreambuf_iterator<char>{}};
 
     EXPECT_THAT(contents_read, StrEq(file_contents));
+}
+
+TEST_F(AVirtualFilesystem, supports_file_ioctl)
+{
+    int const cmd = 66;
+    int arg = 0;
+
+    vfs.add_file_read_write_ioctl(
+        "/file",
+        null_file_handler,
+        null_file_handler,
+        [] (auto, auto cmd, auto arg)
+        {
+            *static_cast<int*>(arg) = cmd + 3;
+            return cmd + 5;
+        }
+        );
+
+    auto fd = open(vfs.full_path("/file").c_str(), O_RDWR);
+    auto ret = ioctl(fd, cmd, &arg);
+    close(fd);
+
+    EXPECT_THAT(arg, Eq(cmd + 3));
+    EXPECT_THAT(ret, Eq(cmd + 5));
 }

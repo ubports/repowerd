@@ -85,6 +85,7 @@ rt::VirtualFilesystem::VirtualFilesystem()
     fuse_ops.read = vfs_read;
     fuse_ops.write = vfs_write;
     fuse_ops.truncate = vfs_truncate;
+    fuse_ops.ioctl = vfs_ioctl;
 
     auto fuse_chan_handle = fuse_mount(mount_point_.c_str(), &args);
     if (!fuse_chan_handle)
@@ -102,7 +103,7 @@ rt::VirtualFilesystem::VirtualFilesystem()
     vfs_thread = std::thread{
         [this]
         {
-            fuse_loop(fuse_handle.get());
+            fuse_loop_mt(fuse_handle.get());
         }};
 
     add_directory("/");
@@ -139,9 +140,19 @@ void rt::VirtualFilesystem::add_file(
     VirtualFilesystemReadHandler const& read_handler,
     VirtualFilesystemWriteHandler const& write_handler)
 {
+    auto const null_ioctl_handler = [](char const*, int, void*) { return 0; };
+    add_file_read_write_ioctl(path, read_handler, write_handler, null_ioctl_handler);
+}
+
+void rt::VirtualFilesystem::add_file_read_write_ioctl(
+    std::string const& path,
+    VirtualFilesystemReadHandler const& read_handler,
+    VirtualFilesystemWriteHandler const& write_handler,
+    VirtualFilesystemIoctlHandler const& ioctl_handler)
+{
     auto components = split_path(path);
     directories[components.first].insert(components.second);
-    files[path] = {read_handler, write_handler};
+    files[path] = {read_handler, write_handler, ioctl_handler};
 }
 
 void rt::VirtualFilesystem::add_file_with_contents(
@@ -159,7 +170,8 @@ void rt::VirtualFilesystem::add_file_with_contents(
                 std::copy(contents.begin() + offset, contents.begin() + offset + len, buf);
                 return len;
             },
-            [](auto, auto, auto, auto) { return 0; }};
+            [](auto, auto, auto, auto) { return 0; },
+            [](auto, auto, auto) { return 0; }};
 }
 
 int rt::VirtualFilesystem::vfs_getattr(char const* path, struct stat* stbuf)
@@ -200,6 +212,17 @@ int rt::VirtualFilesystem::vfs_write(
     struct fuse_file_info* fi)
 {
     return vfs()->write(path, buf, size, offset, fi);
+}
+
+int rt::VirtualFilesystem::vfs_ioctl(
+    char const* path,
+    int cmd,
+    void* arg,
+    struct fuse_file_info* fi,
+    unsigned int flags,
+    void* data)
+{
+    return vfs()->ioctl(path, cmd, arg, fi, flags, data);
 }
 
 int rt::VirtualFilesystem::getattr(char const* path, struct stat* stbuf)
@@ -288,4 +311,19 @@ int rt::VirtualFilesystem::write(
 
     auto const& file_handlers = files[path];
     return file_handlers.write_handler(path, buf, size, offset);
+}
+
+int rt::VirtualFilesystem::ioctl(
+    char const* path,
+    int cmd,
+    void* arg,
+    struct fuse_file_info* /*fi*/,
+    unsigned int /*flags*/,
+    void* /*data*/)
+{
+    if (files.find(path) == files.end())
+        return -ENOENT;
+
+    auto const& file_handlers = files[path];
+    return file_handlers.ioctl_handler(path, cmd, arg);
 }

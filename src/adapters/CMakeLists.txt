@@ -26,11 +26,13 @@ set(
     android_device_config.cpp
     android_device_quirks.cpp
     brightness_params.cpp
-    event_loop.cpp
-    event_loop_timer.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
+    dev_alarm_wakeup_service.cpp
+    event_loop.cpp
+    event_loop_timer.cpp
+    fd.cpp
     sysfs_brightness_control.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp

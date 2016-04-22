@@ -36,6 +36,8 @@ using VirtualFilesystemReadHandler =
     std::function<int(char const* path, char* buf, size_t size, off_t offset)>;
 using VirtualFilesystemWriteHandler =
     std::function<int(char const* path, char const* buf, size_t size, off_t offset)>;
+using VirtualFilesystemIoctlHandler =
+    std::function<int(char const* path, int cmd, void* arg)>;
 
 class VirtualFilesystem
 {
@@ -51,6 +53,11 @@ public:
         std::string const& path,
         VirtualFilesystemReadHandler const& read_handler,
         VirtualFilesystemWriteHandler const& write_handler);
+    void add_file_read_write_ioctl(
+        std::string const& path,
+        VirtualFilesystemReadHandler const& read_handler,
+        VirtualFilesystemWriteHandler const& write_handler,
+        VirtualFilesystemIoctlHandler const& ioctl_handler);
     void add_file_with_contents(
         std::string const& path,
         std::string const& contents);
@@ -76,6 +83,13 @@ private:
         size_t size,
         off_t offset,
         struct fuse_file_info* fi);
+    static int vfs_ioctl(
+        char const* path,
+        int cmd,
+        void* arg,
+        struct fuse_file_info* fi,
+        unsigned int flags,
+        void* data);
 
     int getattr(char const* path, struct stat* stbuf);
     int readdir(
@@ -97,6 +111,13 @@ private:
         size_t size,
         off_t offset,
         struct fuse_file_info* fi);
+    int ioctl(
+        char const* path,
+        int cmd,
+        void* arg,
+        struct fuse_file_info* fi,
+        unsigned int flags,
+        void* data);
 
     std::string const mount_point_;
     std::unique_ptr<fuse,void(*)(fuse*)> fuse_handle;
@@ -106,6 +127,7 @@ private:
     {
         VirtualFilesystemReadHandler read_handler;
         VirtualFilesystemWriteHandler write_handler;
+        VirtualFilesystemIoctlHandler ioctl_handler;
     };
 
     std::unordered_map<std::string,std::unordered_set<std::string>> directories;
