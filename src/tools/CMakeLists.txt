@@ -36,3 +36,20 @@ target_link_libraries(
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
+
+add_executable(
+    repowerd-wakeup-tool
+
+    wakeup_tool.cpp
+
+    $<TARGET_OBJECTS:repowerd-adapters>
+    $<TARGET_OBJECTS:repowerd-core>
+)
+
+target_link_libraries(
+    repowerd-wakeup-tool
+
+    ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UA_LDFLAGS} ${UA_LIBRARIES}
+)
