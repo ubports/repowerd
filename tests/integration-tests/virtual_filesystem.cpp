@@ -164,14 +164,32 @@ void rt::VirtualFilesystem::add_file_with_contents(
     files[path] = {
             [contents](auto /*path*/, auto buf, auto size, auto offset)
             {
-                auto const len = std::max(
-                    std::min(contents.size() - static_cast<decltype(size)>(offset), size),
-                    static_cast<decltype(size)>(0));
-                std::copy(contents.begin() + offset, contents.begin() + offset + len, buf);
-                return len;
+                return contents.copy(buf, size, offset);
             },
             [](auto, auto, auto, auto) { return 0; },
             [](auto, auto, auto) { return 0; }};
+}
+
+std::shared_ptr<std::vector<std::string>> rt::VirtualFilesystem::add_file_with_live_contents(
+    std::string const& path)
+{
+    auto const contents = std::make_shared<std::vector<std::string>>();
+    auto const components = split_path(path);
+    directories[components.first].insert(components.second);
+    files[path] = {
+            [contents](auto /*path*/, auto buf, auto size, auto offset)
+            {
+                return contents->back().copy(buf, size, offset);
+            },
+            [contents](auto /*path*/, auto buf, auto size, auto offset)
+            {
+                contents->push_back(contents->back());
+                contents->back().resize(offset + size);
+                contents->back().replace(offset, size, buf, size);
+                return size;
+            },
+            [](auto, auto, auto) { return 0; }};
+    return contents;
 }
 
 int rt::VirtualFilesystem::vfs_getattr(char const* path, struct stat* stbuf)

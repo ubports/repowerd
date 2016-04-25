@@ -40,7 +40,9 @@ public:
     void set_off_brightness() override;
 
 private:
+    void transition_to_brightness_value(int brightness);
     void write_brightness_value(int brightness);
+    int read_brightness_value();
 
     std::string const sysfs_backlight_dir;
     int const max_brightness;

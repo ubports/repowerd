@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include <functional>
 #include <thread>
+#include <vector>
 
 #define FUSE_USE_VERSION 26
 #include <fuse.h>
@@ -61,6 +62,8 @@ public:
     void add_file_with_contents(
         std::string const& path,
         std::string const& contents);
+    std::shared_ptr<std::vector<std::string>> add_file_with_live_contents(
+        std::string const& path);
 
 private:
     static int vfs_getattr(char const* path, struct stat* stbuf);

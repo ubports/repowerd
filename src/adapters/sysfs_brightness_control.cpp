@@ -19,11 +19,16 @@
 #include "sysfs_brightness_control.h"
 #include "brightness_params.h"
 
-#include <vector>
-#include <string>
+#include <cmath>
+#include <chrono>
 #include <fstream>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <dirent.h>
+
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -118,13 +123,13 @@ void repowerd::SysfsBrightnessControl::enable_autobrightness()
 
 void repowerd::SysfsBrightnessControl::set_dim_brightness()
 {
-    write_brightness_value(dim_brightness);
+    transition_to_brightness_value(dim_brightness);
     normal_brightness_active = false;
 }
 
 void repowerd::SysfsBrightnessControl::set_normal_brightness()
 {
-    write_brightness_value(normal_brightness);
+    transition_to_brightness_value(normal_brightness);
     normal_brightness_active = true;
 }
 
@@ -137,8 +142,39 @@ void repowerd::SysfsBrightnessControl::set_normal_brightness_value(float v)
 
 void repowerd::SysfsBrightnessControl::set_off_brightness()
 {
-    write_brightness_value(0);
+    transition_to_brightness_value(0);
     normal_brightness_active = false;
+}
+
+void repowerd::SysfsBrightnessControl::transition_to_brightness_value(int brightness)
+{
+    auto const starting_brightness = read_brightness_value();
+    auto current_brightness = 1.0 * starting_brightness;
+    auto const step = 0.01 * max_brightness;
+    auto const num_steps = abs(current_brightness - brightness) / step;
+    auto const step_time = (starting_brightness == 0 || brightness == 0) ?
+                           100000us / num_steps : 1000us;
+
+    if (current_brightness < brightness)
+    {
+        while (current_brightness < brightness)
+        {
+            current_brightness += step;
+            if (current_brightness > brightness) current_brightness = brightness;
+            write_brightness_value(round(current_brightness));
+            std::this_thread::sleep_for(step_time);
+        }
+    }
+    else if (current_brightness > brightness)
+    {
+        while (current_brightness > brightness)
+        {
+            current_brightness -= step;
+            if (current_brightness < brightness) current_brightness = brightness;
+            write_brightness_value(round(current_brightness));
+            std::this_thread::sleep_for(step_time);
+        }
+    }
 }
 
 void repowerd::SysfsBrightnessControl::write_brightness_value(int brightness)
@@ -146,4 +182,12 @@ void repowerd::SysfsBrightnessControl::write_brightness_value(int brightness)
     std::ofstream fs{sysfs_backlight_dir + "/brightness"};
     fs << brightness;
     fs.flush();
+}
+
+int repowerd::SysfsBrightnessControl::read_brightness_value()
+{
+    std::ifstream fs{sysfs_backlight_dir + "/brightness"};
+    int brightness = 0;
+    fs >> brightness;
+    return brightness;
 }
