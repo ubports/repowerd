@@ -23,7 +23,9 @@
 #include "dbus_bus.h"
 #include "dbus_client.h"
 #include "fake_device_config.h"
+#include "fake_wakeup_service.h"
 
+#include "fake_shared.h"
 #include "wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -73,10 +75,47 @@ struct PowerdDBusClient : rt::DBusClient
             g_variant_new("(s)", cookie.c_str()));
     }
 
+    rt::DBusAsyncReplyString request_request_wakeup(
+        std::chrono::system_clock::time_point tp)
+    {
+        return invoke_with_reply<rt::DBusAsyncReplyString>(
+            powerd_interface, "requestWakeup",
+            g_variant_new("(st)", "test", std::chrono::system_clock::to_time_t(tp)));
+    }
+
+    rt::DBusAsyncReplyVoid request_clear_wakeup(std::string const& cookie)
+    {
+        return invoke_with_reply<rt::DBusAsyncReplyVoid>(
+            powerd_interface, "clearWakeup",
+            g_variant_new("(s)", cookie.c_str()));
+    }
+
+
     rt::DBusAsyncReply request_get_brightness_params()
     {
         return invoke_with_reply<rt::DBusAsyncReply>(
             powerd_interface, "getBrightnessParams", nullptr);
+    }
+
+    void register_wakeup_handler(
+        std::function<void()> const& func)
+    {
+        event_loop.register_signal_handler(
+            connection,
+            nullptr,
+            powerd_interface,
+            "Wakeup",
+            powerd_path,
+            [func] (
+                GDBusConnection* /*connection*/,
+                gchar const* /*sender*/,
+                gchar const* /*object_path*/,
+                gchar const* /*interface_name*/,
+                gchar const* /*signal_name*/,
+                GVariant* /*parameters*/)
+            {
+                func();
+            });
     }
 };
 
@@ -106,8 +145,9 @@ struct APowerdService : testing::Test
 
     rt::DBusBus bus;
     rt::FakeDeviceConfig fake_device_config;
+    rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService unity_screen_service{
-        fake_device_config, bus.address()};
+        rt::fake_shared(fake_wakeup_service), fake_device_config, bus.address()};
     PowerdDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
@@ -256,6 +296,48 @@ TEST_F(APowerdService, ignores_disconnects_from_clients_without_sys_state_reques
 
     // Allow some time for disconnect notification to reach UnityScreenService
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+TEST_F(APowerdService, schedules_wakeup)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    client.request_request_wakeup(tp).get();
+
+    EXPECT_THAT(fake_wakeup_service.emit_next_wakeup(), Eq(tp));
+}
+
+TEST_F(APowerdService, emits_wakeup_signal)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    std::promise<void> wakeup_promise;
+    auto wakeup_future = wakeup_promise.get_future();
+
+    client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
+
+    client.request_request_wakeup(tp).get();
+    fake_wakeup_service.emit_next_wakeup();
+
+    EXPECT_THAT(wakeup_future.wait_for(default_timeout),
+                Eq(std::future_status::ready));
+}
+
+TEST_F(APowerdService, clears_wakeup)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    std::promise<void> wakeup_promise;
+    auto wakeup_future = wakeup_promise.get_future();
+
+    client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
+
+    auto const cookie = client.request_request_wakeup(tp).get();
+    client.request_clear_wakeup(cookie).get();
+    fake_wakeup_service.emit_next_wakeup();
+
+    EXPECT_THAT(wakeup_future.wait_for(std::chrono::milliseconds{100}),
+                Eq(std::future_status::timeout));
 }
 
 TEST_F(APowerdService, replies_to_get_brightness_params_request)

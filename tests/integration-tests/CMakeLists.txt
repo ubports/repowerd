@@ -30,6 +30,7 @@ add_executable(
     dbus_bus.cpp
     dbus_client.cpp
     fake_device_config.cpp
+    fake_wakeup_service.cpp
     run_command.cpp
     unity_screen_dbus_client.cpp
     virtual_filesystem.cpp

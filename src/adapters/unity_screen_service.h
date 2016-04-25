@@ -35,6 +35,7 @@
 namespace repowerd
 {
 class DeviceConfig;
+class WakeupService;
 
 class UnityScreenService : public ClientRequests,
                            public DisplayPowerEventSink,
@@ -42,6 +43,7 @@ class UnityScreenService : public ClientRequests,
 {
 public:
     UnityScreenService(
+        std::shared_ptr<WakeupService> const& wakeup_service,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
     ~UnityScreenService();
@@ -106,10 +108,17 @@ private:
     void dbus_clearSysState(
         std::string const& sender,
         std::string const& cookie);
+    std::string dbus_requestWakeup(
+        std::string const& name,
+        uint64_t time);
+    void dbus_clearWakeup(std::string const& cookie);
     BrightnessParams dbus_getBrightnessParams();
+    void dbus_emit_Wakeup();
 
+    std::shared_ptr<WakeupService> const wakeup_service;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
+    HandlerRegistration wakeup_handler_registration;
 
     DisableInactivityTimeoutHandler disable_inactivity_timeout_handler;
     EnableInactivityTimeoutHandler enable_inactivity_timeout_handler;

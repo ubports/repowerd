@@ -28,6 +28,7 @@
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
+#include "adapters/wakeup_service.h"
 
 #include "core/voice_call_service.h"
 
@@ -75,6 +76,22 @@ struct NullVoiceCallService : repowerd::VoiceCallService
 
     repowerd::HandlerRegistration register_no_active_call_handler(
         repowerd::NoActiveCallHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
+struct NullWakeupService : repowerd::WakeupService
+{
+    std::string schedule_wakeup_at(std::chrono::system_clock::time_point) override
+    {
+        return {};
+    }
+
+    void cancel_wakeup(std::string const&) override {}
+
+    repowerd::HandlerRegistration register_wakeup_handler(
+        repowerd::WakeupHandler const&) override
     {
         return NullHandlerRegistration{};
     }
@@ -248,6 +265,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
     if (!unity_screen_service)
     {
         unity_screen_service = std::make_shared<UnityScreenService>(
+            the_wakeup_service(),
             *the_device_config(),
             the_dbus_bus_address());
     }
@@ -261,4 +279,13 @@ repowerd::DefaultDaemonConfig::the_unity_power_button()
     if (!unity_power_button)
         unity_power_button = std::make_shared<UnityPowerButton>(the_dbus_bus_address());
     return unity_power_button;
+}
+
+std::shared_ptr<repowerd::WakeupService>
+repowerd::DefaultDaemonConfig::the_wakeup_service()
+{
+    if (!wakeup_service)
+        wakeup_service = std::make_shared<NullWakeupService>();
+
+    return wakeup_service;
 }

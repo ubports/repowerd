@@ -19,6 +19,7 @@
 #include "unity_screen_service.h"
 #include "unity_screen_power_state_change_reason.h"
 #include "event_loop_handler_registration.h"
+#include "wakeup_service.h"
 
 namespace
 {
@@ -113,20 +114,32 @@ char const* const unity_powerd_service_introspection = R"(
     <method name='clearSysState'>
       <arg type='s' name='cookie' direction='in' />
     </method>
+    <method name='requestWakeup'>
+      <arg type='s' name='name' direction='in' />
+      <arg type='t' name='time' direction='in' />
+      <arg type='s' name='cookie' direction='out' />
+    </method>
+    <method name='clearWakeup'>
+      <arg type='s' name='cookie' direction='in' />
+    </method>
     <method name='getBrightnessParams'>
       <!-- Returns dim, min, max, and default brighness and whether or not
            autobrightness is supported, in that order -->
       <arg type='(iiiib)' name='params' direction="out" />
     </method>
+    <signal name='Wakeup'>
+    </signal>
   </interface>
 </node>)";
 
 }
 
 repowerd::UnityScreenService::UnityScreenService(
+    std::shared_ptr<WakeupService> const& wakeup_service,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
-    : dbus_connection{dbus_bus_address},
+    : wakeup_service{wakeup_service},
+      dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_handler},
       enable_inactivity_timeout_handler{null_handler},
       set_inactivity_timeout_handler{null_arg_handler},
@@ -199,6 +212,12 @@ void repowerd::UnityScreenService::start_processing()
             dbus_method_call(
                 connection, sender, object_path, interface_name,
                 method_name, parameters, invocation);
+        });
+
+    wakeup_handler_registration = wakeup_service->register_wakeup_handler(
+        [this] (std::string const&)
+        {
+            dbus_event_loop.enqueue([this] { dbus_emit_Wakeup(); });
         });
 
     dbus_connection.request_name(dbus_screen_service_name);
@@ -404,6 +423,26 @@ void repowerd::UnityScreenService::dbus_method_call(
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
+    else if (method_name == "requestWakeup")
+    {
+        char const* name{""};
+        uint64_t time{0};
+        g_variant_get(parameters, "(&st)", &name, &time);
+
+        auto const cookie = dbus_requestWakeup(name, time);
+
+        g_dbus_method_invocation_return_value(
+            invocation, g_variant_new("(s)", cookie.c_str()));
+    }
+    else if (method_name == "clearWakeup")
+    {
+        char const* cookie{""};
+        g_variant_get(parameters, "(&s)", &cookie);
+
+        dbus_clearWakeup(cookie);
+
+        g_dbus_method_invocation_return_value(invocation, NULL);
+    }
     else if (method_name == "getBrightnessParams")
     {
         auto params = dbus_getBrightnessParams();
@@ -586,7 +625,32 @@ void repowerd::UnityScreenService::dbus_clearSysState(
     }
 }
 
+std::string repowerd::UnityScreenService::dbus_requestWakeup(
+    std::string const& /*name*/,
+    uint64_t time)
+{
+    return wakeup_service->schedule_wakeup_at(std::chrono::system_clock::from_time_t(time));
+}
+
+void repowerd::UnityScreenService::dbus_clearWakeup(
+    std::string const& cookie)
+{
+    wakeup_service->cancel_wakeup(cookie);
+}
+
 repowerd::BrightnessParams repowerd::UnityScreenService::dbus_getBrightnessParams()
 {
     return brightness_params;
+}
+
+void repowerd::UnityScreenService::dbus_emit_Wakeup()
+{
+    g_dbus_connection_emit_signal(
+        dbus_connection,
+        nullptr,
+        dbus_powerd_path,
+        dbus_powerd_interface,
+        "Wakeup",
+        nullptr,
+        nullptr);
 }

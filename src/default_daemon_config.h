@@ -26,6 +26,7 @@ namespace repowerd
 class DeviceConfig;
 class UnityScreenService;
 class UnityPowerButton;
+class WakeupService;
 
 class DefaultDaemonConfig : public DaemonConfig
 {
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<DeviceConfig> the_device_config();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
+    std::shared_ptr<WakeupService> the_wakeup_service();
 
     std::shared_ptr<BrightnessControl> brightness_control;
     std::shared_ptr<DeviceConfig> device_config;
@@ -67,6 +69,7 @@ private:
     std::shared_ptr<UnityScreenService> unity_screen_service;
     std::shared_ptr<UserActivity> user_activity;
     std::shared_ptr<VoiceCallService> voice_call_service;
+    std::shared_ptr<WakeupService> wakeup_service;
 };
 
 }

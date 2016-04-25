@@ -18,12 +18,14 @@
 
 #include "dbus_bus.h"
 #include "fake_device_config.h"
+#include "fake_wakeup_service.h"
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
 #include "src/adapters/unity_screen_power_state_change_reason.h"
 #include "src/adapters/unity_screen_service.h"
 
+#include "fake_shared.h"
 #include "wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -97,7 +99,9 @@ struct AUnityScreenService : testing::Test
 
     rt::DBusBus bus;
     rt::FakeDeviceConfig fake_device_config;
-    repowerd::UnityScreenService service{fake_device_config, bus.address()};
+    rt::FakeWakeupService fake_wakeup_service;
+    repowerd::UnityScreenService service{
+        rt::fake_shared(fake_wakeup_service), fake_device_config, bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
