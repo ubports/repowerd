@@ -35,6 +35,13 @@ public:
     {
         loop.enqueue(register_func).wait();
     }
+
+    EventLoopHandlerRegistration(
+        repowerd::EventLoop& loop,
+        std::function<void()> const& unregister)
+        : HandlerRegistration{[&, unregister] { loop.enqueue(unregister).wait(); }}
+    {
+    }
 };
 
 }

@@ -408,7 +408,7 @@ TEST_F(AUnityScreenService, emits_display_power_state_change_signal)
 
     std::promise<rt::UnityScreenDBusClient::DisplayPowerStateChangeParams> promise;
 
-    client.register_display_power_state_change_handler(
+    auto const reg = client.register_display_power_state_change_handler(
         [&promise] (auto v) { promise.set_value(v); });
 
     struct TestValues

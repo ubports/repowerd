@@ -97,10 +97,10 @@ struct PowerdDBusClient : rt::DBusClient
             powerd_interface, "getBrightnessParams", nullptr);
     }
 
-    void register_wakeup_handler(
+    repowerd::HandlerRegistration register_wakeup_handler(
         std::function<void()> const& func)
     {
-        event_loop.register_signal_handler(
+        return event_loop.register_signal_handler(
             connection,
             nullptr,
             powerd_interface,
@@ -314,7 +314,7 @@ TEST_F(APowerdService, emits_wakeup_signal)
     std::promise<void> wakeup_promise;
     auto wakeup_future = wakeup_promise.get_future();
 
-    client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
+    auto const reg = client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
 
     client.request_request_wakeup(tp).get();
     fake_wakeup_service.emit_next_wakeup();
@@ -330,7 +330,7 @@ TEST_F(APowerdService, clears_wakeup)
     std::promise<void> wakeup_promise;
     auto wakeup_future = wakeup_promise.get_future();
 
-    client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
+    auto const reg = client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
 
     auto const cookie = client.request_request_wakeup(tp).get();
     client.request_clear_wakeup(cookie).get();

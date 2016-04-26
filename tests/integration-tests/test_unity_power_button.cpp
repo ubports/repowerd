@@ -54,9 +54,10 @@ struct UnityPowerButtonDBusClient : rt::DBusClient
         emit_signal("com.canonical.Unity.PowerButton", "Release", nullptr);
     }
 
-    void register_long_press_handler(std::function<void()> const& func)
+    repowerd::HandlerRegistration register_long_press_handler(
+        std::function<void()> const& func)
     {
-        event_loop.register_signal_handler(
+        return event_loop.register_signal_handler(
             connection,
             nullptr,
             "com.canonical.Unity.PowerButton",
@@ -152,7 +153,7 @@ TEST_F(AUnityPowerButton, emits_long_press_signal)
     std::promise<void> promise;
     auto future = promise.get_future();
 
-    client.register_long_press_handler(
+    auto const reg = client.register_long_press_handler(
         [&promise] { promise.set_value(); });
 
     unity_power_button.notify_long_press();

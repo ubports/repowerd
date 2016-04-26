@@ -36,7 +36,7 @@ repowerd::UnityPowerButton::UnityPowerButton(
 
 void repowerd::UnityPowerButton::start_processing()
 {
-    dbus_event_loop.register_signal_handler(
+    dbus_signal_handler_registration = dbus_event_loop.register_signal_handler(
         dbus_connection,
         dbus_power_button_name,
         dbus_power_button_interface,

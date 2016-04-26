@@ -45,7 +45,7 @@ repowerd::UnityUserActivity::UnityUserActivity(
 
 void repowerd::UnityUserActivity::start_processing()
 {
-    dbus_event_loop.register_signal_handler(
+    dbus_signal_handler_registration = dbus_event_loop.register_signal_handler(
         dbus_connection,
         dbus_user_activity_name,
         dbus_user_activity_interface,

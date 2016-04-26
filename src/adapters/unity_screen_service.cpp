@@ -159,7 +159,7 @@ void repowerd::UnityScreenService::start_processing()
 {
     if (started) return;
 
-    dbus_event_loop.register_object_handler(
+    unity_screen_handler_registration = dbus_event_loop.register_object_handler(
         dbus_connection,
         dbus_screen_path,
         unity_screen_service_introspection,
@@ -177,7 +177,7 @@ void repowerd::UnityScreenService::start_processing()
                 method_name, parameters, invocation);
         });
 
-    dbus_event_loop.register_signal_handler(
+    name_owner_changed_handler_registration = dbus_event_loop.register_signal_handler(
         dbus_connection,
         "org.freedesktop.DBus",
         "org.freedesktop.DBus",
@@ -196,7 +196,7 @@ void repowerd::UnityScreenService::start_processing()
                 signal_name, parameters);
         });
 
-    dbus_event_loop.register_object_handler(
+    powerd_handler_registration = dbus_event_loop.register_object_handler(
         dbus_connection,
         dbus_powerd_path,
         unity_powerd_service_introspection,
@@ -224,11 +224,6 @@ void repowerd::UnityScreenService::start_processing()
     dbus_connection.request_name(dbus_powerd_service_name);
 
     started = true;
-}
-
-repowerd::UnityScreenService::~UnityScreenService()
-{
-    dbus_event_loop.stop();
 }
 
 repowerd::HandlerRegistration

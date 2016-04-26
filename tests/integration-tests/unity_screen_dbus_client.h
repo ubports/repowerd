@@ -51,7 +51,7 @@ public:
         int32_t power_state;
         int32_t reason;
     };
-    void register_display_power_state_change_handler(
+    HandlerRegistration register_display_power_state_change_handler(
         std::function<void(DisplayPowerStateChangeParams)> const& f);
 };
 

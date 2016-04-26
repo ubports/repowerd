@@ -113,10 +113,11 @@ rt::DBusAsyncReply rt::UnityScreenDBusClient::request_method_with_invalid_interf
         g_variant_new("(i)", brightness));
 }
 
-void rt::UnityScreenDBusClient::register_display_power_state_change_handler(
+repowerd::HandlerRegistration
+rt::UnityScreenDBusClient::register_display_power_state_change_handler(
     std::function<void(DisplayPowerStateChangeParams)> const& func)
 {
-    event_loop.register_signal_handler(
+    return event_loop.register_signal_handler(
         connection,
         nullptr,
         "com.canonical.Unity.Screen",

@@ -17,9 +17,10 @@
  */
 
 #include "dbus_event_loop.h"
+#include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
 
-void repowerd::DBusEventLoop::register_object_handler(
+repowerd::HandlerRegistration repowerd::DBusEventLoop::register_object_handler(
     GDBusConnection* dbus_connection,
     char const* dbus_path,
     char const* introspection_xml,
@@ -45,6 +46,7 @@ void repowerd::DBusEventLoop::register_object_handler(
         DBusEventLoopMethodCallHandler const handler;
     };
 
+    unsigned int registration_id = 0;
     auto done = enqueue(
         [&]
         {
@@ -59,7 +61,7 @@ void repowerd::DBusEventLoop::register_object_handler(
 
             ScopedGError error;
 
-            g_dbus_connection_register_object(
+            registration_id = g_dbus_connection_register_object(
                 dbus_connection,
                 dbus_path,
                 introspection_data->interfaces[0],
@@ -78,9 +80,19 @@ void repowerd::DBusEventLoop::register_object_handler(
         });
 
     done.wait();
+
+    return EventLoopHandlerRegistration(
+        *this,
+        [dbus_connection,registration_id]
+        {
+            g_dbus_connection_unregister_object(
+                dbus_connection,
+                registration_id);
+        });
 }
 
-void repowerd::DBusEventLoop::register_signal_handler(
+
+repowerd::HandlerRegistration repowerd::DBusEventLoop::register_signal_handler(
     GDBusConnection* dbus_connection,
     char const* dbus_sender,
     char const* dbus_interface,
@@ -107,10 +119,11 @@ void repowerd::DBusEventLoop::register_signal_handler(
         DBusEventLoopSignalHandler const handler;
     };
 
+    unsigned int registration_id = 0;
     auto done = enqueue(
         [&]
         {
-            g_dbus_connection_signal_subscribe(
+            registration_id = g_dbus_connection_signal_subscribe(
                 dbus_connection,
                 dbus_sender,
                 dbus_interface,
@@ -124,4 +137,13 @@ void repowerd::DBusEventLoop::register_signal_handler(
         });
 
     done.wait();
+
+    return EventLoopHandlerRegistration(
+        *this,
+        [dbus_connection,registration_id]
+        {
+            g_dbus_connection_signal_unsubscribe(
+                dbus_connection,
+                registration_id);
+        });
 }

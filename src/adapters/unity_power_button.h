@@ -50,6 +50,7 @@ private:
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
+    HandlerRegistration dbus_signal_handler_registration;
 
     PowerButtonHandler power_button_handler;
 };

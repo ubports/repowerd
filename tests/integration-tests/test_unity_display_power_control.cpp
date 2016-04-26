@@ -49,7 +49,7 @@ public:
         : dbus_connection{bus_address}
     {
         dbus_connection.request_name("com.canonical.Unity.Display");
-        dbus_event_loop.register_object_handler(
+        unity_display_handler_registation = dbus_event_loop.register_object_handler(
             dbus_connection,
             "/com/canonical/Unity/Display",
             unity_display_service_introspection,
@@ -98,6 +98,7 @@ private:
 
     repowerd::DBusConnectionHandle dbus_connection;
     repowerd::DBusEventLoop dbus_event_loop;
+    repowerd::HandlerRegistration unity_display_handler_registation;
 };
 
 struct AUnityDisplayPowerControl : testing::Test

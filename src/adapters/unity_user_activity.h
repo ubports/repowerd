@@ -46,6 +46,7 @@ private:
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
+    HandlerRegistration dbus_signal_handler_registration;
 
     UserActivityHandler user_activity_handler;
 };

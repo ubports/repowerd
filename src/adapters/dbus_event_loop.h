@@ -19,6 +19,7 @@
 #pragma once
 
 #include "event_loop.h"
+#include "src/core/handler_registration.h"
 
 #include <gio/gio.h>
 
@@ -49,13 +50,13 @@ using DBusEventLoopSignalHandler =
 class DBusEventLoop : public EventLoop
 {
 public:
-    void register_object_handler(
+    repowerd::HandlerRegistration register_object_handler(
         GDBusConnection* dbus_connection,
         char const* dbus_path,
         char const* introspection_xml,
         DBusEventLoopMethodCallHandler const& handler);
 
-    void register_signal_handler(
+    repowerd::HandlerRegistration register_signal_handler(
         GDBusConnection* dbus_connection,
         char const* dbus_sender,
         char const* dbus_interface,

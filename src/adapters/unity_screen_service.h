@@ -46,7 +46,6 @@ public:
         std::shared_ptr<WakeupService> const& wakeup_service,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
-    ~UnityScreenService();
 
     void start_processing() override;
 
@@ -118,7 +117,6 @@ private:
     std::shared_ptr<WakeupService> const wakeup_service;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
-    HandlerRegistration wakeup_handler_registration;
 
     DisableInactivityTimeoutHandler disable_inactivity_timeout_handler;
     EnableInactivityTimeoutHandler enable_inactivity_timeout_handler;
@@ -134,6 +132,14 @@ private:
     int32_t next_keep_display_on_id;
     int active_notifications;
     BrightnessParams brightness_params;
+
+    // These need to be at the end, so that handlers are unregistered first on
+    // destruction, to avoid accessing other members if an event arrives
+    // on destruction.
+    HandlerRegistration unity_screen_handler_registration;
+    HandlerRegistration name_owner_changed_handler_registration;
+    HandlerRegistration powerd_handler_registration;
+    HandlerRegistration wakeup_handler_registration;
 };
 
 }
