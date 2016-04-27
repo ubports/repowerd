@@ -21,16 +21,15 @@
 
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
+#include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
+#include "adapters/ofono_voice_call_service.h"
 #include "adapters/sysfs_brightness_control.h"
 #include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display_power_control.h"
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
-#include "adapters/dev_alarm_wakeup_service.h"
-
-#include "core/voice_call_service.h"
 
 using namespace std::chrono_literals;
 
@@ -63,22 +62,6 @@ struct NullProximitySensor : repowerd::ProximitySensor
     repowerd::ProximityState proximity_state() override { return {}; }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
-};
-
-struct NullVoiceCallService : repowerd::VoiceCallService
-{
-    void start_processing() override {}
-    repowerd::HandlerRegistration register_active_call_handler(
-        repowerd::ActiveCallHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_no_active_call_handler(
-        repowerd::NoActiveCallHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
 };
 
 struct NullWakeupService : repowerd::WakeupService
@@ -199,7 +182,7 @@ std::shared_ptr<repowerd::VoiceCallService>
 repowerd::DefaultDaemonConfig::the_voice_call_service()
 {
     if (!voice_call_service)
-        voice_call_service = std::make_shared<NullVoiceCallService>();
+        voice_call_service = std::make_shared<OfonoVoiceCallService>(the_dbus_bus_address());
     return voice_call_service;
 }
 

@@ -109,6 +109,7 @@ public:
     }
 
     void emit_signal(char const* interface, char const* name, GVariant* args);
+    void emit_signal_full(char const* path, char const* interface, char const* name, GVariant* args);
 
 protected:
     void invoke_async(

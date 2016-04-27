@@ -38,6 +38,7 @@ add_executable(
     test_android_device_config.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp
+    test_ofono_voice_call_service.cpp
     test_powerd_service.cpp
     test_sysfs_brightness_control.cpp
     test_ubuntu_proximity_sensor.cpp

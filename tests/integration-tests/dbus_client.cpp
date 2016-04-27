@@ -157,6 +157,19 @@ void rt::DBusClient::emit_signal(
         nullptr);
 }
 
+void rt::DBusClient::emit_signal_full(
+    char const* path, char const* interface, char const* name, GVariant* args)
+{
+    g_dbus_connection_emit_signal(
+        connection,
+        nullptr,
+        path,
+        interface,
+        name,
+        args,
+        nullptr);
+}
+
 void rt::DBusClient::invoke_async(
     DBusAsyncReply* reply, char const* interface, char const* method, GVariant* args)
 {

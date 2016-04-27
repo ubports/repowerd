@@ -33,6 +33,7 @@ set(
     event_loop.cpp
     event_loop_timer.cpp
     fd.cpp
+    ofono_voice_call_service.cpp
     sysfs_brightness_control.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
