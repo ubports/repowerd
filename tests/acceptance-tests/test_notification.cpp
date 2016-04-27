@@ -225,9 +225,11 @@ TEST_F(ANotification, turns_display_on_for_reduced_timeout_if_proximity_uncovere
 
 TEST_F(ANotification, disables_proximity_handling_after_proximity_uncovered)
 {
+    expect_display_turns_on();
     set_proximity_state_near();
     emit_notification();
     emit_proximity_state_far_if_enabled();
+    verify_expectations();
 
     expect_no_display_power_change();
     emit_proximity_state_near_if_enabled();
