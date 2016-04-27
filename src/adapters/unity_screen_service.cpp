@@ -151,6 +151,7 @@ repowerd::UnityScreenService::UnityScreenService(
       started{false},
       next_keep_display_on_id{1},
       active_notifications{0},
+      next_request_sys_state_id{1},
       brightness_params(BrightnessParams::from_device_config(device_config))
 {
 }
@@ -530,6 +531,12 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         {
             enable_inactivity_timeout_handler();
         }
+
+        if (request_sys_state_ids.erase(name) > 0 &&
+            request_sys_state_ids.empty())
+        {
+            // TODO: Allow suspend
+        }
     }
 }
 
@@ -602,7 +609,9 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
     if (state != active_state)
         throw std::runtime_error{"Invalid state"};
 
-    auto const id = dbus_keepDisplayOn(sender);
+    auto const id = next_request_sys_state_id++;
+    request_sys_state_ids.emplace(sender, id);
+    // TODO: disallow suspend
     return std::to_string(id);
 }
 
@@ -610,13 +619,27 @@ void repowerd::UnityScreenService::dbus_clearSysState(
         std::string const& sender,
         std::string const& cookie)
 {
-    try
+    bool id_removed{false};
+
+    int32_t id = 0;
+    try { id = std::stoi(cookie); } catch(...) {}
+
+    auto range = request_sys_state_ids.equal_range(sender);
+    for (auto iter = range.first;
+         iter != range.second;
+         ++iter)
     {
-        auto const id = std::stoi(cookie);
-        dbus_removeDisplayOnRequest(sender, id);
+        if (iter->second == id)
+        {
+            request_sys_state_ids.erase(iter);
+            id_removed = true;
+            break;
+        }
     }
-    catch(...)
+
+    if (id_removed && request_sys_state_ids.empty())
     {
+        // TODO: Allow suspend
     }
 }
 

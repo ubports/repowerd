@@ -128,9 +128,13 @@ private:
     NoNotificationHandler no_notification_handler;
 
     bool started;
+
     std::unordered_multimap<std::string,int32_t> keep_display_on_ids;
     int32_t next_keep_display_on_id;
     int active_notifications;
+
+    std::unordered_multimap<std::string,int32_t> request_sys_state_ids;
+    int32_t next_request_sys_state_id;
     BrightnessParams brightness_params;
 
     // These need to be at the end, so that handlers are unregistered first on
