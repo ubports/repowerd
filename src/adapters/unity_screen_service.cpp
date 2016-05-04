@@ -21,6 +21,8 @@
 #include "event_loop_handler_registration.h"
 #include "wakeup_service.h"
 
+#include "src/core/infinite_timeout.h"
+
 namespace
 {
 
@@ -557,7 +559,11 @@ void repowerd::UnityScreenService::dbus_setUserBrightness(int32_t brightness)
 void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
     int32_t poweroff_timeout, int32_t /*dimmer_timeout*/)
 {
-    set_inactivity_timeout_handler(std::chrono::seconds{poweroff_timeout});
+    if (poweroff_timeout < 0) return;
+
+    auto const timeout = poweroff_timeout == 0 ? repowerd::infinite_timeout : 
+                                                 std::chrono::seconds{poweroff_timeout};
+    set_inactivity_timeout_handler(timeout);
 }
 
 bool repowerd::UnityScreenService::dbus_setScreenPowerMode(

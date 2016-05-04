@@ -24,6 +24,7 @@
 #include "src/adapters/dbus_message_handle.h"
 #include "src/adapters/unity_screen_power_state_change_reason.h"
 #include "src/adapters/unity_screen_service.h"
+#include "src/core/infinite_timeout.h"
 
 #include "fake_shared.h"
 #include "wait_condition.h"
@@ -251,6 +252,31 @@ TEST_F(AUnityScreenService, forwards_set_inactivity_timeouts_request)
     EXPECT_CALL(mock_handlers, set_inactivity_timeout(std::chrono::milliseconds{1000 * poweroff_timeout}));
 
     client.request_set_inactivity_timeouts(poweroff_timeout, dimmer_timeout);
+}
+
+TEST_F(AUnityScreenService, forwards_infinite_inactivity_timeouts_request)
+{
+    int32_t const infinite_poweroff_timeout = 0;
+    int32_t const dimmer_timeout = 5;
+
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(repowerd::infinite_timeout));
+
+    client.request_set_inactivity_timeouts(infinite_poweroff_timeout, dimmer_timeout);
+}
+
+TEST_F(AUnityScreenService, ignores_negative_inactivity_timeouts_request)
+{
+    using namespace testing;
+
+    int32_t const negative_poweroff_timeout = -1;
+    int32_t const dimmer_timeout = 5;
+
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_)).Times(0);
+
+    client.request_set_inactivity_timeouts(negative_poweroff_timeout, dimmer_timeout);
+
+    // Allow some time for dbus calls to reach UnityScreenService
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 TEST_F(AUnityScreenService, forwards_user_auto_brightness_disable_request)
