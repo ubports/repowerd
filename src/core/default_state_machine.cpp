@@ -21,6 +21,7 @@
 #include "brightness_control.h"
 #include "display_power_control.h"
 #include "display_power_event_sink.h"
+#include "infinite_timeout.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
 #include "timer.h"
@@ -71,6 +72,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
         user_inactivity_display_off_alarm_id = AlarmId::invalid;
         if (is_inactivity_timeout_allowed())
             turn_off_display(DisplayPowerChangeReason::activity);
+        scheduled_timeout_type = ScheduledTimeoutType::none;
     }
 }
 
@@ -114,9 +116,13 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
     disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
 }
 
-void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(std::chrono::milliseconds timeout)
+void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
+    std::chrono::milliseconds timeout)
 {
     user_inactivity_normal_display_off_timeout = timeout;
+
+    if (scheduled_timeout_type == ScheduledTimeoutType::normal)
+        schedule_normal_user_inactivity_alarm();
 }
 
 void repowerd::DefaultStateMachine::handle_no_notification()
@@ -246,11 +252,20 @@ void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
     }
 
     user_inactivity_display_off_time_point = {};
+    scheduled_timeout_type = ScheduledTimeoutType::none;
 }
 
 void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
 {
     cancel_user_inactivity_alarm();
+    scheduled_timeout_type = ScheduledTimeoutType::normal;
+
+    if (user_inactivity_normal_display_off_timeout == repowerd::infinite_timeout)
+    {
+        user_inactivity_display_off_time_point = std::chrono::steady_clock::time_point::max();
+        return;
+    }
+
     user_inactivity_display_off_time_point =
         timer->now() + user_inactivity_normal_display_off_timeout;
     if (user_inactivity_normal_display_off_timeout > user_inactivity_normal_display_dim_duration)
@@ -274,6 +289,7 @@ void repowerd::DefaultStateMachine::schedule_post_notification_user_inactivity_a
         user_inactivity_display_off_alarm_id =
             timer->schedule_alarm_in(user_inactivity_post_notification_display_off_timeout);
         user_inactivity_display_off_time_point = tp;
+        scheduled_timeout_type = ScheduledTimeoutType::post_notification;
     }
 }
 
@@ -286,6 +302,7 @@ void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
         user_inactivity_display_off_alarm_id =
             timer->schedule_alarm_in(user_inactivity_reduced_display_off_timeout);
         user_inactivity_display_off_time_point = tp;
+        scheduled_timeout_type = ScheduledTimeoutType::reduced;
     }
 }
 
@@ -341,7 +358,7 @@ void repowerd::DefaultStateMachine::allow_inactivity_timeout(
 
         if (is_inactivity_timeout_allowed() &&
             display_power_mode == DisplayPowerMode::on &&
-            user_inactivity_display_off_alarm_id == AlarmId::invalid)
+            scheduled_timeout_type == ScheduledTimeoutType::none)
         {
             turn_off_display(DisplayPowerChangeReason::activity);
         }
@@ -356,9 +373,23 @@ void repowerd::DefaultStateMachine::disallow_inactivity_timeout(
 
 bool repowerd::DefaultStateMachine::is_inactivity_timeout_allowed()
 {
-    for (auto const& allowed : inactivity_timeout_allowances)
-        if (!allowed) return false;
-    return true;
+    auto const client = inactivity_timeout_allowances[InactivityTimeoutAllowance::client];
+    auto const notification = inactivity_timeout_allowances[InactivityTimeoutAllowance::notification];
+
+    if (!notification)
+    {
+        return false;
+    }
+    else if (!client &&
+             (scheduled_timeout_type == ScheduledTimeoutType::normal ||
+              scheduled_timeout_type == ScheduledTimeoutType::none))
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 void repowerd::DefaultStateMachine::enable_proximity(

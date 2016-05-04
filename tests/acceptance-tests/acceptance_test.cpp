@@ -32,6 +32,7 @@
 #include "fake_voice_call_service.h"
 
 #include "src/core/daemon.h"
+#include "src/core/infinite_timeout.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -51,7 +52,8 @@ rt::AcceptanceTest::AcceptanceTest()
       user_inactivity_post_notification_display_off_timeout{
           config.user_inactivity_post_notification_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
-          config.user_inactivity_reduced_display_off_timeout()}
+          config.user_inactivity_reduced_display_off_timeout()},
+      infinite_timeout{repowerd::infinite_timeout}
 {
     daemon_thread = std::thread{ [this] { daemon.run(); }};
     daemon.flush();

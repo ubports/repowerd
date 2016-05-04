@@ -165,3 +165,33 @@ TEST_F(AUserActivity, event_notifies_of_display_power_change)
     advance_time_by(user_inactivity_normal_display_off_timeout);
     verify_expectations();
 }
+
+TEST_F(AUserActivity,
+       changing_power_state_keeps_screen_on_forever_if_inactivity_timeout_is_infinite)
+{
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    emit_notification();
+    emit_no_notification();
+
+    perform_user_activity_changing_power_state();
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(1h);
+}
+
+TEST_F(AUserActivity,
+       extending_power_state_keeps_screen_on_forever_if_inactivity_timeout_is_infinite)
+{
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    emit_notification();
+    emit_no_notification();
+
+    perform_user_activity_extending_power_state();
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(1h);
+}

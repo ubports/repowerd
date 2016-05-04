@@ -127,3 +127,39 @@ TEST_F(AClientRequest, to_set_short_inactivity_timeout_cancels_display_dim_timeo
     expect_no_display_brightness_change();
     advance_time_by(display_off_timeout - 1ms);
 }
+
+TEST_F(AClientRequest,
+       to_set_infinite_inactivity_timeout_keeps_screen_on_forever_if_turned_on_by_power_button)
+{
+    turn_on_display();
+
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(1h);
+}
+
+TEST_F(AClientRequest,
+       to_set_infinite_inactivity_timeout_keeps_screen_on_forever_after_user_activity)
+{
+    expect_display_turns_on();
+    emit_notification();
+    emit_no_notification();
+    verify_expectations();
+
+    perform_user_activity_extending_power_state();
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(1h);
+}
+
+TEST_F(AClientRequest,
+       to_set_infinite_inactivity_allows_power_button_to_turn_off_screen)
+{
+    turn_on_display();
+    client_request_set_inactivity_timeout(infinite_timeout);
+    turn_off_display();
+}

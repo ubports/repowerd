@@ -65,6 +65,7 @@ private:
         enum Enablement {until_far_event, until_disabled, count};
     };
     using ProximityEnablement = ProximityEnablementEnum::Enablement;
+    enum class ScheduledTimeoutType {none, normal, post_notification, reduced};
 
     void cancel_user_inactivity_alarm();
     void schedule_normal_user_inactivity_alarm();
@@ -105,6 +106,7 @@ private:
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
+    ScheduledTimeoutType scheduled_timeout_type;
 };
 
 }

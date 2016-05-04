@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 namespace rt = repowerd::test;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -136,4 +137,16 @@ TEST_F(APowerButton, event_notifies_of_display_power_change)
 
     press_power_button();
     release_power_button();
+}
+
+TEST_F(APowerButton,
+       press_turns_on_display_and_keeps_it_on_forever_if_inactivity_timeout_is_infinite)
+{
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    turn_on_display();
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(1h);
 }

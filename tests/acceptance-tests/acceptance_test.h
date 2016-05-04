@@ -79,6 +79,7 @@ struct AcceptanceTest : testing::Test
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
+    std::chrono::milliseconds const infinite_timeout;
 };
 
 }

@@ -178,7 +178,7 @@ TEST_F(ANotification, brightens_dim_display)
 }
 
 TEST_F(ANotification,
-       does_not_turn_off_display_when_done_if_a_client_has_disabled_inactivity_timeout)
+       turns_off_display_when_done_if_a_client_disables_inactivity_timeout)
 {
     expect_display_turns_on();
     emit_notification();
@@ -186,7 +186,48 @@ TEST_F(ANotification,
     emit_no_notification();
     verify_expectations();
 
-    expect_no_display_power_change();
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
+}
+
+TEST_F(ANotification,
+       turns_off_display_when_done_if_a_client_sets_infinite_inactivity_timeout)
+{
+    expect_display_turns_on();
+    emit_notification();
+    client_request_set_inactivity_timeout(infinite_timeout);
+    emit_no_notification();
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
+}
+
+TEST_F(ANotification,
+       turns_off_display_when_done_if_a_client_has_previously_disabled_inactivity_timeout)
+{
+    client_request_disable_inactivity_timeout();
+
+    expect_display_turns_on();
+    emit_notification();
+    emit_no_notification();
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
+}
+
+TEST_F(ANotification,
+       turns_off_display_when_done_if_a_client_has_previously_set_infinite_inactivity_timeout)
+{
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    expect_display_turns_on();
+    emit_notification();
+    emit_no_notification();
+    verify_expectations();
+
+    expect_display_turns_off();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
