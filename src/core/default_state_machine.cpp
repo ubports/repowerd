@@ -119,6 +119,8 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
 void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
     std::chrono::milliseconds timeout)
 {
+    if (timeout <= std::chrono::milliseconds::zero()) return;
+
     user_inactivity_normal_display_off_timeout = timeout;
 
     if (scheduled_timeout_type == ScheduledTimeoutType::normal)

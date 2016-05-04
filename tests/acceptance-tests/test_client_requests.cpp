@@ -163,3 +163,18 @@ TEST_F(AClientRequest,
     client_request_set_inactivity_timeout(infinite_timeout);
     turn_off_display();
 }
+
+TEST_F(AClientRequest, to_set_non_positive_inactivity_timeout_is_ignrored)
+{
+    client_request_set_inactivity_timeout(-1ms);
+    client_request_set_inactivity_timeout(0ms);
+
+    turn_on_display();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+}
