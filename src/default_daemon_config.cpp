@@ -21,10 +21,11 @@
 
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
+#include "adapters/backlight_brightness_control.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
 #include "adapters/ofono_voice_call_service.h"
-#include "adapters/sysfs_brightness_control.h"
+#include "adapters/sysfs_backlight.h"
 #include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display_power_control.h"
 #include "adapters/unity_power_button.h"
@@ -88,8 +89,8 @@ repowerd::DefaultDaemonConfig::the_brightness_control()
     if (!brightness_control)
     try
     {
-        brightness_control = std::make_shared<SysfsBrightnessControl>(
-            "/sys",
+        brightness_control = std::make_shared<BacklightBrightnessControl>(
+            std::make_shared<SysfsBacklight>("/sys"),
             *the_device_config());
     }
     catch(...)

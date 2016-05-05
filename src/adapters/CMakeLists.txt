@@ -25,6 +25,7 @@ set(
 
     android_device_config.cpp
     android_device_quirks.cpp
+    backlight_brightness_control.cpp
     brightness_params.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
@@ -34,7 +35,7 @@ set(
     event_loop_timer.cpp
     fd.cpp
     ofono_voice_call_service.cpp
-    sysfs_brightness_control.cpp
+    sysfs_backlight.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
     unity_power_button.cpp

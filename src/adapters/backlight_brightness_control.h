@@ -20,16 +20,19 @@
 
 #include "src/core/brightness_control.h"
 
+#include <memory>
+
 namespace repowerd
 {
 
+class Backlight;
 class DeviceConfig;
 
-class SysfsBrightnessControl : public BrightnessControl
+class BacklightBrightnessControl : public BrightnessControl
 {
 public:
-    SysfsBrightnessControl(
-        std::string const& sysfs_base_dir,
+    BacklightBrightnessControl(
+        std::shared_ptr<Backlight> const& backlight,
         DeviceConfig const& device_config);
 
     void disable_autobrightness() override;
@@ -40,14 +43,13 @@ public:
     void set_off_brightness() override;
 
 private:
-    void transition_to_brightness_value(int brightness);
-    void write_brightness_value(int brightness);
-    int read_brightness_value();
+    void transition_to_brightness_value(float brightness);
+    void set_brightness_value(float brightness);
+    float get_brightness_value();
 
-    std::string const sysfs_backlight_dir;
-    int const max_brightness;
-    int dim_brightness;
-    int normal_brightness;
+    std::shared_ptr<Backlight> const backlight;
+    float dim_brightness;
+    float normal_brightness;
     bool normal_brightness_active;
 };
 
