@@ -15,6 +15,19 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_executable(
+    repowerd-light-tool
+
+    light_tool.cpp
+)
+
+target_link_libraries(
+    repowerd-light-tool
+
+    repowerd-core
+    repowerd-adapters
+)
+
+add_executable(
     repowerd-proximity-tool
 
     proximity_tool.cpp

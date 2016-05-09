@@ -31,6 +31,7 @@ set(
     monotone_spline.cpp
     ofono_voice_call_service.cpp
     sysfs_backlight.cpp
+    ubuntu_light_sensor.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
     unity_power_button.cpp

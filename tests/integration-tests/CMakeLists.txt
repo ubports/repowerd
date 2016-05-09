@@ -41,6 +41,7 @@ add_executable(
     test_ofono_voice_call_service.cpp
     test_powerd_service.cpp
     test_backlight_brightness_control.cpp
+    test_ubuntu_light_sensor.cpp
     test_ubuntu_proximity_sensor.cpp
     test_unity_display_power_control.cpp
     test_unity_power_button.cpp
