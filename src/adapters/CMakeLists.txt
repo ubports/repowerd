@@ -28,6 +28,7 @@ set(
     event_loop.cpp
     event_loop_timer.cpp
     fd.cpp
+    monotone_spline.cpp
     ofono_voice_call_service.cpp
     sysfs_backlight.cpp
     ubuntu_proximity_sensor.cpp

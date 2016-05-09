@@ -17,13 +17,15 @@
 add_executable(
     repowerd-unit-tests
 
-    test_fake_timer.cpp
     test_daemon.cpp
+    test_fake_timer.cpp
+    test_monotone_spline.cpp
 )
 
 target_link_libraries(
     repowerd-unit-tests
 
+    repowerd-adapters
     repowerd-core
     repowerd-test-common
 
