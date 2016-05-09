@@ -27,11 +27,6 @@ rt::FakeProximitySensor::FakeProximitySensor()
 {
 }
 
-void rt::FakeProximitySensor::start_processing()
-{
-    mock.start_processing();
-}
-
 repowerd::HandlerRegistration rt::FakeProximitySensor::register_proximity_handler(
     ProximityHandler const& handler)
 {

@@ -33,8 +33,6 @@ class ProximitySensor
 public:
     virtual ~ProximitySensor() = default;
 
-    virtual void start_processing() = 0;
-
     virtual HandlerRegistration register_proximity_handler(
         ProximityHandler const& handler) = 0;
     virtual ProximityState proximity_state() = 0;

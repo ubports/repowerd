@@ -32,8 +32,6 @@ class FakeProximitySensor : public ProximitySensor
 public:
     FakeProximitySensor();
 
-    void start_processing() override;
-
     HandlerRegistration register_proximity_handler(
         ProximityHandler const& handler) override;
     ProximityState proximity_state() override;
@@ -47,7 +45,6 @@ public:
 
     struct Mock
     {
-        MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_proximity_handler, void(ProximityHandler const&));
         MOCK_METHOD0(unregister_proximity_handler, void());
     };

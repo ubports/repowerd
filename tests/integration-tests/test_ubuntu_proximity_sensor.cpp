@@ -55,7 +55,6 @@ struct AUbuntuProximitySensor : testing::Test
         sensor = std::make_unique<repowerd::UbuntuProximitySensor>(StubDeviceQuirks());
         registration = sensor->register_proximity_handler(
             [this](repowerd::ProximityState state) { mock_handlers.proximity_handler(state); });
-        sensor->start_processing();
     }
 
     struct MockHandlers

@@ -40,10 +40,6 @@ repowerd::UbuntuProximitySensor::UbuntuProximitySensor(
     if (!sensor)
         throw std::runtime_error("Failed to allocate proximity sensor");
 
-}
-
-void repowerd::UbuntuProximitySensor::start_processing()
-{
     ua_sensors_proximity_set_reading_cb(sensor, static_sensor_reading_callback, this);
 }
 

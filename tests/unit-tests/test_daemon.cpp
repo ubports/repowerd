@@ -213,9 +213,7 @@ TEST_F(ADaemon, registers_starts_and_unregisters_proximity_handler)
 {
     using namespace testing;
 
-    InSequence s;
     EXPECT_CALL(config.the_fake_proximity_sensor()->mock, register_proximity_handler(_));
-    EXPECT_CALL(config.the_fake_proximity_sensor()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
 

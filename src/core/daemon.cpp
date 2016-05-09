@@ -219,7 +219,6 @@ void repowerd::Daemon::start_event_processing()
     client_requests->start_processing();
     notification_service->start_processing();
     power_button->start_processing();
-    proximity_sensor->start_processing();
     user_activity->start_processing();
     voice_call_service->start_processing();
 }
