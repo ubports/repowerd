@@ -22,7 +22,6 @@ set(
 )
 
 add_library(
-    repowerd-core OBJECT
+    repowerd-core STATIC
     ${REPOWERD_CORE_SRCS}
 )
-

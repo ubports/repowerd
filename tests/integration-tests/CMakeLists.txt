@@ -18,8 +18,6 @@ pkg_check_modules(FUSE REQUIRED fuse)
 
 include_directories(
     ${FUSE_INCLUDE_DIRS}
-    ${GIO_INCLUDE_DIRS}
-    ${UA_INCLUDE_DIRS}
 )
 
 add_definitions(${FUSE_CFLAGS})
@@ -47,22 +45,19 @@ add_executable(
     test_unity_screen_service.cpp
     test_unity_user_activity.cpp
     test_virtual_filesystem.cpp
-
-    $<TARGET_OBJECTS:repowerd-adapters>
-    $<TARGET_OBJECTS:repowerd-core>
-    $<TARGET_OBJECTS:repowerd-test-common>
 )
 
 target_link_libraries(
     repowerd-integration-tests
 
+    repowerd-core
+    repowerd-adapters
+    repowerd-test-common
+
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
-    ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${FUSE_LDFLAGS} ${FUSE_LIBRARIES}
-    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
-    ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
 
 add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)

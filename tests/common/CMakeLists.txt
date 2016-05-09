@@ -15,7 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_library(
-    repowerd-test-common OBJECT
+    repowerd-test-common STATIC
 
     daemon_config.cpp
     fake_client_requests.cpp
@@ -25,4 +25,14 @@ add_library(
     fake_timer.cpp
     fake_user_activity.cpp
     fake_voice_call_service.cpp
+)
+
+target_link_libraries(
+    repowerd-test-common
+
+    repowerd-core
+
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARY}
+    ${GMOCK_MAIN_LIBRARY}
 )

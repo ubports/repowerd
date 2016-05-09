@@ -25,13 +25,13 @@ add_executable(
     test_turn_on_display_at_startup.cpp
     test_user_activity.cpp
     test_voice_call.cpp
-
-    $<TARGET_OBJECTS:repowerd-core>
-    $<TARGET_OBJECTS:repowerd-test-common>
 )
 
 target_link_libraries(
     repowerd-acceptance-tests
+
+    repowerd-core
+    repowerd-test-common
 
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}

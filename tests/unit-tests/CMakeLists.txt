@@ -14,22 +14,18 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-)
-
 add_executable(
     repowerd-unit-tests
 
     test_fake_timer.cpp
     test_daemon.cpp
-
-    $<TARGET_OBJECTS:repowerd-core>
-    $<TARGET_OBJECTS:repowerd-test-common>
 )
 
 target_link_libraries(
     repowerd-unit-tests
+
+    repowerd-core
+    repowerd-test-common
 
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}
