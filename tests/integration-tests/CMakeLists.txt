@@ -30,6 +30,8 @@ add_executable(
     fake_device_config.cpp
     fake_wakeup_service.cpp
     run_command.cpp
+    temporary_environment_value.cpp
+    temporary_file.cpp
     unity_screen_dbus_client.cpp
     virtual_filesystem.cpp
 

@@ -19,6 +19,8 @@
 #include "src/adapters/ubuntu_proximity_sensor.h"
 #include "src/adapters/device_quirks.h"
 
+#include "temporary_environment_value.h"
+#include "temporary_file.h"
 #include "wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -26,77 +28,11 @@
 
 #include <thread>
 
-#include <cstdlib>
-#include <unistd.h>
-
 namespace rt = repowerd::test;
 using namespace testing;
 
 namespace
 {
-
-class TemporaryEnvironmentValue
-{
-public:
-    TemporaryEnvironmentValue(char const* name, char const* value)
-        : name{name},
-          has_old_value{getenv(name) != nullptr},
-          old_value{has_old_value ? getenv(name) : ""}
-    {
-        if (value)
-            setenv(name, value, overwrite);
-        else
-            unsetenv(name);
-    }
-
-    ~TemporaryEnvironmentValue()
-    {
-        if (has_old_value)
-            setenv(name.c_str(), old_value.c_str(), overwrite);
-        else
-            unsetenv(name.c_str());
-    }
-
-private:
-    static int constexpr overwrite = 1;
-    std::string const name;
-    bool const has_old_value;
-    std::string const old_value;
-};
-
-class TemporaryFile
-{
-public:
-    TemporaryFile()
-    {
-        char name_template[] = "/tmp/repowerd-test-XXXXXX";
-        fd = mkstemp(name_template);
-        if (fd == -1)
-            throw std::runtime_error("Failed to create temporary file");
-        filename = name_template;
-    }
-
-    ~TemporaryFile()
-    {
-        close(fd);
-        unlink(filename.c_str());
-    }
-
-    std::string name()
-    {
-        return filename;
-    }
-
-    void write(std::string data)
-    {
-        ::write(fd, data.c_str(), data.size());
-        fsync(fd);
-    }
-
-private:
-    int fd;
-    std::string filename;
-};
 
 struct StubDeviceQuirks : repowerd::DeviceQuirks
 {
@@ -111,9 +47,9 @@ struct AUbuntuProximitySensor : testing::Test
 {
     void set_up_sensor(std::string const& script)
     {
-        TemporaryFile command_file;
-        TemporaryEnvironmentValue backend{"UBUNTU_PLATFORM_API_BACKEND", "test"};
-        TemporaryEnvironmentValue test_file{"UBUNTU_PLATFORM_API_SENSOR_TEST", command_file.name().c_str()};
+        rt::TemporaryFile command_file;
+        rt::TemporaryEnvironmentValue backend{"UBUNTU_PLATFORM_API_BACKEND", "test"};
+        rt::TemporaryEnvironmentValue test_file{"UBUNTU_PLATFORM_API_SENSOR_TEST", command_file.name().c_str()};
         command_file.write(script);
 
         sensor = std::make_unique<repowerd::UbuntuProximitySensor>(StubDeviceQuirks());
