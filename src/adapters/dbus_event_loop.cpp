@@ -20,6 +20,37 @@
 #include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
 
+namespace
+{
+
+// Send a synchronous request to ensure all previous requests have
+// reached the dbus daemon
+void repowerd_g_dbus_connection_wait_for_requests(GDBusConnection* connection)
+{
+    int const timeout_default = -1;
+    auto const null_cancellable = nullptr;
+    auto const null_args = nullptr;
+    auto const null_return_args_types = nullptr;
+    auto const null_error = nullptr;
+
+    auto result = g_dbus_connection_call_sync(
+        connection,
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        "GetId",
+        null_args,
+        null_return_args_types,
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_default,
+        null_cancellable,
+        null_error);
+
+    g_variant_unref(result);
+}
+
+}
+
 repowerd::HandlerRegistration repowerd::DBusEventLoop::register_object_handler(
     GDBusConnection* dbus_connection,
     char const* dbus_path,
@@ -81,6 +112,11 @@ repowerd::HandlerRegistration repowerd::DBusEventLoop::register_object_handler(
 
     done.wait();
 
+    // g_dbus_connection_register_object() is not synchronous, so wait for
+    // the registration (really a DBus AddMatch request) to be processed
+    // by the server
+    repowerd_g_dbus_connection_wait_for_requests(dbus_connection);
+
     return EventLoopHandlerRegistration(
         *this,
         [dbus_connection,registration_id]
@@ -137,6 +173,11 @@ repowerd::HandlerRegistration repowerd::DBusEventLoop::register_signal_handler(
         });
 
     done.wait();
+
+    // g_dbus_connection_signal_subscribe() is not synchronous, so wait for
+    // the subscription (really a DBus AddMatch request) to be processed
+    // by the server
+    repowerd_g_dbus_connection_wait_for_requests(dbus_connection);
 
     return EventLoopHandlerRegistration(
         *this,
