@@ -19,20 +19,25 @@
 #pragma once
 
 #include "src/core/brightness_control.h"
+#include "event_loop.h"
 
 #include <memory>
 
 namespace repowerd
 {
 
+class AutobrightnessAlgorithm;
 class Backlight;
 class DeviceConfig;
+class LightSensor;
 
 class BacklightBrightnessControl : public BrightnessControl
 {
 public:
     BacklightBrightnessControl(
         std::shared_ptr<Backlight> const& backlight,
+        std::shared_ptr<LightSensor> const& light_sensor,
+        std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
         DeviceConfig const& device_config);
 
     void disable_autobrightness() override;
@@ -42,15 +47,28 @@ public:
     void set_normal_brightness_value(float) override;
     void set_off_brightness() override;
 
+    void sync();
+
 private:
-    void transition_to_brightness_value(float brightness);
+    enum TransitionSpeed {normal, slow};
+    void transition_to_brightness_value(float brightness, TransitionSpeed transition_speed);
     void set_brightness_value(float brightness);
     float get_brightness_value();
 
     std::shared_ptr<Backlight> const backlight;
+    std::shared_ptr<LightSensor> const light_sensor;
+    std::shared_ptr<AutobrightnessAlgorithm> autobrightness_algorithm;
+    bool const ab_supported;
+
+    EventLoop event_loop;
+    HandlerRegistration light_handler_registration;
+    HandlerRegistration ab_handler_registration;
+
     float dim_brightness;
     float normal_brightness;
+    float user_normal_brightness;
     bool normal_brightness_active;
+    bool ab_active;
 };
 
 }

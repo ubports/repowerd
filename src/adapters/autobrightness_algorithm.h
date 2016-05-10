@@ -18,27 +18,34 @@
 
 #pragma once
 
-#include <vector>
+#include "src/core/handler_registration.h"
+
+#include <functional>
 
 namespace repowerd
 {
 
-// Implemented using Monotone cubic Hermite interpolation
-// See: https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
-class MonotoneSpline
+using AutobrightnessHandler = std::function<void(double brightness)>;
+
+class EventLoop;
+
+class AutobrightnessAlgorithm
 {
 public:
-    struct Point { double x; double y; };
+    virtual ~AutobrightnessAlgorithm() = default;
+    
+    virtual bool init(EventLoop& event_loop) = 0;
 
-    MonotoneSpline(std::vector<Point> const& points);
+    virtual void new_light_value(double light) = 0;
+    virtual void reset() = 0;
 
-    double interpolate(double x) const;
+    virtual HandlerRegistration register_autobrightness_handler(
+        AutobrightnessHandler const& handler) = 0;
 
-private:
-    int find_index(double x) const;
-
-    std::vector<Point> points;
-    std::vector<double> tangents;
+protected:
+    AutobrightnessAlgorithm() = default;
+    AutobrightnessAlgorithm(AutobrightnessAlgorithm const&) = delete;
+    AutobrightnessAlgorithm& operator=(AutobrightnessAlgorithm const&) = delete;
 };
 
 }

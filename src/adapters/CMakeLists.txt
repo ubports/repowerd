@@ -19,6 +19,7 @@ set(
 
     android_device_config.cpp
     android_device_quirks.cpp
+    android_autobrightness_algorithm.cpp
     backlight_brightness_control.cpp
     brightness_params.cpp
     dbus_connection_handle.cpp
