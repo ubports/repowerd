@@ -3,6 +3,7 @@ Priority: optional
 Section: admin
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
+               android-headers,
                cmake,
                fuse,
                google-mock,
