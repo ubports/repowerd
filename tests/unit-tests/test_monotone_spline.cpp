@@ -93,3 +93,14 @@ TEST_F(AMonotoneSpline, interpolated_points_lie_between_original_points)
         }
     }
 }
+
+TEST_F(AMonotoneSpline, with_fewer_than_two_point_cannot_be_created)
+{
+    EXPECT_THROW({
+        repowerd::MonotoneSpline({});
+    }, std::logic_error);
+
+    EXPECT_THROW({
+        repowerd::MonotoneSpline({{1,1}});
+    }, std::logic_error);
+}

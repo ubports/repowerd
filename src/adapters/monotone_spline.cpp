@@ -18,7 +18,7 @@
 
 #include "monotone_spline.h"
 #include <algorithm>
-#include <iostream>
+#include <stdexcept>
 
 namespace
 {
@@ -93,6 +93,9 @@ void ensure_monotonicity(std::vector<double>& tangents,
 std::vector<double> calculate_monotone_point_tangents(
     std::vector<repowerd::MonotoneSpline::Point> const& points)
 {
+    if (points.size() < 2)
+        throw std::logic_error("Cannot create spline with fewer than two points");
+
     auto const slopes = secant_slopes(points);
     auto tangents = point_tangents(slopes);
     ensure_monotonicity(tangents, slopes);
