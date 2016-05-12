@@ -74,7 +74,7 @@ struct OfonoDBusClient : rt::DBusClient
     void emit_call_added(std::string const& call_path, repowerd::OfonoCallState call_state)
     {
         auto const params = g_variant_new_parsed(
-            "(@o %o, @a{sv} {'State': <%s>, 'Name': <'bla'>})",
+            "(@o %o, @a{sv} {'Name': <'bla'>, 'State': <%s>, 'Emergency': <false>})",
             call_path.c_str(), ofono_call_state_to_string(call_state).c_str());
         emit_signal("org.ofono.VoiceCallManager", "CallAdded", params);
     }

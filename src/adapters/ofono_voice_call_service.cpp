@@ -59,7 +59,7 @@ repowerd::OfonoCallState get_call_state_from_properties(GVariantIter* properties
     std::string state;
     bool done = false;
 
-    while (!done && g_variant_iter_loop(properties, "{&sv}", &key_cstr, &value))
+    while (!done && g_variant_iter_next(properties, "{&sv}", &key_cstr, &value))
     {
         std::string const key{key_cstr ? key_cstr : ""};
         if (key == "State")
