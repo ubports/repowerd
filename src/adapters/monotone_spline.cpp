@@ -149,7 +149,7 @@ int repowerd::MonotoneSpline::find_index(double x) const
     if (x < points[0].x)
         return -1;
 
-    for (auto i = 0u; i < points.size(); ++i)
+    for (auto i = 0u; i < points.size() - 1; ++i)
     {
         if (x >= points[i].x && x < points[i+1].x)
             return i;
