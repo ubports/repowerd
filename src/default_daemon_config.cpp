@@ -19,9 +19,10 @@
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
 
+#include "adapters/android_autobrightness_algorithm.h"
+#include "adapters/android_backlight.h"
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
-#include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/backlight_brightness_control.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
@@ -247,7 +248,16 @@ repowerd::DefaultDaemonConfig::the_backlight()
 {
     if (!backlight)
     {
-        backlight = std::make_shared<SysfsBacklight>("/sys");
+        try
+        {
+            backlight = std::make_shared<AndroidBacklight>();
+        }
+        catch (...)
+        {
+        }
+
+        if (!backlight)
+            backlight = std::make_shared<SysfsBacklight>("/sys");
     }
 
     return backlight;

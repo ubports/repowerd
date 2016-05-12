@@ -36,6 +36,7 @@ add_executable(
     unity_screen_dbus_client.cpp
     virtual_filesystem.cpp
 
+    test_android_backlight.cpp
     test_android_device_config.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp

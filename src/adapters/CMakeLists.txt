@@ -17,9 +17,10 @@
 set(
     REPOWERD_ADAPTER_SRCS
 
+    android_autobrightness_algorithm.cpp
+    android_backlight.cpp
     android_device_config.cpp
     android_device_quirks.cpp
-    android_autobrightness_algorithm.cpp
     backlight_brightness_control.cpp
     brightness_params.cpp
     dbus_connection_handle.cpp
@@ -50,6 +51,7 @@ target_link_libraries(
 
     ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
 )
 
@@ -58,5 +60,6 @@ target_include_directories(
 
     ${ANDROID_PROPERTIES_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
+    ${LIBHARDWARE_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
 )

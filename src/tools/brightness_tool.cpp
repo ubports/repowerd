@@ -17,6 +17,7 @@
  */
 
 #include "src/adapters/android_autobrightness_algorithm.h"
+#include "src/adapters/android_backlight.h"
 #include "src/adapters/android_device_config.h"
 #include "src/adapters/backlight_brightness_control.h"
 #include "src/adapters/sysfs_backlight.h"
@@ -25,11 +26,59 @@
 #include <iostream>
 #include <string>
 
+struct NullLightSensor : repowerd::LightSensor
+{
+    repowerd::HandlerRegistration register_light_handler(
+        repowerd::LightHandler const&) override
+    {
+        return repowerd::HandlerRegistration{[]{}};
+    }
+
+    void enable_light_events() override {}
+    void disable_light_events() override {}
+};
+
+auto create_backlight()
+{
+    std::shared_ptr<repowerd::Backlight> backlight;
+
+    try
+    {
+        backlight = std::make_shared<repowerd::AndroidBacklight>();
+    }
+    catch (...)
+    {
+    }
+
+    if (!backlight)
+        backlight = std::make_shared<repowerd::SysfsBacklight>("/sys");
+
+    return backlight;
+}
+
+auto create_light_sensor()
+{
+    std::shared_ptr<repowerd::LightSensor> light_sensor;
+
+    try
+    {
+        light_sensor = std::make_shared<repowerd::UbuntuLightSensor>();
+    }
+    catch (...)
+    {
+    }
+
+    if (!light_sensor)
+        light_sensor = std::make_shared<NullLightSensor>();
+
+    return light_sensor;
+}
+
 int main()
 {
     repowerd::AndroidDeviceConfig device_config{"/usr/share/powerd/device_configs"};
-    auto const backlight = std::make_shared<repowerd::SysfsBacklight>("/sys");
-    auto const light_sensor = std::make_shared<repowerd::UbuntuLightSensor>();
+    auto const backlight = create_backlight();
+    auto const light_sensor = create_light_sensor();
     auto const ab_algorithm =
         std::make_shared<repowerd::AndroidAutobrightnessAlgorithm>(device_config);
     repowerd::BacklightBrightnessControl brightness_control{

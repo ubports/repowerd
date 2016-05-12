@@ -10,6 +10,7 @@ Build-Depends: debhelper (>= 9),
                libandroid-properties-dev,
                libfuse-dev,
                libglib2.0-dev,
+               libhardware-dev,
                libubuntu-application-api-dev,
                pkg-config
 Standards-Version: 3.9.4
