@@ -63,6 +63,18 @@ struct NullBrightnessNotification : repowerd::BrightnessNotification
     }
 };
 
+struct NullLightSensor : repowerd::LightSensor
+{
+    repowerd::HandlerRegistration register_light_handler(
+        repowerd::LightHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+
+    void enable_light_events() override {}
+    void disable_light_events() override {}
+};
+
 struct NullProximitySensor : repowerd::ProximitySensor
 {
     repowerd::HandlerRegistration register_proximity_handler(
@@ -297,8 +309,13 @@ std::shared_ptr<repowerd::LightSensor>
 repowerd::DefaultDaemonConfig::the_light_sensor()
 {
     if (!light_sensor)
+    try
     {
         light_sensor = std::make_shared<UbuntuLightSensor>();
+    }
+    catch (...)
+    {
+        light_sensor = std::make_shared<NullLightSensor>();
     }
 
     return light_sensor;
