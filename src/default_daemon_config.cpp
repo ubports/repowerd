@@ -230,14 +230,25 @@ bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()
     return true;
 }
 
+std::shared_ptr<repowerd::Backlight>
+repowerd::DefaultDaemonConfig::the_backlight()
+{
+    if (!backlight)
+    {
+        backlight = std::make_shared<SysfsBacklight>("/sys");
+    }
+
+    return backlight;
+}
+
 std::shared_ptr<repowerd::BacklightBrightnessControl>
 repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
 {
     if (!backlight_brightness_control)
     {
         backlight_brightness_control = std::make_shared<BacklightBrightnessControl>(
-            std::make_shared<SysfsBacklight>("/sys"),
-            std::make_shared<UbuntuLightSensor>(),
+            the_backlight(),
+            the_light_sensor(),
             std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
             *the_device_config());
     }
@@ -280,6 +291,17 @@ repowerd::DefaultDaemonConfig::the_device_config()
     }
 
     return device_config;
+}
+
+std::shared_ptr<repowerd::LightSensor>
+repowerd::DefaultDaemonConfig::the_light_sensor()
+{
+    if (!light_sensor)
+    {
+        light_sensor = std::make_shared<UbuntuLightSensor>();
+    }
+
+    return light_sensor;
 }
 
 std::shared_ptr<repowerd::UnityScreenService>
