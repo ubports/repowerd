@@ -18,6 +18,7 @@
 
 #include "unity_screen_service.h"
 #include "unity_screen_power_state_change_reason.h"
+#include "brightness_notification.h"
 #include "event_loop_handler_registration.h"
 #include "wakeup_service.h"
 
@@ -138,9 +139,11 @@ char const* const unity_powerd_service_introspection = R"(
 
 repowerd::UnityScreenService::UnityScreenService(
     std::shared_ptr<WakeupService> const& wakeup_service,
+    std::shared_ptr<BrightnessNotification> const& brightness_notification,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : wakeup_service{wakeup_service},
+      brightness_notification{brightness_notification},
       dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_handler},
       enable_inactivity_timeout_handler{null_handler},
@@ -221,6 +224,12 @@ void repowerd::UnityScreenService::start_processing()
         [this] (std::string const&)
         {
             dbus_event_loop.enqueue([this] { dbus_emit_Wakeup(); });
+        });
+
+    brightness_handler_registration = brightness_notification->register_brightness_handler(
+        [this] (double brightness)
+        {
+            dbus_event_loop.enqueue([this,brightness] { dbus_emit_Brightness(brightness); });
         });
 
     dbus_connection.request_name(dbus_screen_service_name);
@@ -676,5 +685,21 @@ void repowerd::UnityScreenService::dbus_emit_Wakeup()
         dbus_powerd_interface,
         "Wakeup",
         nullptr,
+        nullptr);
+}
+
+void repowerd::UnityScreenService::dbus_emit_Brightness(double brightness)
+{
+    int32_t const brightness_abs = brightness * brightness_params.max_value;
+
+    g_dbus_connection_emit_signal(
+        dbus_connection,
+        nullptr,
+        dbus_powerd_path,
+        "org.freedesktop.DBus.Properties",
+        "PropertiesChanged",
+        g_variant_new_parsed(
+            "(@s %s, @a{sv} {'brightness': <%i>}, @as [])",
+            dbus_powerd_interface, brightness_abs),
         nullptr);
 }

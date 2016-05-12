@@ -54,6 +54,15 @@ struct NullBrightnessControl : repowerd::BrightnessControl
     void set_off_brightness() override {}
 };
 
+struct NullBrightnessNotification : repowerd::BrightnessNotification
+{
+    repowerd::HandlerRegistration register_brightness_handler(
+        repowerd::BrightnessHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
 struct NullProximitySensor : repowerd::ProximitySensor
 {
     repowerd::HandlerRegistration register_proximity_handler(
@@ -90,13 +99,9 @@ repowerd::DefaultDaemonConfig::the_brightness_control()
     if (!brightness_control)
     try
     {
-        brightness_control = std::make_shared<BacklightBrightnessControl>(
-            std::make_shared<SysfsBacklight>("/sys"),
-            std::make_shared<UbuntuLightSensor>(),
-            std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
-            *the_device_config());
+        brightness_control = the_backlight_brightness_control();
     }
-    catch(...)
+    catch (...)
     {
         brightness_control = std::make_shared<NullBrightnessControl>();
     }
@@ -225,6 +230,37 @@ bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()
     return true;
 }
 
+std::shared_ptr<repowerd::BacklightBrightnessControl>
+repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
+{
+    if (!backlight_brightness_control)
+    {
+        backlight_brightness_control = std::make_shared<BacklightBrightnessControl>(
+            std::make_shared<SysfsBacklight>("/sys"),
+            std::make_shared<UbuntuLightSensor>(),
+            std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
+            *the_device_config());
+    }
+
+    return backlight_brightness_control;
+}
+
+std::shared_ptr<repowerd::BrightnessNotification>
+repowerd::DefaultDaemonConfig::the_brightness_notification()
+{
+    if (!brightness_notification)
+    try
+    {
+        brightness_notification = the_backlight_brightness_control();
+    }
+    catch (...)
+    {
+        brightness_notification = std::make_shared<NullBrightnessNotification>();
+    }
+
+    return brightness_notification;
+}
+
 std::string repowerd::DefaultDaemonConfig::the_dbus_bus_address()
 {
     auto const address = std::unique_ptr<gchar, decltype(&g_free)>{
@@ -253,6 +289,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
     {
         unity_screen_service = std::make_shared<UnityScreenService>(
             the_wakeup_service(),
+            the_backlight_brightness_control(),
             *the_device_config(),
             the_dbus_bus_address());
     }

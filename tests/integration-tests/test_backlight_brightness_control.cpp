@@ -370,3 +370,39 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.enable_autobrightness();
     Mock::VerifyAndClearExpectations(&autobrightness_algorithm.mock);
 }
+
+TEST_F(ABacklightBrightnessControl, notifies_of_brightness_change)
+{
+    double notified_brightness{0.0};
+
+    auto const handler_registration =
+        brightness_control.register_brightness_handler(
+            [&](double brightness) { notified_brightness = brightness; });
+
+    brightness_control.set_normal_brightness();
+    brightness_control.set_normal_brightness_value(0.9);
+    brightness_control.sync();
+
+    EXPECT_THAT(notified_brightness, Eq(0.9f));
+
+    brightness_control.set_dim_brightness();
+    brightness_control.sync();
+
+    EXPECT_THAT(notified_brightness, Eq(dim_percent));
+}
+
+TEST_F(ABacklightBrightnessControl, notifies_of_autobrightness_change)
+{
+    double notified_brightness{0.0};
+
+    auto const handler_registration =
+        brightness_control.register_brightness_handler(
+            [&](double brightness) { notified_brightness = brightness; });
+
+    brightness_control.set_normal_brightness();
+    brightness_control.enable_autobrightness();
+    autobrightness_algorithm.emit_autobrightness(0.9);
+    brightness_control.sync();
+
+    EXPECT_THAT(notified_brightness, Eq(0.9f));
+}

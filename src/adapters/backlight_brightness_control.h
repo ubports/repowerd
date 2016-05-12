@@ -19,6 +19,7 @@
 #pragma once
 
 #include "src/core/brightness_control.h"
+#include "brightness_notification.h"
 #include "event_loop.h"
 
 #include <memory>
@@ -31,7 +32,7 @@ class Backlight;
 class DeviceConfig;
 class LightSensor;
 
-class BacklightBrightnessControl : public BrightnessControl
+class BacklightBrightnessControl : public BrightnessControl, public BrightnessNotification
 {
 public:
     BacklightBrightnessControl(
@@ -46,6 +47,9 @@ public:
     void set_normal_brightness() override;
     void set_normal_brightness_value(float) override;
     void set_off_brightness() override;
+
+    HandlerRegistration register_brightness_handler(
+        BrightnessHandler const& handler) override;
 
     void sync();
 
@@ -63,6 +67,7 @@ private:
     EventLoop event_loop;
     HandlerRegistration light_handler_registration;
     HandlerRegistration ab_handler_registration;
+    BrightnessHandler brightness_handler;
 
     float dim_brightness;
     float normal_brightness;

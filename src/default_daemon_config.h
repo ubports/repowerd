@@ -23,6 +23,8 @@
 namespace repowerd
 {
 
+class BacklightBrightnessControl;
+class BrightnessNotification;
 class DeviceConfig;
 class UnityScreenService;
 class UnityPowerButton;
@@ -53,13 +55,17 @@ public:
     bool turn_on_display_at_startup() override;
 
 private:
+    std::shared_ptr<BacklightBrightnessControl> the_backlight_brightness_control();
+    std::shared_ptr<BrightnessNotification> the_brightness_notification();
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
     std::shared_ptr<WakeupService> the_wakeup_service();
 
+    std::shared_ptr<BacklightBrightnessControl> backlight_brightness_control;
     std::shared_ptr<BrightnessControl> brightness_control;
+    std::shared_ptr<BrightnessNotification> brightness_notification;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<ProximitySensor> proximity_sensor;

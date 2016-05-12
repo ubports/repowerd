@@ -20,6 +20,7 @@
 #include "backlight_brightness_control.h"
 #include "backlight.h"
 #include "brightness_params.h"
+#include "event_loop_handler_registration.h"
 #include "light_sensor.h"
 
 #include <cmath>
@@ -32,6 +33,8 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+auto const null_handler = [](double){};
 
 float normal_brightness_percent(repowerd::DeviceConfig const& device_config)
 {
@@ -56,6 +59,7 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
       light_sensor{light_sensor},
       autobrightness_algorithm{autobrightness_algorithm},
       ab_supported{autobrightness_algorithm->init(event_loop)},
+      brightness_handler{null_handler},
       dim_brightness{dim_brightness_percent(device_config)},
       normal_brightness{normal_brightness_percent(device_config)},
       user_normal_brightness{normal_brightness},
@@ -161,6 +165,16 @@ void repowerd::BacklightBrightnessControl::set_off_brightness()
         });
 }
 
+repowerd::HandlerRegistration
+repowerd::BacklightBrightnessControl::register_brightness_handler(
+    BrightnessHandler const& handler)
+{
+    return EventLoopHandlerRegistration(
+        event_loop,
+        [this,&handler] { brightness_handler = handler; },
+        [this] { brightness_handler = null_handler; });
+}
+
 void repowerd::BacklightBrightnessControl::sync()
 {
     event_loop.enqueue([]{}).get();
@@ -198,6 +212,8 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
             std::this_thread::sleep_for(step_time);
         }
     }
+
+    brightness_handler(brightness);
 }
 
 void repowerd::BacklightBrightnessControl::set_brightness_value(float brightness)

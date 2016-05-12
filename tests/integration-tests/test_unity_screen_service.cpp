@@ -17,6 +17,7 @@
  */
 
 #include "dbus_bus.h"
+#include "fake_brightness_notification.h"
 #include "fake_device_config.h"
 #include "fake_wakeup_service.h"
 #include "unity_screen_dbus_client.h"
@@ -99,10 +100,14 @@ struct AUnityScreenService : testing::Test
     std::chrono::seconds const default_timeout{3};
 
     rt::DBusBus bus;
+    rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService service{
-        rt::fake_shared(fake_wakeup_service), fake_device_config, bus.address()};
+        rt::fake_shared(fake_wakeup_service),
+        rt::fake_shared(fake_brightness_notification),
+        fake_device_config,
+        bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };

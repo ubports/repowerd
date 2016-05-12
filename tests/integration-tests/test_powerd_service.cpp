@@ -22,6 +22,7 @@
 
 #include "dbus_bus.h"
 #include "dbus_client.h"
+#include "fake_brightness_notification.h"
 #include "fake_device_config.h"
 #include "fake_wakeup_service.h"
 
@@ -90,7 +91,6 @@ struct PowerdDBusClient : rt::DBusClient
             g_variant_new("(s)", cookie.c_str()));
     }
 
-
     rt::DBusAsyncReply request_get_brightness_params()
     {
         return invoke_with_reply<rt::DBusAsyncReply>(
@@ -117,6 +117,62 @@ struct PowerdDBusClient : rt::DBusClient
                 func();
             });
     }
+
+    repowerd::HandlerRegistration register_brightness_handler(
+        std::function<void(int32_t)> const& func)
+    {
+        return event_loop.register_signal_handler(
+            connection,
+            nullptr,
+            "org.freedesktop.DBus.Properties",
+            "PropertiesChanged",
+            powerd_path,
+            [func, this] (
+                GDBusConnection* /*connection*/,
+                gchar const* /*sender*/,
+                gchar const* /*object_path*/,
+                gchar const* /*interface_name*/,
+                gchar const* /*signal_name*/,
+                GVariant* parameters)
+            {
+                char const* interface_name{""};
+                GVariantIter* changed_properties;
+                GVariantIter* invalid_properties;
+
+                g_variant_get(parameters, "(&sa{sv}as)",
+                              &interface_name, &changed_properties, &invalid_properties);
+
+                auto const brightness = get_brightness_property(changed_properties);
+
+                g_variant_iter_free(changed_properties);
+                g_variant_iter_free(invalid_properties);
+
+                if (brightness >= 0)
+                    func(brightness);
+            });
+    }
+
+    int32_t get_brightness_property(GVariantIter* properties)
+    {
+        char const* prop_name_cstr{""};
+        GVariant* prop_value{nullptr};
+        int32_t brightness = -1;
+        bool done = false;
+
+        while (!done &&
+               g_variant_iter_next(properties, "{&sv}", &prop_name_cstr, &prop_value))
+        {
+            std::string const prop_name{prop_name_cstr ? prop_name_cstr : ""};
+            if (prop_name == "brightness")
+            {
+                brightness = g_variant_get_int32(prop_value);
+                done = true;
+            }
+            g_variant_unref(prop_value);
+        }
+
+        return brightness;
+    }
 };
 
 struct APowerdService : testing::Test
@@ -137,10 +193,14 @@ struct APowerdService : testing::Test
     std::chrono::seconds const default_timeout{3};
 
     rt::DBusBus bus;
+    rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService unity_screen_service{
-        rt::fake_shared(fake_wakeup_service), fake_device_config, bus.address()};
+        rt::fake_shared(fake_wakeup_service),
+        rt::fake_shared(fake_brightness_notification),
+        fake_device_config,
+        bus.address()};
     PowerdDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
@@ -352,4 +412,19 @@ TEST_F(APowerdService, replies_to_get_brightness_params_request)
     EXPECT_THAT(default_value, Eq(fake_device_config.brightness_default_value));
     EXPECT_THAT(autobrightness_supported,
                 Eq(fake_device_config.brightness_autobrightness_supported));
+}
+
+TEST_F(APowerdService, emits_brightness_property_change)
+{
+    std::promise<int32_t> brightness_promise;
+    auto brightness_future = brightness_promise.get_future();
+
+    auto const reg = client.register_brightness_handler(
+        [&](int32_t brightness) { brightness_promise.set_value(brightness); });
+
+    fake_brightness_notification.emit_brightness(0.7);
+
+    ASSERT_THAT(brightness_future.wait_for(default_timeout),
+                Eq(std::future_status::ready));
+    EXPECT_THAT(brightness_future.get(), Eq(0.7 * fake_device_config.brightness_max_value));
 }
