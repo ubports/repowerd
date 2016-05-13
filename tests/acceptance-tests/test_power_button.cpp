@@ -150,3 +150,25 @@ TEST_F(APowerButton,
     expect_no_display_brightness_change();
     advance_time_by(1h);
 }
+
+TEST_F(APowerButton, press_is_logged)
+{
+    press_power_button();
+
+    EXPECT_TRUE(log_contains_line({"power_button_press"}));
+}
+
+TEST_F(APowerButton, release_is_logged)
+{
+    release_power_button();
+
+    EXPECT_TRUE(log_contains_line({"power_button_release"}));
+}
+
+TEST_F(APowerButton, long_press_is_logged)
+{
+    press_power_button();
+    advance_time_by(power_button_long_press_timeout);
+
+    EXPECT_TRUE(log_contains_line({"long_press"}));
+}

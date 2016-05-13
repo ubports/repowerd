@@ -19,6 +19,8 @@
 #include "src/adapters/ubuntu_proximity_sensor.h"
 #include "src/adapters/device_quirks.h"
 
+#include "fake_log.h"
+#include "fake_shared.h"
 #include "temporary_environment_value.h"
 #include "temporary_file.h"
 #include "wait_condition.h"
@@ -52,7 +54,9 @@ struct AUbuntuProximitySensor : testing::Test
         rt::TemporaryEnvironmentValue test_file{"UBUNTU_PLATFORM_API_SENSOR_TEST", command_file.name().c_str()};
         command_file.write(script);
 
-        sensor = std::make_unique<repowerd::UbuntuProximitySensor>(StubDeviceQuirks());
+        sensor = std::make_unique<repowerd::UbuntuProximitySensor>(
+            rt::fake_shared(fake_log),
+            StubDeviceQuirks());
         registration = sensor->register_proximity_handler(
             [this](repowerd::ProximityState state) { mock_handlers.proximity_handler(state); });
     }
@@ -63,6 +67,7 @@ struct AUbuntuProximitySensor : testing::Test
     };
     NiceMock<MockHandlers> mock_handlers;
 
+    rt::FakeLog fake_log;
     std::unique_ptr<repowerd::UbuntuProximitySensor> sensor;
     repowerd::HandlerRegistration registration;
 
@@ -95,6 +100,8 @@ TEST_F(AUbuntuProximitySensor, reports_far_event)
 
         handler_called.wait_for(default_timeout);
         EXPECT_TRUE(handler_called.woken());
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_event", "far"}));
     });
 }
 
@@ -115,6 +122,8 @@ TEST_F(AUbuntuProximitySensor, reports_near_event)
 
         handler_called.wait_for(default_timeout);
         EXPECT_TRUE(handler_called.woken());
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_event", "near"}));
     });
 }
 
@@ -134,6 +143,10 @@ TEST_F(AUbuntuProximitySensor, reports_synthetic_far_event_if_no_initial_event_a
 
         handler_called.wait_for(default_timeout);
         EXPECT_TRUE(handler_called.woken());
+
+        EXPECT_TRUE(fake_log.contains_line({"schedule", "synthetic", "far"}));
+        EXPECT_TRUE(fake_log.contains_line({"emitting", "synthetic", "far"}));
+        EXPECT_TRUE(fake_log.contains_line({"proximity_event", "far"}));
     });
 }
 
@@ -147,6 +160,8 @@ TEST_F(AUbuntuProximitySensor, reports_current_state)
 
         std::this_thread::sleep_for(std::chrono::milliseconds{750});
         EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::near));
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_state", "near"}));
     });
 }
 
@@ -158,6 +173,8 @@ TEST_F(AUbuntuProximitySensor, waits_for_first_event_to_report_current_state)
             "500 proximity near\n");
 
         EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::near));
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_state", "near"}));
     });
 }
 
@@ -168,5 +185,22 @@ TEST_F(AUbuntuProximitySensor, reports_current_state_far_if_no_event_arrives_soo
             "create proximity\n");
 
         EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::far));
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_state", "far"}));
+    });
+}
+
+TEST_F(AUbuntuProximitySensor, logs_enable_and_disable_proximity_events)
+{
+    TEST_IN_SEPARATE_PROCESS({
+        set_up_sensor(
+            "create proximity\n");
+
+        sensor->enable_proximity_events();
+        EXPECT_TRUE(fake_log.contains_line({"enable", "proximity_events"}));
+        EXPECT_FALSE(fake_log.contains_line({"disable", "proximity_events"}));
+
+        sensor->disable_proximity_events();
+        EXPECT_TRUE(fake_log.contains_line({"disable", "proximity_events"}));
     });
 }

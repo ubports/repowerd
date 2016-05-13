@@ -178,3 +178,24 @@ TEST_F(AClientRequest, to_set_non_positive_inactivity_timeout_is_ignrored)
     expect_display_turns_off();
     advance_time_by(1ms);
 }
+
+TEST_F(AClientRequest, to_disable_inactivity_timeout_is_logged)
+{
+    client_request_disable_inactivity_timeout();
+
+    EXPECT_TRUE(log_contains_line({"disable_inactivity_timeout"}));
+}
+
+TEST_F(AClientRequest, to_enable_inactivity_timeout_is_logged)
+{
+    client_request_enable_inactivity_timeout();
+
+    EXPECT_TRUE(log_contains_line({"enable_inactivity_timeout"}));
+}
+
+TEST_F(AClientRequest, to_set_inactivity_timeout_is_logged)
+{
+    client_request_set_inactivity_timeout(15000ms);
+
+    EXPECT_TRUE(log_contains_line({"set_inactivity_timeout", "15000"}));
+}

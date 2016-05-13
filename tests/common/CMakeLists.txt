@@ -19,6 +19,7 @@ add_library(
 
     daemon_config.cpp
     fake_client_requests.cpp
+    fake_log.cpp
     fake_notification_service.cpp
     fake_power_button.cpp
     fake_proximity_sensor.cpp

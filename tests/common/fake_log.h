@@ -18,31 +18,28 @@
 
 #pragma once
 
-#include "src/core/display_power_control.h"
 #include "src/core/log.h"
 
-#include "dbus_connection_handle.h"
-
-#include <memory>
+#include <string>
+#include <vector>
+#include <mutex>
 
 namespace repowerd
 {
-class Log;
+namespace test
+{
 
-class UnityDisplayPowerControl : public DisplayPowerControl
+class FakeLog : public Log
 {
 public:
-    UnityDisplayPowerControl(
-        std::shared_ptr<Log> const& log,
-        std::string const& dbus_bus_address);
+    void log(char const* tag, char const* format, ...) override;
 
-    void turn_on() override;
-    void turn_off() override;
+    bool contains_line(std::vector<std::string> const& words);
 
 private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
+    std::mutex contents_mutex;
+    std::vector<std::string> contents;
 };
 
 }
-
+}

@@ -144,6 +144,12 @@ void rt::DBusClient::DBusClient::disconnect()
         g_dbus_connection_close_sync(connection, nullptr, nullptr);
 }
 
+std::string rt::DBusClient::DBusClient::unique_name()
+{
+    auto const str = g_dbus_connection_get_unique_name(connection);
+    return str ? str : ":invalid";
+}
+
 void rt::DBusClient::emit_signal(
     char const* interface, char const* name, GVariant* args)
 {

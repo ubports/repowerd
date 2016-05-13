@@ -16,33 +16,31 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "syslog_log.h"
 
-#include "src/core/display_power_control.h"
-#include "src/core/log.h"
+#include <cstdarg>
+#include <string>
 
-#include "dbus_connection_handle.h"
+#include <syslog.h>
 
-#include <memory>
-
-namespace repowerd
+repowerd::SyslogLog::SyslogLog()
 {
-class Log;
-
-class UnityDisplayPowerControl : public DisplayPowerControl
-{
-public:
-    UnityDisplayPowerControl(
-        std::shared_ptr<Log> const& log,
-        std::string const& dbus_bus_address);
-
-    void turn_on() override;
-    void turn_off() override;
-
-private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
-};
-
+    openlog("repowerd", LOG_PID, LOG_DAEMON);
 }
 
+repowerd::SyslogLog::~SyslogLog()
+{
+    closelog();
+}
+
+void repowerd::SyslogLog::log(char const* tag, char const* format, ...)
+{
+    std::string const format_str = std::string{tag} + ": " + format;
+
+    va_list ap;
+    va_start(ap, format);
+
+    vsyslog(LOG_DEBUG, format_str.c_str(), ap);
+
+    va_end(ap);
+}

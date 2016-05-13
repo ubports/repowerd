@@ -39,6 +39,7 @@ public:
     std::shared_ptr<ClientRequests> the_client_requests() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<DisplayPowerEventSink> the_display_power_event_sink() override;
+    std::shared_ptr<Log> the_log() override;
     std::shared_ptr<NotificationService> the_notification_service() override;
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
@@ -74,6 +75,7 @@ private:
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<LightSensor> light_sensor;
+    std::shared_ptr<Log> log;
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;

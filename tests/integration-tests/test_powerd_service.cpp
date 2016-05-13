@@ -24,6 +24,7 @@
 #include "dbus_client.h"
 #include "fake_brightness_notification.h"
 #include "fake_device_config.h"
+#include "fake_log.h"
 #include "fake_wakeup_service.h"
 
 #include "fake_shared.h"
@@ -69,9 +70,9 @@ struct PowerdDBusClient : rt::DBusClient
             g_variant_new("(si)", "test", state));
     }
 
-    rt::DBusAsyncReplyString request_clear_sys_state(std::string const& cookie)
+    rt::DBusAsyncReplyVoid request_clear_sys_state(std::string const& cookie)
     {
-        return invoke_with_reply<rt::DBusAsyncReplyString>(
+        return invoke_with_reply<rt::DBusAsyncReplyVoid>(
             powerd_interface, "clearSysState",
             g_variant_new("(s)", cookie.c_str()));
     }
@@ -195,10 +196,12 @@ struct APowerdService : testing::Test
     rt::DBusBus bus;
     rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
+    rt::FakeLog fake_log;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService unity_screen_service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
+        rt::fake_shared(fake_log),
         fake_device_config,
         bus.address()};
     PowerdDBusClient client{bus.address()};
@@ -427,4 +430,113 @@ TEST_F(APowerdService, emits_brightness_property_change)
     ASSERT_THAT(brightness_future.wait_for(default_timeout),
                 Eq(std::future_status::ready));
     EXPECT_THAT(brightness_future.get(), Eq(0.7 * fake_device_config.brightness_max_value));
+}
+
+TEST_F(APowerdService, logs_request_sys_state_request)
+{
+    auto const cookie = client.request_request_sys_state(active_state).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "requestSysState",
+            "test",
+            std::to_string(active_state),
+            client.unique_name(),
+            cookie}));
+}
+
+TEST_F(APowerdService, logs_clear_sys_state_request)
+{
+    auto const cookie = client.request_request_sys_state(active_state).get();
+    client.request_clear_sys_state(cookie).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "clearSysState",
+            client.unique_name(),
+            cookie}));
+}
+
+TEST_F(APowerdService, logs_request_wakeup_request)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    auto const cookie = client.request_request_wakeup(tp).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "requestWakeup",
+            client.unique_name(),
+            "test",
+            cookie,
+            std::to_string(std::chrono::system_clock::to_time_t(tp))}));
+}
+
+TEST_F(APowerdService, logs_clear_wakeup_request)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+    auto const cookie = client.request_request_wakeup(tp).get();
+    client.request_clear_wakeup(cookie).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "clearWakeup",
+            client.unique_name(),
+            cookie}));
+}
+
+TEST_F(APowerdService, logs_get_brightness_params)
+{
+    client.request_get_brightness_params().get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "getBrightnessParams",
+            std::to_string(fake_device_config.brightness_dim_value),
+            std::to_string(fake_device_config.brightness_min_value),
+            std::to_string(fake_device_config.brightness_max_value),
+            std::to_string(fake_device_config.brightness_default_value),
+            fake_device_config.brightness_autobrightness_supported ? "true" : "false"
+            }));
+}
+
+TEST_F(APowerdService, logs_wakeup_signal)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    std::promise<void> wakeup_promise;
+    auto wakeup_future = wakeup_promise.get_future();
+
+    auto const reg = client.register_wakeup_handler([&] { wakeup_promise.set_value(); });
+
+    client.request_request_wakeup(tp).get();
+    fake_wakeup_service.emit_next_wakeup();
+
+    EXPECT_THAT(wakeup_future.wait_for(default_timeout),
+                Eq(std::future_status::ready));
+
+    EXPECT_TRUE(fake_log.contains_line({"emit", "Wakeup"}));
+}
+
+TEST_F(APowerdService, logs_brightness_signal)
+{
+    float const brightness = 0.7;
+    std::promise<void> brightness_promise;
+    auto brightness_future = brightness_promise.get_future();
+
+    auto const reg = client.register_brightness_handler(
+        [&](int32_t) { brightness_promise.set_value(); });
+
+    fake_brightness_notification.emit_brightness(brightness);
+
+    ASSERT_THAT(brightness_future.wait_for(default_timeout),
+                Eq(std::future_status::ready));
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "emit", "brightness",
+            std::to_string(brightness),
+            std::to_string(
+                static_cast<int>(brightness * fake_device_config.brightness_max_value))
+            }));
 }

@@ -19,6 +19,7 @@
 #include "dbus_bus.h"
 #include "fake_brightness_notification.h"
 #include "fake_device_config.h"
+#include "fake_log.h"
 #include "fake_wakeup_service.h"
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
@@ -102,10 +103,12 @@ struct AUnityScreenService : testing::Test
     rt::DBusBus bus;
     rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
+    rt::FakeLog fake_log;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
+        rt::fake_shared(fake_log),
         fake_device_config,
         bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};
@@ -549,4 +552,140 @@ TEST_F(AUnityScreenService, emits_display_power_state_change_signal)
         EXPECT_THAT(params.power_state, Eq(0));
         EXPECT_THAT(params.reason, Eq(static_cast<int32_t>(v.unity_screen_reason)));
     }
+}
+
+TEST_F(AUnityScreenService, logs_keep_display_on_request)
+{
+    auto const id = client.request_keep_display_on().get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line(
+            {"keepDisplayOn", client.unique_name(), std::to_string(id)}));
+}
+
+TEST_F(AUnityScreenService, logs_remove_display_on_request)
+{
+    auto const id = client.request_keep_display_on().get();
+    client.request_remove_display_on_request(id).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "removeDisplayOnRequest",
+            client.unique_name(),
+            std::to_string(id)}));
+}
+
+TEST_F(AUnityScreenService, logs_user_auto_brightness_disable_request)
+{
+    client.request_user_auto_brightness_enable(false).get();
+
+    EXPECT_TRUE(fake_log.contains_line({"userAutobrightnessEnable", "disable"}));
+}
+
+TEST_F(AUnityScreenService, logs_user_auto_brightness_enable_request)
+{
+    client.request_user_auto_brightness_enable(true).get();
+
+    EXPECT_TRUE(fake_log.contains_line({"userAutobrightnessEnable", "enable"}));
+}
+
+TEST_F(AUnityScreenService, logs_set_user_brightness_request)
+{
+    int const brightness = 30;
+    client.request_set_user_brightness(brightness).get();
+
+    EXPECT_TRUE(fake_log.contains_line({"setUserBrightness", std::to_string(brightness)}));
+}
+
+TEST_F(AUnityScreenService, logs_set_inactivity_timeouts_request)
+{
+    int32_t const poweroff_timeout = 10;
+    int32_t const dimmer_timeout = 5;
+
+    client.request_set_inactivity_timeouts(poweroff_timeout, dimmer_timeout).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "setInactivityTimeouts",
+            std::to_string(poweroff_timeout),
+            std::to_string(dimmer_timeout)}));
+}
+
+TEST_F(AUnityScreenService, logs_set_screen_power_mode_request)
+{
+    client.request_set_screen_power_mode("on", notification_reason).get();
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "setScreenPowerMode",
+            client.unique_name(),
+            "on",
+            std::to_string(notification_reason)}));
+}
+
+TEST_F(AUnityScreenService, logs_emit_display_power_change_signal_for_on)
+{
+    service.notify_display_power_on(
+        repowerd::DisplayPowerChangeReason::proximity);
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "emit", "DisplayPowerStateChange",
+            "1",
+            std::to_string(
+                static_cast<int>(
+                    repowerd::UnityScreenPowerStateChangeReason::proximity))}));
+}
+
+TEST_F(AUnityScreenService, logs_emit_display_power_change_signal_for_off)
+{
+    service.notify_display_power_off(
+        repowerd::DisplayPowerChangeReason::power_button);
+
+    EXPECT_TRUE(
+        fake_log.contains_line({
+            "emit", "DisplayPowerStateChange",
+            "0",
+            std::to_string(
+                static_cast<int>(
+                    repowerd::UnityScreenPowerStateChangeReason::power_key))}));
+}
+
+TEST_F(AUnityScreenService, does_not_log_name_owner_changed_for_untracked_clients)
+{
+    client.disconnect();
+
+    EXPECT_FALSE(fake_log.contains_line({"NameOwnerChanged"}));
+}
+
+TEST_F(AUnityScreenService, logs_name_owner_changed_for_tracked_keep_display_on_clients)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_keep_display_on().get();
+    client.disconnect();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+
+    EXPECT_TRUE(fake_log.contains_line({"NameOwnerChanged", client.unique_name()}));
+}
+
+TEST_F(AUnityScreenService, logs_name_owner_changed_for_tracked_notification_clients)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, no_notification())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_set_screen_power_mode("on", notification_reason).get();
+    client.disconnect();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+
+    EXPECT_TRUE(fake_log.contains_line({"NameOwnerChanged", client.unique_name()}));
 }

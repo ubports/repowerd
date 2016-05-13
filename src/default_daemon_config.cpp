@@ -24,10 +24,13 @@
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
 #include "adapters/backlight_brightness_control.h"
+#include "adapters/console_log.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
+#include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/sysfs_backlight.h"
+#include "adapters/syslog_log.h"
 #include "adapters/ubuntu_light_sensor.h"
 #include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display_power_control.h"
@@ -132,7 +135,11 @@ std::shared_ptr<repowerd::DisplayPowerControl>
 repowerd::DefaultDaemonConfig::the_display_power_control()
 {
     if (!display_power_control)
-        display_power_control = std::make_shared<UnityDisplayPowerControl>(the_dbus_bus_address());
+    {
+        display_power_control = std::make_shared<UnityDisplayPowerControl>(
+            the_log(),
+            the_dbus_bus_address());
+    }
     return display_power_control;
 }
 
@@ -166,7 +173,9 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
     if (!proximity_sensor)
     try
     {
-        proximity_sensor = std::make_shared<UbuntuProximitySensor>(AndroidDeviceQuirks());
+        proximity_sensor = std::make_shared<UbuntuProximitySensor>(
+            the_log(),
+            AndroidDeviceQuirks());
     }
     catch (...)
     {
@@ -331,6 +340,23 @@ repowerd::DefaultDaemonConfig::the_light_sensor()
     return light_sensor;
 }
 
+std::shared_ptr<repowerd::Log>
+repowerd::DefaultDaemonConfig::the_log()
+{
+    if (!log)
+    {
+        auto const log_env_cstr = getenv("REPOWERD_LOG");
+        std::string const log_env{log_env_cstr ? log_env_cstr : ""};
+        if (log_env == "console")
+            log = std::make_shared<ConsoleLog>();
+        else if (log_env == "null")
+            log = std::make_shared<NullLog>();
+        else
+            log = std::make_shared<SyslogLog>();
+    }
+    return log;
+}
+
 std::shared_ptr<repowerd::UnityScreenService>
 repowerd::DefaultDaemonConfig::the_unity_screen_service()
 {
@@ -339,6 +365,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
         unity_screen_service = std::make_shared<UnityScreenService>(
             the_wakeup_service(),
             the_backlight_brightness_control(),
+            the_log(),
             *the_device_config(),
             the_dbus_bus_address());
     }

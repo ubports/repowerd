@@ -195,3 +195,33 @@ TEST_F(AUserActivity,
     expect_no_display_brightness_change();
     advance_time_by(1h);
 }
+
+TEST_F(AUserActivity, extending_power_state_is_logged)
+{
+    perform_user_activity_extending_power_state();
+
+    EXPECT_TRUE(log_contains_line({"user_activity", "extending_power_state"}));
+}
+
+TEST_F(AUserActivity, changing_power_state_is_logged)
+{
+    perform_user_activity_changing_power_state();
+
+    EXPECT_TRUE(log_contains_line({"user_activity", "changing_power_state"}));
+}
+
+TEST_F(AUserActivity, not_performed_turning_off_display_is_logged)
+{
+    turn_on_display();
+
+    advance_time_by(user_inactivity_normal_display_dim_timeout);
+
+    EXPECT_TRUE(log_contains_line({"display_dim"}));
+    EXPECT_FALSE(log_contains_line({"display_off"}));
+
+    advance_time_by(
+        user_inactivity_normal_display_off_timeout -
+        user_inactivity_normal_display_dim_timeout);
+
+    EXPECT_TRUE(log_contains_line({"display_off"}));
+}

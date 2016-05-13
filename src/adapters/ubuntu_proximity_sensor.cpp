@@ -20,17 +20,22 @@
 #include "device_quirks.h"
 #include "event_loop_handler_registration.h"
 
+#include "src/core/log.h"
+
 #include <stdexcept>
 #include <algorithm>
 
 namespace
 {
+char const* const log_tag = "UbuntuProximitySensor";
 auto const null_handler = [](repowerd::ProximityState){};
 }
 
 repowerd::UbuntuProximitySensor::UbuntuProximitySensor(
+    std::shared_ptr<Log> const& log,
     DeviceQuirks const& device_quirks)
-    : sensor{ua_sensors_proximity_new()},
+    : log{log},
+      sensor{ua_sensors_proximity_new()},
       handler{null_handler},
       synthetic_event_seqno{1},
       synthetic_event_delay{device_quirks.synthentic_initial_far_event_delay()},
@@ -54,6 +59,8 @@ repowerd::HandlerRegistration repowerd::UbuntuProximitySensor::register_proximit
 
 repowerd::ProximityState repowerd::UbuntuProximitySensor::proximity_state()
 {
+    log->log(log_tag, "proximity_state()");
+
     event_loop.enqueue(
         [this]
         {
@@ -68,11 +75,16 @@ repowerd::ProximityState repowerd::UbuntuProximitySensor::proximity_state()
             disable_proximity_events_unqueued(EnablementMode::without_handler);
         });
 
+    log->log(log_tag, "proximity_state() => %s",
+             valid_state == ProximityState::far ? "far" : "near");
+
     return valid_state;
 }
 
 void repowerd::UbuntuProximitySensor::enable_proximity_events()
 {
+    log->log(log_tag, "enable_proximity_events()");
+
     event_loop.enqueue(
         [this]
         {
@@ -82,6 +94,8 @@ void repowerd::UbuntuProximitySensor::enable_proximity_events()
 
 void repowerd::UbuntuProximitySensor::disable_proximity_events()
 {
+    log->log(log_tag, "disable_proximity_events()");
+
     event_loop.enqueue(
         [this]
         {
@@ -103,6 +117,9 @@ void repowerd::UbuntuProximitySensor::static_sensor_reading_callback(
 
 void repowerd::UbuntuProximitySensor::handle_proximity_event(ProximityState new_state)
 {
+    log->log(log_tag, "handle_proximity_event(%s)",
+             new_state == ProximityState::far ? "far" : "near");
+
     invalidate_synthetic_far_event();
 
     {
@@ -166,6 +183,9 @@ void repowerd::UbuntuProximitySensor::schedule_synthetic_far_event()
         return;
     }
 
+    log->log(log_tag, "schedule_synthetic_far_event(), delay_ms=%d",
+             static_cast<int>(synthetic_event_delay.count()));
+
     // Some proximity sensors don't send an initial event when
     // enabled and the state is 'far'. Work around this by
     // sending a synthetic far event if no events have been
@@ -174,7 +194,10 @@ void repowerd::UbuntuProximitySensor::schedule_synthetic_far_event()
         [this, expected_seqno = synthetic_event_seqno]
         {
             if (synthetic_event_seqno == expected_seqno)
+            {
+                log->log(log_tag, "emitting synthetic far event");
                 handle_proximity_event(ProximityState::far);
+            }
         });
 }
 

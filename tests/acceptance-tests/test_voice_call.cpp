@@ -163,3 +163,17 @@ TEST_F(AVoiceCall, event_notifies_of_display_power_change)
     emit_no_active_call();
     verify_expectations();
 }
+
+TEST_F(AVoiceCall, is_logged)
+{
+    emit_active_call();
+
+    EXPECT_TRUE(log_contains_line({"active_call"}));
+}
+
+TEST_F(AVoiceCall, done_is_logged)
+{
+    emit_no_active_call();
+
+    EXPECT_TRUE(log_contains_line({"no_active_call"}));
+}

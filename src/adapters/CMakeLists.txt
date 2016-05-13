@@ -23,6 +23,7 @@ set(
     android_device_quirks.cpp
     backlight_brightness_control.cpp
     brightness_params.cpp
+    console_log.cpp
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
@@ -31,7 +32,9 @@ set(
     event_loop_timer.cpp
     fd.cpp
     monotone_spline.cpp
+    null_log.cpp
     ofono_voice_call_service.cpp
+    syslog_log.cpp
     sysfs_backlight.cpp
     ubuntu_light_sensor.cpp
     ubuntu_proximity_sensor.cpp

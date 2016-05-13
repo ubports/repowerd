@@ -32,11 +32,14 @@ namespace repowerd
 {
 
 class DeviceQuirks;
+class Log;
 
 class UbuntuProximitySensor : public ProximitySensor
 {
 public:
-    UbuntuProximitySensor(DeviceQuirks const& device_quirks);
+    UbuntuProximitySensor(
+        std::shared_ptr<Log> const& log,
+        DeviceQuirks const& device_quirks);
 
     HandlerRegistration register_proximity_handler(
         ProximityHandler const& handler) override;
@@ -59,6 +62,7 @@ private:
     bool is_enabled();
     bool should_invoke_handler();
 
+    std::shared_ptr<Log> const log;
     UASensorsProximity* const sensor;
     EventLoop event_loop;
 

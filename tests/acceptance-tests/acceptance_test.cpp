@@ -24,6 +24,7 @@
 #include "mock_display_power_event_sink.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_client_requests.h"
+#include "fake_log.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "fake_proximity_sensor.h"
@@ -119,7 +120,11 @@ void rt::AcceptanceTest::expect_display_power_on_notification(
 {
     EXPECT_CALL(*config.the_mock_display_power_event_sink(),
                 notify_display_power_on(reason));
+}
 
+bool rt::AcceptanceTest::log_contains_line(std::vector<std::string> const& words)
+{
+    return config.the_fake_log()->contains_line(words);
 }
 
 void rt::AcceptanceTest::verify_expectations()

@@ -16,33 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "null_log.h"
 
-#include "src/core/display_power_control.h"
-#include "src/core/log.h"
-
-#include "dbus_connection_handle.h"
-
-#include <memory>
-
-namespace repowerd
+void repowerd::NullLog::log(char const*, char const*, ...)
 {
-class Log;
-
-class UnityDisplayPowerControl : public DisplayPowerControl
-{
-public:
-    UnityDisplayPowerControl(
-        std::shared_ptr<Log> const& log,
-        std::string const& dbus_bus_address);
-
-    void turn_on() override;
-    void turn_off() override;
-
-private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
-};
-
 }
-

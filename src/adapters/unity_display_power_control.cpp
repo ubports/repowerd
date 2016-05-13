@@ -25,16 +25,21 @@ namespace
 char const* const unity_display_bus_name = "com.canonical.Unity.Display";
 char const* const unity_display_object_path = "/com/canonical/Unity/Display";
 char const* const unity_display_interface_name = "com.canonical.Unity.Display";
+char const* const log_tag = "UnityDisplayPowerControl";
 }
 
 repowerd::UnityDisplayPowerControl::UnityDisplayPowerControl(
+    std::shared_ptr<Log> const& log,
     std::string const& dbus_bus_address)
-    : dbus_connection{dbus_bus_address}
+    : log{log},
+      dbus_connection{dbus_bus_address}
 {
 }
 
 void repowerd::UnityDisplayPowerControl::turn_on()
 {
+    log->log(log_tag, "turn_on()");
+
     g_dbus_connection_call(
         dbus_connection,
         unity_display_bus_name,
@@ -52,6 +57,8 @@ void repowerd::UnityDisplayPowerControl::turn_on()
 
 void repowerd::UnityDisplayPowerControl::turn_off()
 {
+    log->log(log_tag, "turn_off()");
+
     g_dbus_connection_call(
         dbus_connection,
         unity_display_bus_name,

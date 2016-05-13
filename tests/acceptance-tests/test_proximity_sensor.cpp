@@ -92,3 +92,17 @@ TEST_F(APromixitySensor, event_notifies_of_display_power_change)
         repowerd::DisplayPowerChangeReason::proximity);
     emit_proximity_state_far();
 }
+
+TEST_F(APromixitySensor, near_event_is_logged)
+{
+    emit_proximity_state_near();
+
+    EXPECT_TRUE(log_contains_line({"proximity", "near"}));
+}
+
+TEST_F(APromixitySensor, far_event_is_logged)
+{
+    emit_proximity_state_far();
+
+    EXPECT_TRUE(log_contains_line({"proximity", "far"}));
+}

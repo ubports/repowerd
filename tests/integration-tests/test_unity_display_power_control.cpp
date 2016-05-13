@@ -22,6 +22,8 @@
 #include "src/adapters/dbus_event_loop.h"
 #include "src/adapters/unity_display_power_control.h"
 
+#include "fake_log.h"
+#include "fake_shared.h"
 #include "wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -104,8 +106,11 @@ private:
 struct AUnityDisplayPowerControl : testing::Test
 {
     rt::DBusBus bus;
+    rt::FakeLog fake_log;
     FakeUnityDisplayDBusService service{bus.address()};
-    repowerd::UnityDisplayPowerControl control{bus.address()};
+    repowerd::UnityDisplayPowerControl control{
+        rt::fake_shared(fake_log),
+        bus.address()};
 
     std::chrono::seconds const default_timeout{3};
 };
@@ -136,4 +141,18 @@ TEST_F(AUnityDisplayPowerControl, turn_off_request_contacts_dbus_service)
 
     called.wait_for(default_timeout);
     EXPECT_TRUE(called.woken());
+}
+
+TEST_F(AUnityDisplayPowerControl, logs_turn_on_request)
+{
+    control.turn_on();
+
+    EXPECT_TRUE(fake_log.contains_line({"turn_on"}));
+}
+
+TEST_F(AUnityDisplayPowerControl, logs_turn_off_request)
+{
+    control.turn_off();
+
+    EXPECT_TRUE(fake_log.contains_line({"turn_off"}));
 }

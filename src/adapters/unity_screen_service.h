@@ -36,6 +36,7 @@
 namespace repowerd
 {
 class BrightnessNotification;
+class Log;
 class DeviceConfig;
 class WakeupService;
 
@@ -47,6 +48,7 @@ public:
     UnityScreenService(
         std::shared_ptr<WakeupService> const& wakeup_service,
         std::shared_ptr<BrightnessNotification> const& brightness_notification,
+        std::shared_ptr<Log> const& log,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
 
@@ -114,15 +116,19 @@ private:
         std::string const& sender,
         std::string const& cookie);
     std::string dbus_requestWakeup(
+        std::string const& sender,
         std::string const& name,
         uint64_t time);
-    void dbus_clearWakeup(std::string const& cookie);
+    void dbus_clearWakeup(std::string const& sender, std::string const& cookie);
     BrightnessParams dbus_getBrightnessParams();
     void dbus_emit_Wakeup();
-    void dbus_emit_Brightness(double brightness);
+    void dbus_emit_brightness(double brightness);
+
+    void dbus_unknown_method(std::string const& sender, std::string const& name);
 
     std::shared_ptr<WakeupService> const wakeup_service;
     std::shared_ptr<BrightnessNotification> const brightness_notification;
+    std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
 

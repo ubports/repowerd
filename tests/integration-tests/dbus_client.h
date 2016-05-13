@@ -99,6 +99,8 @@ public:
 
     void disconnect();
 
+    std::string unique_name();
+
     template <typename T>
     T invoke_with_reply(
         char const* interface, char const* method, GVariant* args)

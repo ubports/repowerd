@@ -19,6 +19,7 @@
 #include "daemon_config.h"
 #include "mock_display_power_control.h"
 #include "mock_brightness_control.h"
+#include "fake_log.h"
 
 #include "src/core/daemon.h"
 
@@ -49,4 +50,6 @@ TEST(ATurnOnDisplayAtStartupOption, turns_on_display_at_startup)
     daemon.flush();
     daemon.stop();
     daemon_thread.join();
+
+    EXPECT_TRUE(config.the_fake_log()->contains_line({"turn_on_display"}));
 }

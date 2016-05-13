@@ -88,6 +88,7 @@ private:
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<DisplayPowerEventSink> const display_power_event_sink;
+    std::shared_ptr<Log> const log;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<Timer> const timer;

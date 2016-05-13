@@ -294,3 +294,17 @@ TEST_F(ANotification,
     emit_proximity_state_far_if_enabled();
     verify_expectations();
 }
+
+TEST_F(ANotification, is_logged)
+{
+    emit_notification();
+
+    EXPECT_TRUE(log_contains_line({"notification"}));
+}
+
+TEST_F(ANotification, done_is_logged)
+{
+    emit_no_notification();
+
+    EXPECT_TRUE(log_contains_line({"no_notification"}));
+}

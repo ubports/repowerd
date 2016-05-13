@@ -17,6 +17,7 @@
  */
 
 #include "src/adapters/android_device_quirks.h"
+#include "src/adapters/console_log.h"
 #include "src/adapters/ubuntu_proximity_sensor.h"
 
 #include <iostream>
@@ -32,8 +33,9 @@ void print_proximity(std::string const& s, repowerd::ProximityState state)
 
 int main()
 {
+    auto log = std::make_shared<repowerd::ConsoleLog>();
     repowerd::AndroidDeviceQuirks quirks;
-    repowerd::UbuntuProximitySensor sensor{quirks};
+    repowerd::UbuntuProximitySensor sensor{log, quirks};
 
     auto registration = sensor.register_proximity_handler(
         [] (repowerd::ProximityState state)

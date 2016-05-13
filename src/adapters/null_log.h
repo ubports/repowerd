@@ -18,31 +18,15 @@
 
 #pragma once
 
-#include "src/core/display_power_control.h"
 #include "src/core/log.h"
-
-#include "dbus_connection_handle.h"
-
-#include <memory>
 
 namespace repowerd
 {
-class Log;
 
-class UnityDisplayPowerControl : public DisplayPowerControl
+class NullLog : public Log
 {
 public:
-    UnityDisplayPowerControl(
-        std::shared_ptr<Log> const& log,
-        std::string const& dbus_bus_address);
-
-    void turn_on() override;
-    void turn_off() override;
-
-private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
+    void log(char const* tag, char const* format, ...) override;
 };
 
 }
-

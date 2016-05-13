@@ -16,33 +16,21 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "console_log.h"
 
-#include "src/core/display_power_control.h"
-#include "src/core/log.h"
+#include <cstdarg>
+#include <string>
 
-#include "dbus_connection_handle.h"
+#include <cstdio>
 
-#include <memory>
-
-namespace repowerd
+void repowerd::ConsoleLog::log(char const* tag, char const* format, ...)
 {
-class Log;
+    std::string const format_str = std::string{tag} + ": " + format + "\n";
 
-class UnityDisplayPowerControl : public DisplayPowerControl
-{
-public:
-    UnityDisplayPowerControl(
-        std::shared_ptr<Log> const& log,
-        std::string const& dbus_bus_address);
+    va_list ap;
+    va_start(ap, format);
 
-    void turn_on() override;
-    void turn_off() override;
+    vprintf(format_str.c_str(), ap);
 
-private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
-};
-
+    va_end(ap);
 }
-

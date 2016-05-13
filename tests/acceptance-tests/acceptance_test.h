@@ -69,6 +69,8 @@ struct AcceptanceTest : testing::Test
     void turn_off_display();
     void turn_on_display();
 
+    bool log_contains_line(std::vector<std::string> const& words);
+
     DaemonConfig config;
     Daemon daemon{config};
     std::thread daemon_thread;

@@ -22,14 +22,21 @@
 #include "display_power_control.h"
 #include "display_power_event_sink.h"
 #include "infinite_timeout.h"
+#include "log.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
 #include "timer.h"
+
+namespace
+{
+char const* const log_tag = "DefaultStateMachine";
+}
 
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
     : brightness_control{config.the_brightness_control()},
       display_power_control{config.the_display_power_control()},
       display_power_event_sink{config.the_display_power_event_sink()},
+      log{config.the_log()},
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
@@ -58,18 +65,21 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
 {
     if (id == power_button_long_press_alarm_id)
     {
+        log->log(log_tag, "handle_alarm(long_press)");
         power_button_event_sink->notify_long_press();
         power_button_long_press_detected = true;
         power_button_long_press_alarm_id = AlarmId::invalid;
     }
     else if (id == user_inactivity_display_dim_alarm_id)
     {
+        log->log(log_tag, "handle_alarm(display_dim)");
         user_inactivity_display_dim_alarm_id = AlarmId::invalid;
         if (is_inactivity_timeout_allowed())
             dim_display();
     }
     else if (id == user_inactivity_display_off_alarm_id)
     {
+        log->log(log_tag, "handle_alarm(display_off)");
         user_inactivity_display_off_alarm_id = AlarmId::invalid;
         if (is_inactivity_timeout_allowed())
             turn_off_display(DisplayPowerChangeReason::activity);
@@ -79,6 +89,8 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
 
 void repowerd::DefaultStateMachine::handle_active_call()
 {
+    log->log(log_tag, "handle_active_call");
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
@@ -94,6 +106,8 @@ void repowerd::DefaultStateMachine::handle_active_call()
 
 void repowerd::DefaultStateMachine::handle_no_active_call()
 {
+    log->log(log_tag, "handle_no_active_call");
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
@@ -109,17 +123,24 @@ void repowerd::DefaultStateMachine::handle_no_active_call()
 
 void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
 {
+    log->log(log_tag, "handle_enable_inactivity_timeout");
+
     allow_inactivity_timeout(InactivityTimeoutAllowance::client);
 }
 
 void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
 {
+    log->log(log_tag, "handle_disable_inactivity_timeout");
+
     disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
 }
 
 void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
     std::chrono::milliseconds timeout)
 {
+    log->log(log_tag, "handle_set_inactivity_timeout(%d)",
+             static_cast<int>(timeout.count()));
+
     if (timeout <= std::chrono::milliseconds::zero()) return;
 
     user_inactivity_normal_display_off_timeout = timeout;
@@ -130,6 +151,8 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
 
 void repowerd::DefaultStateMachine::handle_no_notification()
 {
+    log->log(log_tag, "handle_no_notification");
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         schedule_post_notification_user_inactivity_alarm();
@@ -141,6 +164,8 @@ void repowerd::DefaultStateMachine::handle_no_notification()
 
 void repowerd::DefaultStateMachine::handle_notification()
 {
+    log->log(log_tag, "handle_notification");
+
     disallow_inactivity_timeout(InactivityTimeoutAllowance::notification);
 
     if (display_power_mode == DisplayPowerMode::on)
@@ -162,6 +187,8 @@ void repowerd::DefaultStateMachine::handle_notification()
 
 void repowerd::DefaultStateMachine::handle_power_button_press()
 {
+    log->log(log_tag, "handle_power_button_press");
+
     display_power_mode_at_power_button_press = display_power_mode;
 
     if (display_power_mode == DisplayPowerMode::off)
@@ -175,6 +202,8 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
 
 void repowerd::DefaultStateMachine::handle_power_button_release()
 {
+    log->log(log_tag, "handle_power_button_release");
+
     if (power_button_long_press_detected)
     {
         power_button_long_press_detected = false;
@@ -190,6 +219,8 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
 
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
+    log->log(log_tag, "handle_proximity_far");
+
     auto const use_reduced_timeout = is_proximity_enabled_only_until_far_event();
     disable_proximity(ProximityEnablement::until_far_event);
 
@@ -208,18 +239,24 @@ void repowerd::DefaultStateMachine::handle_proximity_far()
 
 void repowerd::DefaultStateMachine::handle_proximity_near()
 {
+    log->log(log_tag, "handle_proximity_near");
+
     if (display_power_mode == DisplayPowerMode::on)
         turn_off_display(DisplayPowerChangeReason::proximity);
 }
 
 void repowerd::DefaultStateMachine::handle_turn_on_display()
 {
+    log->log(log_tag, "handle_turn_on_display");
+
     if (display_power_mode == DisplayPowerMode::off)
         turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
 }
 
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
 {
+    log->log(log_tag, "handle_user_activity_changing_power_state");
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
@@ -233,6 +270,8 @@ void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
 
 void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
 {
+    log->log(log_tag, "handle_user_activity_extending_power_state");
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
