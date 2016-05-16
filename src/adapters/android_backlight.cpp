@@ -21,6 +21,7 @@
 #include <android/hardware/lights.h>
 
 #include <stdexcept>
+#include <cstring>
 
 repowerd::AndroidBacklight::AndroidBacklight()
     : brightness{0.0f}
@@ -47,6 +48,7 @@ void repowerd::AndroidBacklight::set_brightness(float value)
     int const value_abs = value * 255;
 
     light_state_t state;
+    memset(&state, 0, sizeof(light_state_t));
     state.flashMode = LIGHT_FLASH_NONE;
     state.brightnessMode = BRIGHTNESS_MODE_USER;
     state.color = ((0xffU << 24) | (value_abs << 16) | (value_abs << 8) | value_abs);

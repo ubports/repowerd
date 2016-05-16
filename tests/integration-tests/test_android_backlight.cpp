@@ -18,6 +18,8 @@
 
 #include "src/adapters/android_backlight.h"
 
+#include "fake_libhardware.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -28,11 +30,38 @@ namespace
 
 struct AnAndroidBacklight : Test
 {
+    repowerd::test::FakeLibhardware fake_libhardware;
+    std::unique_ptr<repowerd::AndroidBacklight> create_backlight()
+    {
+        return std::make_unique<repowerd::AndroidBacklight>();
+    }
 };
+
+MATCHER_P(LightState, brightness, "")
+{
+    return arg.flashMode == LIGHT_FLASH_NONE &&
+           arg.brightnessMode == BRIGHTNESS_MODE_USER &&
+           arg.color == ((0xffU << 24) | (brightness << 16) | (brightness << 8) | brightness);
+}
 
 }
 
-TEST_F(AnAndroidBacklight, DISABLED_todo)
+TEST_F(AnAndroidBacklight, opens_and_closes_lights_module)
 {
-    EXPECT_TRUE(false);
+    EXPECT_THAT(fake_libhardware.is_lights_module_open(), Eq(false));
+    auto backlight = create_backlight();
+    EXPECT_THAT(fake_libhardware.is_lights_module_open(), Eq(true));
+    backlight.reset();
+    EXPECT_THAT(fake_libhardware.is_lights_module_open(), Eq(false));
+}
+
+TEST_F(AnAndroidBacklight, sets_brightness)
+{
+    auto const backlight = create_backlight();
+    backlight->set_brightness(0.0);
+    backlight->set_brightness(0.5);
+    backlight->set_brightness(1.0);
+
+    EXPECT_THAT(fake_libhardware.backlight_state_history(),
+                ElementsAre(LightState(0), LightState(127), LightState(255)));
 }
