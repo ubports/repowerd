@@ -18,19 +18,28 @@
 
 #include "fake_device_config.h"
 
+repowerd::test::FakeDeviceConfig::FakeDeviceConfig()
+{
+    set("screenBrightnessDim", std::to_string(brightness_dim_value));
+    set("screenBrightnessSettingMininum", std::to_string(brightness_min_value));
+    set("screenBrightnessSettingMaximum", std::to_string(brightness_max_value));
+    set("screenBrightnessSettingDefault", std::to_string(brightness_default_value));
+    set("automatic_brightness_available", "true");
+}
+
 std::string repowerd::test::FakeDeviceConfig::get(
     std::string const& name, std::string const& default_prop_value) const
 {
-    if (name == "screenBrightnessDim")
-        return std::to_string(brightness_dim_value);
-    else if (name == "screenBrightnessSettingMininum")
-        return std::to_string(brightness_min_value);
-    else if (name == "screenBrightnessSettingMaximum")
-        return std::to_string(brightness_max_value);
-    else if (name == "screenBrightnessSettingDefault")
-        return std::to_string(brightness_default_value);
-    else if (name == "automatic_brightness_available")
-        return "true";
+    auto const iter = properties.find(name);
+
+    if (iter != properties.end())
+        return iter->second;
     else
         return default_prop_value;
+}
+
+void repowerd::test::FakeDeviceConfig::set(
+    std::string const& name, std::string const& value)
+{
+    properties[name] = value;
 }

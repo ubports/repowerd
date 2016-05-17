@@ -20,6 +20,8 @@
 
 #include "src/adapters/device_config.h"
 
+#include <unordered_map>
+
 namespace repowerd
 {
 namespace test
@@ -27,14 +29,21 @@ namespace test
 
 struct FakeDeviceConfig : repowerd::DeviceConfig
 {
+    FakeDeviceConfig();
+
     std::string get(
         std::string const& name, std::string const& default_prop_value) const override;
+
+    void set(std::string const& name, std::string const& value);
 
     int const brightness_dim_value = 5;
     int const brightness_min_value = 2;
     int const brightness_max_value = 100;
     int const brightness_default_value = 50;
     bool const brightness_autobrightness_supported = true;
+
+private:
+    std::unordered_map<std::string,std::string> properties;
 };
 
 }
