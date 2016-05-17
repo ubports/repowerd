@@ -29,6 +29,7 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <gio/gio.h>
 
@@ -99,7 +100,10 @@ private:
         std::string const& name,
         std::string const& old_owner,
         std::string const& new_owner);
-    bool dbus_setScreenPowerMode(std::string const& mode, int32_t reason);
+    bool dbus_setScreenPowerMode(
+        std::string const& sender,
+        std::string const& mode,
+        int32_t reason);
     void dbus_emit_DisplayPowerStateChange(int32_t power_state, int32_t reason);
 
     std::string dbus_requestSysState(
@@ -135,7 +139,7 @@ private:
 
     std::unordered_multimap<std::string,int32_t> keep_display_on_ids;
     int32_t next_keep_display_on_id;
-    int active_notifications;
+    std::unordered_multiset<std::string> active_notifications;
 
     std::unordered_multimap<std::string,int32_t> request_sys_state_ids;
     int32_t next_request_sys_state_id;

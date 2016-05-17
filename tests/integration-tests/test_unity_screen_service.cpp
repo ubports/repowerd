@@ -354,6 +354,68 @@ TEST_F(AUnityScreenService,
     client.request_set_screen_power_mode("off", snap_decision_reason);
 }
 
+TEST_F(AUnityScreenService, notifies_of_no_notification_when_single_client_disconnects)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, notification()).Times(3);
+    EXPECT_CALL(mock_handlers, no_notification())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_set_screen_power_mode("on", notification_reason);
+    client.request_set_screen_power_mode("on", notification_reason);
+    client.request_set_screen_power_mode("on", snap_decision_reason);
+
+    client.disconnect();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUnityScreenService,
+       notifies_of_no_notification_when_all_clients_disconnect_or_remove_requests)
+{
+    using namespace testing;
+
+    rt::UnityScreenDBusClient other_client{bus.address()};
+
+    EXPECT_CALL(mock_handlers, notification()).Times(4);
+
+    client.request_set_screen_power_mode("on", notification_reason);
+    client.request_set_screen_power_mode("on", snap_decision_reason);
+    other_client.request_set_screen_power_mode("on", notification_reason);
+    other_client.request_set_screen_power_mode("on", snap_decision_reason);
+
+    other_client.disconnect();
+    client.request_set_screen_power_mode("off", notification_reason);
+
+    Mock::VerifyAndClearExpectations(&mock_handlers);
+
+    rt::WaitCondition request_processed;
+    EXPECT_CALL(mock_handlers, no_notification())
+        .WillOnce(WakeUp(&request_processed));
+
+    client.request_set_screen_power_mode("off", snap_decision_reason);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUnityScreenService, ignores_notification_done_request_from_client_without_notifications)
+{
+    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    client.request_set_screen_power_mode("off", notification_reason);
+}
+
+TEST_F(AUnityScreenService, ignores_disconnects_from_clients_without_notifications)
+{
+    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+
+    client.disconnect();
+
+    // Allow some time for disconnect notification to reach UnityScreenService
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
 
 TEST_F(AUnityScreenService, returns_false_for_unsupported_set_screen_power_mode_request)
 {

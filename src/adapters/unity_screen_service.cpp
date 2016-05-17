@@ -155,7 +155,6 @@ repowerd::UnityScreenService::UnityScreenService(
       no_notification_handler{null_handler},
       started{false},
       next_keep_display_on_id{1},
-      active_notifications{0},
       next_request_sys_state_id{1},
       brightness_params(BrightnessParams::from_device_config(device_config))
 {
@@ -397,7 +396,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         int32_t reason{-1};
         g_variant_get(parameters, "(&si)", &mode, &reason);
 
-        auto const result = dbus_setScreenPowerMode(mode, reason);
+        auto const result = dbus_setScreenPowerMode(sender, mode, reason);
 
         g_dbus_method_invocation_return_value(
             invocation,
@@ -548,6 +547,12 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         {
             // TODO: Allow suspend
         }
+
+        if (active_notifications.erase(name) > 0 &&
+            active_notifications.empty())
+        {
+            no_notification_handler();
+        }
     }
 }
 
@@ -576,22 +581,23 @@ void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
 }
 
 bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
-    std::string const& mode, int32_t reason)
+    std::string const& sender, std::string const& mode, int32_t reason)
 {
     if (reason == static_cast<int32_t>(UnityScreenPowerStateChangeReason::notification) ||
         reason == static_cast<int32_t>(UnityScreenPowerStateChangeReason::snap_decision))
     {
         if (mode == "on")
         {
-            ++active_notifications;
+            active_notifications.emplace(sender);
             notification_handler();
         }
         else if (mode == "off")
         {
-            if (active_notifications > 0)
+            auto const iter = active_notifications.find(sender);
+            if (iter != active_notifications.end())
             {
-                --active_notifications;
-                if (active_notifications == 0)
+                active_notifications.erase(iter);
+                if (active_notifications.empty())
                     no_notification_handler();
             }
         }
