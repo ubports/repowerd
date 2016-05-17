@@ -82,7 +82,8 @@ public:
         return sqrt(accum / (steps.size() - 1));
     }
 
-    std::vector<float> brightness_history{0.5f};
+    float const starting_brightness = 0.5f;
+    std::vector<float> brightness_history{starting_brightness};
 };
 
 class FakeLightSensor : public repowerd::LightSensor
@@ -405,4 +406,23 @@ TEST_F(ABacklightBrightnessControl, notifies_of_autobrightness_change)
     brightness_control.sync();
 
     EXPECT_THAT(notified_brightness, Eq(0.9f));
+}
+
+TEST_F(ABacklightBrightnessControl, does_not_notify_if_brightness_does_not_change)
+{
+    double notified_brightness{-1.0};
+
+    auto const handler_registration =
+        brightness_control.register_brightness_handler(
+            [&](double brightness) { notified_brightness = brightness; });
+
+    expect_brightness_value(backlight.starting_brightness);
+
+    brightness_control.set_normal_brightness();
+    brightness_control.set_normal_brightness_value(backlight.starting_brightness);
+    brightness_control.enable_autobrightness();
+    autobrightness_algorithm.emit_autobrightness(backlight.starting_brightness);
+    brightness_control.sync();
+
+    EXPECT_THAT(notified_brightness, Eq(-1.0f));
 }

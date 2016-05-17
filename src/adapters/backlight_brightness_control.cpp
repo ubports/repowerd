@@ -213,7 +213,8 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
         }
     }
 
-    brightness_handler(brightness);
+    if (starting_brightness != brightness)
+        brightness_handler(brightness);
 }
 
 void repowerd::BacklightBrightnessControl::set_brightness_value(float brightness)
