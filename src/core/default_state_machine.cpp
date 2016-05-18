@@ -47,7 +47,8 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       user_inactivity_reduced_display_off_timeout{
           config.user_inactivity_reduced_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
-          config.user_inactivity_post_notification_display_off_timeout()}
+          config.user_inactivity_post_notification_display_off_timeout()},
+      scheduled_timeout_type{ScheduledTimeoutType::none}
 {
       inactivity_timeout_allowances.fill(true);
       proximity_enablements.fill(false);
