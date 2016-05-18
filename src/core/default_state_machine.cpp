@@ -23,6 +23,7 @@
 #include "display_power_event_sink.h"
 #include "infinite_timeout.h"
 #include "log.h"
+#include "modem_power_control.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
 #include "timer.h"
@@ -37,6 +38,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       display_power_control{config.the_display_power_control()},
       display_power_event_sink{config.the_display_power_event_sink()},
       log{config.the_log()},
+      modem_power_control{config.the_modem_power_control()},
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       timer{config.the_timer()},
@@ -353,6 +355,8 @@ void repowerd::DefaultStateMachine::turn_off_display(
 {
     brightness_control->set_off_brightness();
     display_power_control->turn_off();
+    if (reason != DisplayPowerChangeReason::proximity)
+        modem_power_control->set_low_power_mode();
     display_power_mode = DisplayPowerMode::off;
     cancel_user_inactivity_alarm();
     display_power_event_sink->notify_display_power_off(reason);
@@ -364,6 +368,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;
     brighten_display();
+    modem_power_control->set_normal_power_mode();
     display_power_event_sink->notify_display_power_on(reason);
 }
 

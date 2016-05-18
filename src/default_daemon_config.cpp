@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
+#include "core/modem_power_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -77,6 +78,12 @@ struct NullLightSensor : repowerd::LightSensor
 
     void enable_light_events() override {}
     void disable_light_events() override {}
+};
+
+struct NullModemPowerControl : repowerd::ModemPowerControl
+{
+    void set_low_power_mode() override {}
+    void set_normal_power_mode() override {}
 };
 
 struct NullProximitySensor : repowerd::ProximitySensor
@@ -149,6 +156,14 @@ repowerd::DefaultDaemonConfig::the_display_power_event_sink()
     return the_unity_screen_service();
 }
 
+std::shared_ptr<repowerd::ModemPowerControl>
+repowerd::DefaultDaemonConfig::the_modem_power_control()
+{
+    if (!modem_power_control)
+        modem_power_control = std::make_shared<NullModemPowerControl>();
+
+    return modem_power_control;
+}
 std::shared_ptr<repowerd::NotificationService>
 repowerd::DefaultDaemonConfig::the_notification_service()
 {
