@@ -80,9 +80,10 @@ struct PowerdDBusClient : rt::DBusClient
     rt::DBusAsyncReplyString request_request_wakeup(
         std::chrono::system_clock::time_point tp)
     {
+        auto const t64 = static_cast<uint64_t>(std::chrono::system_clock::to_time_t(tp));
         return invoke_with_reply<rt::DBusAsyncReplyString>(
             powerd_interface, "requestWakeup",
-            g_variant_new("(st)", "test", std::chrono::system_clock::to_time_t(tp)));
+            g_variant_new("(st)", "test", t64));
     }
 
     rt::DBusAsyncReplyVoid request_clear_wakeup(std::string const& cookie)
