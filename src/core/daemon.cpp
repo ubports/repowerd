@@ -34,7 +34,6 @@
 repowerd::Daemon::Daemon(DaemonConfig& config)
     : brightness_control{config.the_brightness_control()},
       client_requests{config.the_client_requests()},
-      display_power_control{config.the_display_power_control()},
       notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
       proximity_sensor{config.the_proximity_sensor()},
