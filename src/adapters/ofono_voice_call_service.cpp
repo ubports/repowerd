@@ -19,10 +19,13 @@
 #include "ofono_voice_call_service.h"
 #include "event_loop_handler_registration.h"
 
+#include "src/core/log.h"
+
 #include <algorithm>
 
 namespace
 {
+char const* const log_tag = "OfonoVoiceCallService";
 auto const null_handler = []{};
 char const* const ofono_manager_interface = "org.ofono.Manager";
 char const* const ofono_radio_settings_interface = "org.ofono.RadioSettings";
@@ -52,6 +55,32 @@ repowerd::OfonoCallState ofono_call_state_from_string(std::string const& state_s
         state = repowerd::OfonoCallState::invalid;
 
     return state;
+}
+
+std::string ofono_call_state_to_string(repowerd::OfonoCallState state)
+{
+    switch (state)
+    {
+    case repowerd::OfonoCallState::active:
+        return "active";
+    case repowerd::OfonoCallState::alerting:
+        return "alerting";
+    case repowerd::OfonoCallState::dialing:
+        return "dialing";
+    case repowerd::OfonoCallState::disconnected:
+        return "disconnected";
+    case repowerd::OfonoCallState::held:
+        return "held";
+    case repowerd::OfonoCallState::incoming:
+        return "incoming";
+    case repowerd::OfonoCallState::waiting:
+        return "waiting";
+    case repowerd::OfonoCallState::invalid:
+    default:
+        return "";
+    };
+
+    return "";
 }
 
 repowerd::OfonoCallState get_call_state_from_properties(GVariantIter* properties)
@@ -85,8 +114,10 @@ bool is_call_state_active(repowerd::OfonoCallState call_state)
 }
 
 repowerd::OfonoVoiceCallService::OfonoVoiceCallService(
+    std::shared_ptr<Log> const& log,
     std::string const& dbus_bus_address)
-    : dbus_connection{dbus_bus_address},
+    : log{log},
+      dbus_connection{dbus_bus_address},
       active_call_handler{null_handler},
       no_active_call_handler{null_handler}
 {
@@ -254,30 +285,42 @@ void repowerd::OfonoVoiceCallService::handle_dbus_signal(
 void repowerd::OfonoVoiceCallService::dbus_CallAdded(
     std::string const& call_path, OfonoCallState call_state)
 {
+    log->log(log_tag, "dbus_CallAdded(%s,%s)",
+             call_path.c_str(), ofono_call_state_to_string(call_state).c_str());
+
     update_call_state(call_path, call_state);
 }
 
 void repowerd::OfonoVoiceCallService::dbus_CallRemoved(
     std::string const& call_path)
 {
+    log->log(log_tag, "dbus_CallRemoved(%s)", call_path.c_str());
+
     update_call_state(call_path, repowerd::OfonoCallState::invalid);
 }
 
 void repowerd::OfonoVoiceCallService::dbus_CallStateChanged(
     std::string const& call_path, OfonoCallState call_state)
 {
+    log->log(log_tag, "dbus_CallStateChanged(%s,%s)",
+             call_path.c_str(), ofono_call_state_to_string(call_state).c_str());
+
     update_call_state(call_path, call_state);
 }
 
 void repowerd::OfonoVoiceCallService::dbus_ModemAdded(
     std::string const& modem_path)
 {
+    log->log(log_tag, "dbus_ModemAdded(%s)", modem_path.c_str());
+
     modems.insert(modem_path);
 }
 
 void repowerd::OfonoVoiceCallService::dbus_ModemRemoved(
     std::string const& modem_path)
 {
+    log->log(log_tag, "dbus_ModemRemoved(%s)", modem_path.c_str());
+
     modems.erase(modem_path);
 }
 
@@ -339,7 +382,10 @@ void repowerd::OfonoVoiceCallService::add_existing_modems()
 
     char const* modem{""};
     while (g_variant_iter_next(result_modems, "(&oa{sv})", &modem, nullptr))
+    {
+        log->log(log_tag, "add_existing_modems(), %s", modem);
         modems.insert(modem);
+    }
 
     g_variant_iter_free(result_modems);
     g_variant_unref(result);
@@ -355,6 +401,9 @@ void repowerd::OfonoVoiceCallService::set_fast_dormancy(bool fast_dormancy)
 
     for (auto const& modem : modems)
     {
+        log->log(log_tag, "set_fast_dormancy(%s,%s)",
+                 modem.c_str(), fast_dormancy ? "true" : "false");
+
         g_dbus_connection_call(
             dbus_connection,
             ofono_service_name,

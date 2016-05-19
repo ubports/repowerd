@@ -16,10 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "dbus_bus.h"
-#include "fake_ofono.h"
 #include "src/adapters/ofono_voice_call_service.h"
 
+#include "dbus_bus.h"
+#include "fake_log.h"
+#include "fake_ofono.h"
+#include "fake_shared.h"
 #include "spin_wait.h"
 #include "wait_condition.h"
 
@@ -93,7 +95,10 @@ struct AnOfonoVoiceCallService : testing::Test
     testing::NiceMock<MockHandlers> mock_handlers;
 
     rt::DBusBus bus;
-    repowerd::OfonoVoiceCallService ofono_voice_call_service{bus.address()};
+    rt::FakeLog fake_log;
+    repowerd::OfonoVoiceCallService ofono_voice_call_service{
+        rt::fake_shared(fake_log),
+        bus.address()};
     rt::FakeOfono ofono{bus.address()};
 
     std::vector<repowerd::HandlerRegistration> registrations;
@@ -268,4 +273,117 @@ TEST_F(AnOfonoVoiceCallService, does_not_set_power_mode_on_removed_modems)
         default_timeout);
 
     EXPECT_TRUE(condition);
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_call_added)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, active_call())
+        .WillOnce(Return())
+        .WillOnce(Return())
+        .WillOnce(WakeUp(&request_processed));
+
+    ofono.add_call(call_path(1), repowerd::OfonoCallState::active);
+    ofono.add_call(call_path(2), repowerd::OfonoCallState::alerting);
+    ofono.add_call(call_path(3), repowerd::OfonoCallState::dialing);
+
+    request_processed.wait_for(default_timeout);
+
+    EXPECT_TRUE(fake_log.contains_line({"CallAdded", call_path(1), "active"}));
+    EXPECT_TRUE(fake_log.contains_line({"CallAdded", call_path(2), "alerting"}));
+    EXPECT_TRUE(fake_log.contains_line({"CallAdded", call_path(3), "dialing"}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_call_removed)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, active_call());
+    EXPECT_CALL(mock_handlers, no_active_call())
+        .WillOnce(WakeUp(&request_processed));
+
+    ofono.add_call(call_path(1), repowerd::OfonoCallState::active);
+    ofono.remove_call(call_path(1));
+
+    request_processed.wait_for(default_timeout);
+
+    EXPECT_TRUE(fake_log.contains_line({"CallRemoved", call_path(1)}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_call_state_changed)
+{
+    ofono.add_call(call_path(1), repowerd::OfonoCallState::incoming);
+
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, active_call())
+        .WillOnce(WakeUp(&request_processed));
+
+    ofono.change_call_state(call_path(1), repowerd::OfonoCallState::active);
+
+    request_processed.wait_for(default_timeout);
+
+    EXPECT_TRUE(fake_log.contains_line({"CallStateChanged", call_path(1), "active"}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_existing_modems)
+{
+    EXPECT_TRUE(fake_log.contains_line({"add_existing_modems", initial_modem}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_modem_added)
+{
+    ofono.add_modem(modem1);
+    ofono.add_modem(modem2);
+    auto all_modems = {initial_modem, modem1, modem2};
+
+    wait_for_tracked_modems(all_modems);
+
+    EXPECT_TRUE(fake_log.contains_line({"ModemAdded", modem1}));
+    EXPECT_TRUE(fake_log.contains_line({"ModemAdded", modem2}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_modem_removed)
+{
+    ofono.add_modem(modem1);
+    ofono.add_modem(modem2);
+    auto all_modems = {initial_modem, modem1, modem2};
+    auto all_modems_but_modem1 = {initial_modem, modem2};
+
+    wait_for_tracked_modems(all_modems);
+    ofono.remove_modem(modem1);
+    wait_for_tracked_modems(all_modems_but_modem1);
+
+    EXPECT_TRUE(fake_log.contains_line({"ModemRemoved", modem1}));
+}
+
+TEST_F(AnOfonoVoiceCallService, logs_set_fast_dormancy)
+{
+    ofono.add_modem(modem1);
+    auto all_modems = {initial_modem, modem1};
+
+    wait_for_tracked_modems(all_modems);
+
+    ofono_voice_call_service.set_low_power_mode();
+
+    ofono.wait_for_modems_condition(
+        modems_with_power(
+            all_modems,
+            rt::FakeOfono::ModemPowerState::low),
+        default_timeout);
+
+    for (auto const& modem : all_modems)
+        EXPECT_TRUE(fake_log.contains_line({"set_fast_dormancy", modem, "true"}));
+
+    ofono_voice_call_service.set_normal_power_mode();
+
+    ofono.wait_for_modems_condition(
+        modems_with_power(
+            all_modems,
+            rt::FakeOfono::ModemPowerState::normal),
+        default_timeout);
+
+    for (auto const& modem : all_modems)
+        EXPECT_TRUE(fake_log.contains_line({"set_fast_dormancy", modem, "false"}));
 }

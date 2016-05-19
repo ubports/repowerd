@@ -354,7 +354,11 @@ std::shared_ptr<repowerd::OfonoVoiceCallService>
 repowerd::DefaultDaemonConfig::the_ofono_voice_call_service()
 {
     if (!ofono_voice_call_service)
-        ofono_voice_call_service = std::make_shared<OfonoVoiceCallService>(the_dbus_bus_address());
+    {
+        ofono_voice_call_service = std::make_shared<OfonoVoiceCallService>(
+            the_log(),
+            the_dbus_bus_address());
+    }
     return ofono_voice_call_service;
 }
 

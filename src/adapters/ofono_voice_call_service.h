@@ -24,11 +24,14 @@
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace repowerd
 {
+
+class Log;
 
 enum class OfonoCallState {
     invalid,
@@ -43,7 +46,9 @@ enum class OfonoCallState {
 class OfonoVoiceCallService : public VoiceCallService, public ModemPowerControl
 {
 public:
-    OfonoVoiceCallService(std::string const& dbus_bus_address);
+    OfonoVoiceCallService(
+        std::shared_ptr<Log> const& log,
+        std::string const& dbus_bus_address);
 
     void start_processing() override;
 
@@ -78,6 +83,7 @@ private:
     void add_existing_modems();
     void set_fast_dormancy(bool fast_dormancy);
 
+    std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
     HandlerRegistration manager_handler_registration;
