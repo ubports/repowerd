@@ -30,6 +30,7 @@ add_executable(
     fake_brightness_notification.cpp
     fake_device_config.cpp
     fake_libhardware.cpp
+    fake_ofono.cpp
     fake_wakeup_service.cpp
     run_command.cpp
     temporary_environment_value.cpp

@@ -19,11 +19,13 @@
 #pragma once
 
 #include "src/core/voice_call_service.h"
+#include "src/core/modem_power_control.h"
 
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace repowerd
 {
@@ -38,7 +40,7 @@ enum class OfonoCallState {
     incoming,
     waiting};
 
-class OfonoVoiceCallService : public VoiceCallService
+class OfonoVoiceCallService : public VoiceCallService, public ModemPowerControl
 {
 public:
     OfonoVoiceCallService(std::string const& dbus_bus_address);
@@ -49,6 +51,11 @@ public:
         ActiveCallHandler const& handler) override;
     HandlerRegistration register_no_active_call_handler(
         NoActiveCallHandler const& handler) override;
+
+    void set_low_power_mode() override;
+    void set_normal_power_mode() override;
+
+    std::unordered_set<std::string> tracked_modems();
 
 private:
     void handle_dbus_signal(
@@ -62,19 +69,25 @@ private:
     void dbus_CallAdded(std::string const& call_path, OfonoCallState call_state);
     void dbus_CallRemoved(std::string const& call_path);
     void dbus_CallStateChanged(std::string const& call_path, OfonoCallState call_state);
+    void dbus_ModemAdded(std::string const& call_path);
+    void dbus_ModemRemoved(std::string const& call_path);
 
     void update_call_state(
         std::string const& call_path, OfonoCallState call_state);
     bool is_any_call_active();
+    void add_existing_modems();
+    void set_fast_dormancy(bool fast_dormancy);
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
+    HandlerRegistration manager_handler_registration;
     HandlerRegistration voice_call_manager_handler_registration;
     HandlerRegistration voice_call_handler_registration;
 
     ActiveCallHandler active_call_handler;
     NoActiveCallHandler no_active_call_handler;
     std::unordered_map<std::string,OfonoCallState> calls;
+    std::unordered_set<std::string> modems;
 };
 
 }

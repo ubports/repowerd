@@ -26,6 +26,7 @@ add_library(
     fake_timer.cpp
     fake_user_activity.cpp
     fake_voice_call_service.cpp
+    spin_wait.cpp
 )
 
 target_link_libraries(

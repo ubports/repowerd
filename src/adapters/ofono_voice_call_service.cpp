@@ -24,6 +24,8 @@
 namespace
 {
 auto const null_handler = []{};
+char const* const ofono_manager_interface = "org.ofono.Manager";
+char const* const ofono_radio_settings_interface = "org.ofono.RadioSettings";
 char const* const ofono_service_name = "org.ofono";
 char const* const ofono_voice_call_manager_interface = "org.ofono.VoiceCallManager";
 char const* const ofono_voice_call_interface = "org.ofono.VoiceCall";
@@ -92,6 +94,25 @@ repowerd::OfonoVoiceCallService::OfonoVoiceCallService(
 
 void repowerd::OfonoVoiceCallService::start_processing()
 {
+    manager_handler_registration = dbus_event_loop.register_signal_handler(
+        dbus_connection,
+        ofono_service_name,
+        ofono_manager_interface,
+        nullptr,
+        nullptr,
+        [this] (
+            GDBusConnection* connection,
+            gchar const* sender,
+            gchar const* object_path,
+            gchar const* interface_name,
+            gchar const* signal_name,
+            GVariant* parameters)
+        {
+            handle_dbus_signal(
+                connection, sender, object_path, interface_name,
+                signal_name, parameters);
+        });
+
     voice_call_manager_handler_registration = dbus_event_loop.register_signal_handler(
         dbus_connection,
         ofono_service_name,
@@ -129,6 +150,8 @@ void repowerd::OfonoVoiceCallService::start_processing()
                 connection, sender, object_path, interface_name,
                 signal_name, parameters);
         });
+
+    dbus_event_loop.enqueue([this] { add_existing_modems(); }).get();
 }
 
 repowerd::HandlerRegistration repowerd::OfonoVoiceCallService::register_active_call_handler(
@@ -147,6 +170,23 @@ repowerd::HandlerRegistration repowerd::OfonoVoiceCallService::register_no_activ
         dbus_event_loop,
             [this, &handler] { this->no_active_call_handler = handler; },
             [this] { this->no_active_call_handler = null_handler; }};
+}
+
+void repowerd::OfonoVoiceCallService::set_low_power_mode()
+{
+    dbus_event_loop.enqueue([this] { set_fast_dormancy(true); });
+}
+
+void repowerd::OfonoVoiceCallService::set_normal_power_mode()
+{
+    dbus_event_loop.enqueue([this] { set_fast_dormancy(false); });
+}
+
+std::unordered_set<std::string> repowerd::OfonoVoiceCallService::tracked_modems()
+{
+    decltype(modems) ret_modems;
+    dbus_event_loop.enqueue([this,&ret_modems] { ret_modems = modems; }).get();
+    return ret_modems;
 }
 
 void repowerd::OfonoVoiceCallService::handle_dbus_signal(
@@ -195,6 +235,20 @@ void repowerd::OfonoVoiceCallService::handle_dbus_signal(
 
         g_variant_unref(value);
     }
+    else if (signal_name == "ModemAdded")
+    {
+        char const* modem_path{""};
+        g_variant_get(parameters, "(&oa{sv})", &modem_path, nullptr);
+
+        dbus_ModemAdded(modem_path);
+    }
+    else if (signal_name == "ModemRemoved")
+    {
+        char const* modem_path{""};
+        g_variant_get(parameters, "(&o)", &modem_path);
+
+        dbus_ModemRemoved(modem_path);
+    }
 }
 
 void repowerd::OfonoVoiceCallService::dbus_CallAdded(
@@ -213,6 +267,18 @@ void repowerd::OfonoVoiceCallService::dbus_CallStateChanged(
     std::string const& call_path, OfonoCallState call_state)
 {
     update_call_state(call_path, call_state);
+}
+
+void repowerd::OfonoVoiceCallService::dbus_ModemAdded(
+    std::string const& modem_path)
+{
+    modems.insert(modem_path);
+}
+
+void repowerd::OfonoVoiceCallService::dbus_ModemRemoved(
+    std::string const& modem_path)
+{
+    modems.erase(modem_path);
 }
 
 void repowerd::OfonoVoiceCallService::update_call_state(
@@ -244,4 +310,63 @@ bool repowerd::OfonoVoiceCallService::is_any_call_active()
         {
             return is_call_state_active(kv.second);
         });
+}
+
+void repowerd::OfonoVoiceCallService::add_existing_modems()
+{
+    int constexpr timeout_default = -1;
+    auto constexpr null_cancellable = nullptr;
+    auto constexpr null_args = nullptr;
+    auto constexpr null_error = nullptr;
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        ofono_service_name,
+        "/",
+        ofono_manager_interface,
+        "GetModems",
+        null_args,
+        G_VARIANT_TYPE("(a(oa{sv}))"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_default,
+        null_cancellable,
+        null_error);
+
+    if (!result) return;
+
+    GVariantIter* result_modems;
+    g_variant_get(result, "(a(oa{sv}))", &result_modems);
+
+    char const* modem{""};
+    while (g_variant_iter_next(result_modems, "(&oa{sv})", &modem, nullptr))
+        modems.insert(modem);
+
+    g_variant_iter_free(result_modems);
+    g_variant_unref(result);
+}
+
+void repowerd::OfonoVoiceCallService::set_fast_dormancy(bool fast_dormancy)
+{
+    int constexpr timeout_default = -1;
+    auto constexpr null_cancellable = nullptr;
+    auto constexpr null_reply_type = nullptr;
+    auto constexpr null_callback = nullptr;
+    auto constexpr null_user_data = nullptr;
+
+    for (auto const& modem : modems)
+    {
+        g_dbus_connection_call(
+            dbus_connection,
+            ofono_service_name,
+            modem.c_str(),
+            ofono_radio_settings_interface,
+            "SetProperty",
+            g_variant_new("(sv)", "FastDormancy", g_variant_new_boolean(fast_dormancy)),
+            null_reply_type,
+            G_DBUS_CALL_FLAGS_NONE,
+            timeout_default,
+            null_cancellable,
+            null_callback,
+            null_user_data);
+    }
 }
