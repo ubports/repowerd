@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
-#include "core/modem_power_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -159,11 +158,9 @@ repowerd::DefaultDaemonConfig::the_display_power_event_sink()
 std::shared_ptr<repowerd::ModemPowerControl>
 repowerd::DefaultDaemonConfig::the_modem_power_control()
 {
-    if (!modem_power_control)
-        modem_power_control = std::make_shared<NullModemPowerControl>();
-
-    return modem_power_control;
+    return the_ofono_voice_call_service();
 }
+
 std::shared_ptr<repowerd::NotificationService>
 repowerd::DefaultDaemonConfig::the_notification_service()
 {
@@ -227,9 +224,7 @@ repowerd::DefaultDaemonConfig::the_user_activity()
 std::shared_ptr<repowerd::VoiceCallService>
 repowerd::DefaultDaemonConfig::the_voice_call_service()
 {
-    if (!voice_call_service)
-        voice_call_service = std::make_shared<OfonoVoiceCallService>(the_dbus_bus_address());
-    return voice_call_service;
+    return the_ofono_voice_call_service();
 }
 
 std::chrono::milliseconds
@@ -353,6 +348,14 @@ repowerd::DefaultDaemonConfig::the_light_sensor()
     }
 
     return light_sensor;
+}
+
+std::shared_ptr<repowerd::OfonoVoiceCallService>
+repowerd::DefaultDaemonConfig::the_ofono_voice_call_service()
+{
+    if (!ofono_voice_call_service)
+        ofono_voice_call_service = std::make_shared<OfonoVoiceCallService>(the_dbus_bus_address());
+    return ofono_voice_call_service;
 }
 
 std::shared_ptr<repowerd::Log>

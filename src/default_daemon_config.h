@@ -28,6 +28,7 @@ class BacklightBrightnessControl;
 class BrightnessNotification;
 class DeviceConfig;
 class LightSensor;
+class OfonoVoiceCallService;
 class UnityScreenService;
 class UnityPowerButton;
 class WakeupService;
@@ -65,6 +66,7 @@ private:
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
     std::shared_ptr<LightSensor> the_light_sensor();
+    std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
     std::shared_ptr<WakeupService> the_wakeup_service();
@@ -78,13 +80,13 @@ private:
     std::shared_ptr<LightSensor> light_sensor;
     std::shared_ptr<Log> log;
     std::shared_ptr<ModemPowerControl> modem_power_control;
+    std::shared_ptr<OfonoVoiceCallService> ofono_voice_call_service;
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UnityPowerButton> unity_power_button;
     std::shared_ptr<UnityScreenService> unity_screen_service;
     std::shared_ptr<UserActivity> user_activity;
-    std::shared_ptr<VoiceCallService> voice_call_service;
     std::shared_ptr<WakeupService> wakeup_service;
 };
 
