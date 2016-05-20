@@ -92,6 +92,7 @@ private:
     std::shared_ptr<ModemPowerControl> const modem_power_control;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
+    std::shared_ptr<SuspendControl> const suspend_control;
     std::shared_ptr<Timer> const timer;
 
     std::array<bool,InactivityTimeoutAllowance::count> inactivity_timeout_allowances;

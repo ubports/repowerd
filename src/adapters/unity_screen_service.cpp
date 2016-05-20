@@ -24,11 +24,13 @@
 
 #include "src/core/infinite_timeout.h"
 #include "src/core/log.h"
+#include "src/core/suspend_control.h"
 
 namespace
 {
 
 char const* const log_tag = "UnityScreenService";
+char const* const suspend_id = "UnityScreenService";
 
 auto const null_handler = []{};
 auto const null_arg_handler = [](auto){};
@@ -144,10 +146,12 @@ repowerd::UnityScreenService::UnityScreenService(
     std::shared_ptr<WakeupService> const& wakeup_service,
     std::shared_ptr<BrightnessNotification> const& brightness_notification,
     std::shared_ptr<Log> const& log,
+    std::shared_ptr<SuspendControl> const& suspend_control,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : wakeup_service{wakeup_service},
       brightness_notification{brightness_notification},
+      suspend_control{suspend_control},
       log{log},
       dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_handler},
@@ -567,7 +571,7 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         if (request_sys_state_ids.erase(name) > 0 &&
             request_sys_state_ids.empty())
         {
-            // TODO: Allow suspend
+            suspend_control->allow_suspend(suspend_id);
         }
 
         if (active_notifications.erase(name) > 0 &&
@@ -672,7 +676,7 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
     auto const id = next_request_sys_state_id++;
     request_sys_state_ids.emplace(sender, id);
 
-    // TODO: disallow suspend
+    suspend_control->disallow_suspend(suspend_id);
 
     log->log(log_tag, "dbus_requestSysState(%s,%s,%d) => %d",
              sender.c_str(), name.c_str(), state, id);
@@ -707,7 +711,7 @@ void repowerd::UnityScreenService::dbus_clearSysState(
 
     if (id_removed && request_sys_state_ids.empty())
     {
-        // TODO: Allow suspend
+        suspend_control->allow_suspend(suspend_id);
     }
 }
 

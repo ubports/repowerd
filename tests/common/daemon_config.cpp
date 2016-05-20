@@ -29,6 +29,7 @@
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_proximity_sensor.h"
+#include "fake_suspend_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
@@ -92,6 +93,11 @@ std::shared_ptr<repowerd::StateMachine> rt::DaemonConfig::the_state_machine()
     if (!state_machine)
         state_machine = std::make_shared<DefaultStateMachine>(*this);
     return state_machine;
+}
+
+std::shared_ptr<repowerd::SuspendControl> rt::DaemonConfig::the_suspend_control()
+{
+    return the_fake_suspend_control();
 }
 
 std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
@@ -227,6 +233,15 @@ std::shared_ptr<rt::FakeProximitySensor> rt::DaemonConfig::the_fake_proximity_se
         fake_proximity_sensor = std::make_shared<rt::FakeProximitySensor>();
 
     return fake_proximity_sensor;
+}
+
+std::shared_ptr<rt::FakeSuspendControl>
+rt::DaemonConfig::the_fake_suspend_control()
+{
+    if (!fake_suspend_control)
+        fake_suspend_control = std::make_shared<rt::FakeSuspendControl>();
+
+    return fake_suspend_control;
 }
 
 std::shared_ptr<rt::FakeTimer> rt::DaemonConfig::the_fake_timer()

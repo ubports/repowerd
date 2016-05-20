@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
+#include "core/suspend_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -95,6 +96,12 @@ struct NullProximitySensor : repowerd::ProximitySensor
     repowerd::ProximityState proximity_state() override { return {}; }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
+};
+
+struct NullSuspendControl : repowerd::SuspendControl
+{
+    void allow_suspend(std::string const&) override {}
+    void disallow_suspend(std::string const&) override {}
 };
 
 struct NullWakeupService : repowerd::WakeupService
@@ -203,6 +210,14 @@ repowerd::DefaultDaemonConfig::the_state_machine()
     if (!state_machine)
         state_machine = std::make_shared<DefaultStateMachine>(*this);
     return state_machine;
+}
+
+std::shared_ptr<repowerd::SuspendControl>
+repowerd::DefaultDaemonConfig::the_suspend_control()
+{
+    if (!suspend_control)
+        suspend_control = std::make_shared<NullSuspendControl>();
+    return suspend_control;
 }
 
 std::shared_ptr<repowerd::Timer>
@@ -388,6 +403,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
             the_wakeup_service(),
             the_backlight_brightness_control(),
             the_log(),
+            the_suspend_control(),
             *the_device_config(),
             the_dbus_bus_address());
     }

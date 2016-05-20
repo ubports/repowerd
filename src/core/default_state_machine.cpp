@@ -26,11 +26,13 @@
 #include "modem_power_control.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
+#include "suspend_control.h"
 #include "timer.h"
 
 namespace
 {
 char const* const log_tag = "DefaultStateMachine";
+char const* const suspend_id = "DefaultStateMachine";
 }
 
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
@@ -41,6 +43,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       modem_power_control{config.the_modem_power_control()},
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
+      suspend_control{config.the_suspend_control()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
@@ -360,11 +363,14 @@ void repowerd::DefaultStateMachine::turn_off_display(
     display_power_mode = DisplayPowerMode::off;
     cancel_user_inactivity_alarm();
     display_power_event_sink->notify_display_power_off(reason);
+    if (reason != DisplayPowerChangeReason::proximity)
+        suspend_control->allow_suspend(suspend_id);
 }
 
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
     DisplayPowerChangeReason reason)
 {
+    suspend_control->disallow_suspend(suspend_id);
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;
     brighten_display();

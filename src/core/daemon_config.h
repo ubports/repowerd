@@ -35,6 +35,7 @@ class PowerButton;
 class PowerButtonEventSink;
 class ProximitySensor;
 class StateMachine;
+class SuspendControl;
 class Timer;
 class UserActivity;
 class VoiceCallService;
@@ -55,6 +56,7 @@ public:
     virtual std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() = 0;
     virtual std::shared_ptr<ProximitySensor> the_proximity_sensor() = 0;
     virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
+    virtual std::shared_ptr<SuspendControl> the_suspend_control() = 0;
     virtual std::shared_ptr<Timer> the_timer() = 0;
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
     virtual std::shared_ptr<VoiceCallService> the_voice_call_service() = 0;

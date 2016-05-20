@@ -23,6 +23,7 @@ add_library(
     fake_notification_service.cpp
     fake_power_button.cpp
     fake_proximity_sensor.cpp
+    fake_suspend_control.cpp
     fake_timer.cpp
     fake_user_activity.cpp
     fake_voice_call_service.cpp
