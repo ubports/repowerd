@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
-#include "core/suspend_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -28,6 +27,7 @@
 #include "adapters/console_log.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
+#include "adapters/libsuspend_suspend_control.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/sysfs_backlight.h"
@@ -96,12 +96,6 @@ struct NullProximitySensor : repowerd::ProximitySensor
     repowerd::ProximityState proximity_state() override { return {}; }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
-};
-
-struct NullSuspendControl : repowerd::SuspendControl
-{
-    void allow_suspend(std::string const&) override {}
-    void disallow_suspend(std::string const&) override {}
 };
 
 struct NullWakeupService : repowerd::WakeupService
@@ -216,7 +210,10 @@ std::shared_ptr<repowerd::SuspendControl>
 repowerd::DefaultDaemonConfig::the_suspend_control()
 {
     if (!suspend_control)
-        suspend_control = std::make_shared<NullSuspendControl>();
+    {
+        suspend_control = std::make_shared<LibsuspendSuspendControl>(
+            the_log());
+    }
     return suspend_control;
 }
 

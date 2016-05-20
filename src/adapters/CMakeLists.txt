@@ -14,6 +14,8 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+add_subdirectory(libsuspend)
+
 set(
     REPOWERD_ADAPTER_SRCS
 
@@ -31,6 +33,7 @@ set(
     event_loop.cpp
     event_loop_timer.cpp
     fd.cpp
+    libsuspend_suspend_control.cpp
     monotone_spline.cpp
     null_log.cpp
     ofono_voice_call_service.cpp
@@ -52,6 +55,7 @@ add_library(
 target_link_libraries(
     repowerd-adapters
 
+    suspend
     ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
