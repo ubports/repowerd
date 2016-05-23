@@ -19,13 +19,27 @@
 #include "console_log.h"
 
 #include <cstdarg>
-#include <string>
-
 #include <cstdio>
+#include <ctime>
+#include <string>
 
 void repowerd::ConsoleLog::log(char const* tag, char const* format, ...)
 {
-    std::string const format_str = std::string{tag} + ": " + format + "\n";
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    char now[32];
+    auto const offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
+    snprintf(now + offset, sizeof(now) - offset, ".%06ld", ts.tv_nsec / 1000);
+
+    std::string format_str;
+    format_str += "[";
+    format_str += now;
+    format_str += "] ";
+    format_str += tag;
+    format_str += ": ";
+    format_str += format;
+    format_str += "\n";
 
     va_list ap;
     va_start(ap, format);
@@ -33,4 +47,6 @@ void repowerd::ConsoleLog::log(char const* tag, char const* format, ...)
     vprintf(format_str.c_str(), ap);
 
     va_end(ap);
+
+    fflush(stdout);
 }
