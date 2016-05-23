@@ -137,7 +137,7 @@ public:
 
     void emit_autobrightness(double brightness)
     {
-        event_loop->enqueue([this,brightness] { autobrightness_handler(brightness); });
+        event_loop->enqueue([this,brightness] { autobrightness_handler(brightness); }).get();
     }
 
     repowerd::HandlerRegistration register_autobrightness_handler(
@@ -158,7 +158,6 @@ struct ABacklightBrightnessControl : Test
 {
     void expect_brightness_value(float brightness)
     {
-        brightness_control.sync();
         EXPECT_THAT(backlight.brightness_history.back(), Eq(brightness));
     }
 
@@ -166,7 +165,6 @@ struct ABacklightBrightnessControl : Test
     {
         auto start = std::chrono::steady_clock::now();
         func();
-        brightness_control.sync();
         return std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - start);
     }
@@ -242,7 +240,6 @@ TEST_F(ABacklightBrightnessControl, transitions_smoothly_between_brightness_valu
 {
     brightness_control.set_off_brightness();
     brightness_control.set_normal_brightness();
-    brightness_control.sync();
 
     EXPECT_THAT(backlight.brightness_history.size(), Ge(20));
     EXPECT_THAT(backlight.brightness_steps_stddev(), Le(0.01));
@@ -252,11 +249,9 @@ TEST_F(ABacklightBrightnessControl, transitions_smoothly_between_brightness_valu
 {
     brightness_control.set_off_brightness();
     brightness_control.set_normal_brightness();
-    brightness_control.sync();
     backlight.clear_brightness_history();
 
     brightness_control.set_off_brightness();
-    brightness_control.sync();
 
     EXPECT_THAT(backlight.brightness_history.size(), Ge(20));
     EXPECT_THAT(backlight.brightness_steps_stddev(), Le(0.01));
@@ -266,7 +261,6 @@ TEST_F(ABacklightBrightnessControl,
        transitions_between_zero_and_non_zero_brightness_in_100ms)
 {
     brightness_control.set_off_brightness();
-    brightness_control.sync();
 
     EXPECT_THAT(duration_of([&]{brightness_control.set_normal_brightness();}), IsAbout(100ms));
     EXPECT_THAT(duration_of([&]{brightness_control.set_off_brightness();}), IsAbout(100ms));
@@ -277,7 +271,6 @@ TEST_F(ABacklightBrightnessControl,
        ignores_light_events_when_autobrightness_is_disabled)
 {
     light_sensor.emit_light_if_enabled(500.0);
-    brightness_control.sync();
 
     EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
 }
@@ -286,9 +279,7 @@ TEST_F(ABacklightBrightnessControl,
        processes_light_events_when_autobrightness_is_enabled)
 {
     brightness_control.enable_autobrightness();
-    brightness_control.sync();
     light_sensor.emit_light_if_enabled(500.0);
-    brightness_control.sync();
 
     EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(1));
 }
@@ -382,12 +373,10 @@ TEST_F(ABacklightBrightnessControl, notifies_of_brightness_change)
 
     brightness_control.set_normal_brightness();
     brightness_control.set_normal_brightness_value(0.9);
-    brightness_control.sync();
 
     EXPECT_THAT(notified_brightness, Eq(0.9f));
 
     brightness_control.set_dim_brightness();
-    brightness_control.sync();
 
     EXPECT_THAT(notified_brightness, Eq(dim_percent));
 }
@@ -403,7 +392,6 @@ TEST_F(ABacklightBrightnessControl, notifies_of_autobrightness_change)
     brightness_control.set_normal_brightness();
     brightness_control.enable_autobrightness();
     autobrightness_algorithm.emit_autobrightness(0.9);
-    brightness_control.sync();
 
     EXPECT_THAT(notified_brightness, Eq(0.9f));
 }
@@ -422,7 +410,6 @@ TEST_F(ABacklightBrightnessControl, does_not_notify_if_brightness_does_not_chang
     brightness_control.set_normal_brightness_value(backlight.starting_brightness);
     brightness_control.enable_autobrightness();
     autobrightness_algorithm.emit_autobrightness(backlight.starting_brightness);
-    brightness_control.sync();
 
     EXPECT_THAT(notified_brightness, Eq(-1.0f));
 }

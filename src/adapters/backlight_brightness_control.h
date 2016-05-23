@@ -51,8 +51,6 @@ public:
     HandlerRegistration register_brightness_handler(
         BrightnessHandler const& handler) override;
 
-    void sync();
-
 private:
     enum TransitionSpeed {normal, slow};
     void transition_to_brightness_value(float brightness, TransitionSpeed transition_speed);

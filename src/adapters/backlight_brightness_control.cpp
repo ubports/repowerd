@@ -102,7 +102,7 @@ void repowerd::BacklightBrightnessControl::disable_autobrightness()
                 if (normal_brightness_active)
                     transition_to_brightness_value(normal_brightness, TransitionSpeed::slow);
             }
-        });
+        }).get();
 }
 
 void repowerd::BacklightBrightnessControl::enable_autobrightness()
@@ -118,7 +118,7 @@ void repowerd::BacklightBrightnessControl::enable_autobrightness()
                 light_sensor->enable_light_events();
                 ab_active = true;
             }
-        });
+        }).get();
 }
 
 void repowerd::BacklightBrightnessControl::set_dim_brightness()
@@ -128,7 +128,7 @@ void repowerd::BacklightBrightnessControl::set_dim_brightness()
         { 
             transition_to_brightness_value(dim_brightness, TransitionSpeed::normal);
             normal_brightness_active = false;
-        });
+        }).get();
 }
 
 void repowerd::BacklightBrightnessControl::set_normal_brightness()
@@ -138,7 +138,7 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness()
         { 
             transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
             normal_brightness_active = true;
-        });
+        }).get();
 }
 
 void repowerd::BacklightBrightnessControl::set_normal_brightness_value(float v)
@@ -152,7 +152,7 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness_value(float v)
                 normal_brightness = user_normal_brightness;
                 transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
             }
-        });
+        }).get();
 }
 
 void repowerd::BacklightBrightnessControl::set_off_brightness()
@@ -162,7 +162,7 @@ void repowerd::BacklightBrightnessControl::set_off_brightness()
         { 
             transition_to_brightness_value(0, TransitionSpeed::normal);
             normal_brightness_active = false;
-        });
+        }).get();
 }
 
 repowerd::HandlerRegistration
@@ -173,11 +173,6 @@ repowerd::BacklightBrightnessControl::register_brightness_handler(
         event_loop,
         [this,&handler] { brightness_handler = handler; },
         [this] { brightness_handler = null_handler; });
-}
-
-void repowerd::BacklightBrightnessControl::sync()
-{
-    event_loop.enqueue([]{}).get();
 }
 
 void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
