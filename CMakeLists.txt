@@ -30,6 +30,7 @@ pkg_check_modules(ANDROID_PROPERTIES REQUIRED libandroid-properties)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(UA REQUIRED ubuntu-platform-api)
 pkg_check_modules(LIBHARDWARE REQUIRED libhardware)
+pkg_check_modules(UBUNTU_PLATFORM_HARDWARE_API REQUIRED ubuntu-platform-hardware-api)
 find_package(AndroidHeaders REQUIRED)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;AddressSanitizer;ThreadSanitizer")

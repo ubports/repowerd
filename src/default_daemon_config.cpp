@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
-#include "core/performance_booster.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -34,6 +33,7 @@
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
 #include "adapters/ubuntu_light_sensor.h"
+#include "adapters/ubuntu_performance_booster.h"
 #include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display_power_control.h"
 #include "adapters/unity_power_button.h"
@@ -179,7 +179,15 @@ std::shared_ptr<repowerd::PerformanceBooster>
 repowerd::DefaultDaemonConfig::the_performance_booster()
 {
     if (!performance_booster)
+    try
+    {
+        performance_booster = std::make_shared<UbuntuPerformanceBooster>(
+            the_log());
+    }
+    catch (...)
+    {
         performance_booster = std::make_shared<NullPerformanceBooster>();
+    }
 
     return performance_booster;
 }

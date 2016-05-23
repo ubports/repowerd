@@ -40,6 +40,7 @@ set(
     syslog_log.cpp
     sysfs_backlight.cpp
     ubuntu_light_sensor.cpp
+    ubuntu_performance_booster.cpp
     ubuntu_proximity_sensor.cpp
     unity_display_power_control.cpp
     unity_power_button.cpp
@@ -60,6 +61,7 @@ target_link_libraries(
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
+    ${UBUNTU_PLATFORM_HARDWARE_API_LDFLAGS} ${UBUNTU_PLATFORM_HARDWARE_API_LIBRARIES}
 )
 
 target_include_directories(
@@ -69,4 +71,5 @@ target_include_directories(
     ${GIO_INCLUDE_DIRS}
     ${LIBHARDWARE_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
+    ${UBUNTU_PLATFORM_HARDWARE_API_INCLUDE_DIRS}
 )
