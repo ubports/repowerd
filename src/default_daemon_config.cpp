@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
+#include "core/performance_booster.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -84,6 +85,12 @@ struct NullModemPowerControl : repowerd::ModemPowerControl
 {
     void set_low_power_mode() override {}
     void set_normal_power_mode() override {}
+};
+
+struct NullPerformanceBooster : repowerd::PerformanceBooster
+{
+    void enable_interactive_mode() override {}
+    void disable_interactive_mode() override {}
 };
 
 struct NullProximitySensor : repowerd::ProximitySensor
@@ -166,6 +173,15 @@ std::shared_ptr<repowerd::NotificationService>
 repowerd::DefaultDaemonConfig::the_notification_service()
 {
     return the_unity_screen_service();
+}
+
+std::shared_ptr<repowerd::PerformanceBooster>
+repowerd::DefaultDaemonConfig::the_performance_booster()
+{
+    if (!performance_booster)
+        performance_booster = std::make_shared<NullPerformanceBooster>();
+
+    return performance_booster;
 }
 
 std::shared_ptr<repowerd::PowerButton>

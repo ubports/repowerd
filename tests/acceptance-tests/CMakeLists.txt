@@ -21,6 +21,7 @@ add_executable(
     test_client_requests.cpp
     test_modem_power_control.cpp
     test_notification.cpp
+    test_performance_booster.cpp
     test_power_button.cpp
     test_proximity_sensor.cpp
     test_suspend_control.cpp

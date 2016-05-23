@@ -43,6 +43,7 @@ public:
     std::shared_ptr<Log> the_log() override;
     std::shared_ptr<ModemPowerControl> the_modem_power_control() override;
     std::shared_ptr<NotificationService> the_notification_service() override;
+    std::shared_ptr<PerformanceBooster> the_performance_booster() override;
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
@@ -82,6 +83,7 @@ private:
     std::shared_ptr<Log> log;
     std::shared_ptr<ModemPowerControl> modem_power_control;
     std::shared_ptr<OfonoVoiceCallService> ofono_voice_call_service;
+    std::shared_ptr<PerformanceBooster> performance_booster;
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<StateMachine> state_machine;
     std::shared_ptr<SuspendControl> suspend_control;

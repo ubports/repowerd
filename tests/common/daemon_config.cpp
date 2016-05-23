@@ -26,6 +26,7 @@
 #include "fake_log.h"
 #include "mock_modem_power_control.h"
 #include "fake_notification_service.h"
+#include "mock_performance_booster.h"
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_proximity_sensor.h"
@@ -71,6 +72,11 @@ std::shared_ptr<repowerd::ModemPowerControl> rt::DaemonConfig::the_modem_power_c
 std::shared_ptr<repowerd::NotificationService> rt::DaemonConfig::the_notification_service()
 {
     return the_fake_notification_service();
+}
+
+std::shared_ptr<repowerd::PerformanceBooster> rt::DaemonConfig::the_performance_booster()
+{
+    return the_mock_performance_booster();
 }
 
 std::shared_ptr<repowerd::PowerButton> rt::DaemonConfig::the_power_button()
@@ -208,6 +214,15 @@ std::shared_ptr<rt::FakeNotificationService> rt::DaemonConfig::the_fake_notifica
         fake_notification_service = std::make_shared<rt::FakeNotificationService>();
 
     return fake_notification_service;
+}
+
+std::shared_ptr<NiceMock<rt::MockPerformanceBooster>>
+rt::DaemonConfig::the_mock_performance_booster()
+{
+    if (!mock_performance_booster)
+        mock_performance_booster = std::make_shared<NiceMock<rt::MockPerformanceBooster>>();
+
+    return mock_performance_booster;
 }
 
 std::shared_ptr<rt::FakePowerButton> rt::DaemonConfig::the_fake_power_button()
