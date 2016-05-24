@@ -26,9 +26,12 @@ namespace repowerd
 class DeviceQuirks
 {
 public:
+    enum class ProximityEventType {near, far};
+
     virtual ~DeviceQuirks() = default;
 
-    virtual std::chrono::milliseconds synthentic_initial_far_event_delay() const = 0;
+    virtual std::chrono::milliseconds synthetic_initial_proximity_event_delay() const = 0;
+    virtual ProximityEventType synthetic_initial_proximity_event_type() const = 0;
 
 protected:
     DeviceQuirks() = default;

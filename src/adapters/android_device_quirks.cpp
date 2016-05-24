@@ -32,24 +32,42 @@ std::string determine_device_name()
     return name;
 }
 
-std::chrono::milliseconds synthetic_initial_far_event_delay_for(std::string device_name)
+std::chrono::milliseconds synthetic_initial_proximity_event_delay_for(std::string)
 {
+    return 500ms;
+}
+
+repowerd::AndroidDeviceQuirks::ProximityEventType
+synthetic_initial_proximity_event_type_for(std::string device_name)
+{
+    // In general we assume a "near" state if we don't get an initial event.
+    // However, arale does not emit an initial event when in the "far" state
+    // in particular, so we assume a "far" state for arale.
     if (device_name == "arale")
-        return 500ms;
+        return repowerd::AndroidDeviceQuirks::ProximityEventType::far;
     else
-        return std::chrono::milliseconds::max();
+        return repowerd::AndroidDeviceQuirks::ProximityEventType::near;
 }
 
 }
 
 repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks()
     : device_name_{determine_device_name()},
-      synthetic_initial_far_event_delay_{synthetic_initial_far_event_delay_for(device_name_)}
+      synthetic_initial_proximity_event_delay_{
+          synthetic_initial_proximity_event_delay_for(device_name_)},
+      synthetic_initial_proximity_event_type_{
+          synthetic_initial_proximity_event_type_for(device_name_)}
 {
 }
 
 std::chrono::milliseconds
-repowerd::AndroidDeviceQuirks::synthentic_initial_far_event_delay() const
+repowerd::AndroidDeviceQuirks::synthetic_initial_proximity_event_delay() const
 {
-    return synthetic_initial_far_event_delay_;
+    return synthetic_initial_proximity_event_delay_;
+}
+
+repowerd::AndroidDeviceQuirks::ProximityEventType
+repowerd::AndroidDeviceQuirks::synthetic_initial_proximity_event_type() const
+{
+    return synthetic_initial_proximity_event_type_;
 }

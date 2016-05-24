@@ -38,11 +38,25 @@ namespace
 
 struct StubDeviceQuirks : repowerd::DeviceQuirks
 {
-    std::chrono::milliseconds synthentic_initial_far_event_delay() const override
+    std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override
     {
         // Set a high delay to account for valgrind slowness
         return std::chrono::milliseconds{1000};
     }
+
+    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_proximity_event_type() const override
+    {
+        return synthetic_initial_far_event_type_;
+    }
+
+    void set_synthetic_initial_event_type_near()
+    {
+        synthetic_initial_far_event_type_ = repowerd::DeviceQuirks::ProximityEventType::near;
+    }
+
+private:
+    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_far_event_type_{
+        repowerd::DeviceQuirks::ProximityEventType::far};
 };
 
 struct AUbuntuProximitySensor : testing::Test
@@ -55,8 +69,7 @@ struct AUbuntuProximitySensor : testing::Test
         command_file.write(script);
 
         sensor = std::make_unique<repowerd::UbuntuProximitySensor>(
-            rt::fake_shared(fake_log),
-            StubDeviceQuirks());
+            rt::fake_shared(fake_log), stub_device_quirks);
         registration = sensor->register_proximity_handler(
             [this](repowerd::ProximityState state) { mock_handlers.proximity_handler(state); });
     }
@@ -68,6 +81,7 @@ struct AUbuntuProximitySensor : testing::Test
     NiceMock<MockHandlers> mock_handlers;
 
     rt::FakeLog fake_log;
+    StubDeviceQuirks stub_device_quirks;
     std::unique_ptr<repowerd::UbuntuProximitySensor> sensor;
     repowerd::HandlerRegistration registration;
 
@@ -128,7 +142,7 @@ TEST_F(AUbuntuProximitySensor, reports_near_event)
 }
 
 
-TEST_F(AUbuntuProximitySensor, reports_synthetic_far_event_if_no_initial_event_arrives)
+TEST_F(AUbuntuProximitySensor, reports_synthetic_event_far_if_no_initial_event_arrives)
 {
     TEST_IN_SEPARATE_PROCESS({
         rt::WaitCondition handler_called;
@@ -147,6 +161,30 @@ TEST_F(AUbuntuProximitySensor, reports_synthetic_far_event_if_no_initial_event_a
         EXPECT_TRUE(fake_log.contains_line({"schedule", "synthetic", "far"}));
         EXPECT_TRUE(fake_log.contains_line({"emitting", "synthetic", "far"}));
         EXPECT_TRUE(fake_log.contains_line({"proximity_event", "far"}));
+    });
+}
+
+TEST_F(AUbuntuProximitySensor, reports_synthetic_event_near_if_no_initial_event_arrives)
+{
+    TEST_IN_SEPARATE_PROCESS({
+        stub_device_quirks.set_synthetic_initial_event_type_near();
+
+        rt::WaitCondition handler_called;
+
+        EXPECT_CALL(mock_handlers, proximity_handler(repowerd::ProximityState::near))
+            .WillOnce(WakeUp(&handler_called));
+
+        set_up_sensor(
+            "create proximity\n");
+
+        sensor->enable_proximity_events();
+
+        handler_called.wait_for(default_timeout);
+        EXPECT_TRUE(handler_called.woken());
+
+        EXPECT_TRUE(fake_log.contains_line({"schedule", "synthetic", "near"}));
+        EXPECT_TRUE(fake_log.contains_line({"emitting", "synthetic", "near"}));
+        EXPECT_TRUE(fake_log.contains_line({"proximity_event", "near"}));
     });
 }
 
@@ -178,7 +216,7 @@ TEST_F(AUbuntuProximitySensor, waits_for_first_event_to_report_current_state)
     });
 }
 
-TEST_F(AUbuntuProximitySensor, reports_current_state_far_if_no_event_arrives_soon)
+TEST_F(AUbuntuProximitySensor, reports_current_synthetic_state_far_if_no_event_arrives_soon)
 {
     TEST_IN_SEPARATE_PROCESS({
         set_up_sensor(
@@ -187,6 +225,20 @@ TEST_F(AUbuntuProximitySensor, reports_current_state_far_if_no_event_arrives_soo
         EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::far));
 
         EXPECT_TRUE(fake_log.contains_line({"proximity_state", "far"}));
+    });
+}
+
+TEST_F(AUbuntuProximitySensor, reports_current_synthetic_state_near_if_no_event_arrives_soon)
+{
+    TEST_IN_SEPARATE_PROCESS({
+        stub_device_quirks.set_synthetic_initial_event_type_near();
+
+        set_up_sensor(
+            "create proximity\n");
+
+        EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::near));
+
+        EXPECT_TRUE(fake_log.contains_line({"proximity_state", "near"}));
     });
 }
 

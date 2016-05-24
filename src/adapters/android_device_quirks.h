@@ -30,11 +30,13 @@ class AndroidDeviceQuirks : public DeviceQuirks
 public:
     AndroidDeviceQuirks();
 
-    std::chrono::milliseconds synthentic_initial_far_event_delay() const override;
+    std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override;
+    ProximityEventType synthetic_initial_proximity_event_type() const override;
 
 private:
     std::string const device_name_;
-    std::chrono::milliseconds const synthetic_initial_far_event_delay_;
+    std::chrono::milliseconds const synthetic_initial_proximity_event_delay_;
+    ProximityEventType const synthetic_initial_proximity_event_type_;
 };
 
 }
