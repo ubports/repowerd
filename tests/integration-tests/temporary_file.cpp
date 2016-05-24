@@ -19,7 +19,7 @@
 #include "temporary_file.h"
 
 #include <cstdlib>
-#include <stdexcept>
+#include <system_error>
 #include <unistd.h>
 
 namespace rt = repowerd::test;
@@ -29,7 +29,7 @@ rt::TemporaryFile::TemporaryFile()
     char name_template[] = "/tmp/repowerd-test-XXXXXX";
     fd = mkstemp(name_template);
     if (fd == -1)
-        throw std::runtime_error("Failed to create temporary file");
+        throw std::system_error{errno, std::system_category(), "Failed to create temporary file"};
     filename = name_template;
 }
 
@@ -46,6 +46,7 @@ std::string rt::TemporaryFile::name() const
 
 void rt::TemporaryFile::write(std::string data) const
 {
-    ::write(fd, data.c_str(), data.size());
+    if (::write(fd, data.c_str(), data.size()) != static_cast<ssize_t>(data.size()))
+        throw std::system_error{errno, std::system_category(), "Failed to write to temporary file"};
     fsync(fd);
 }

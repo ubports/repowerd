@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <system_error>
 #include <cstring>
+#include <iostream>
 
 namespace rt = repowerd::test;
 
@@ -111,7 +112,8 @@ rt::VirtualFilesystem::VirtualFilesystem()
 
 rt::VirtualFilesystem::~VirtualFilesystem()
 {
-    system(("fusermount -u " + mount_point_).c_str());
+    if (system(("fusermount -u " + mount_point_).c_str()) != 0)
+        std::cerr << "Failed to unmount fuse filesystem" << std::endl;
     vfs_thread.join();
     rmdir(mount_point_.c_str());
 }
