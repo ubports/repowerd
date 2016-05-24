@@ -20,6 +20,7 @@
 #include "src/adapters/android_backlight.h"
 #include "src/adapters/android_device_config.h"
 #include "src/adapters/backlight_brightness_control.h"
+#include "src/adapters/console_log.h"
 #include "src/adapters/sysfs_backlight.h"
 #include "src/adapters/ubuntu_light_sensor.h"
 
@@ -79,10 +80,11 @@ int main()
     repowerd::AndroidDeviceConfig device_config{"/usr/share/powerd/device_configs"};
     auto const backlight = create_backlight();
     auto const light_sensor = create_light_sensor();
+    auto const log = std::make_shared<repowerd::ConsoleLog>();
     auto const ab_algorithm =
         std::make_shared<repowerd::AndroidAutobrightnessAlgorithm>(device_config);
     repowerd::BacklightBrightnessControl brightness_control{
-        backlight, light_sensor, ab_algorithm, device_config};
+        backlight, light_sensor, ab_algorithm, log, device_config};
 
     bool running = true;
 

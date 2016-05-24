@@ -23,6 +23,8 @@
 #include "event_loop_handler_registration.h"
 #include "light_sensor.h"
 
+#include "src/core/log.h"
+
 #include <cmath>
 #include <chrono>
 #include <string>
@@ -34,6 +36,7 @@ using namespace std::chrono_literals;
 namespace
 {
 
+char const* const log_tag = "BacklightBrightnessControl";
 auto const null_handler = [](double){};
 
 float normal_brightness_percent(repowerd::DeviceConfig const& device_config)
@@ -54,10 +57,12 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
     std::shared_ptr<Backlight> const& backlight,
     std::shared_ptr<LightSensor> const& light_sensor,
     std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
+    std::shared_ptr<Log> const& log,
     DeviceConfig const& device_config)
     : backlight{backlight},
       light_sensor{light_sensor},
       autobrightness_algorithm{autobrightness_algorithm},
+      log{log},
       ab_supported{autobrightness_algorithm->init(event_loop)},
       brightness_handler{null_handler},
       dim_brightness{dim_brightness_percent(device_config)},
@@ -187,6 +192,12 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
                             || brightness == 0.0f) ?
                             100000us / num_steps : 1000us;
 
+    if (starting_brightness != brightness)
+    {
+        log->log(log_tag, "Transitioning brightness %.2f => %.2f in %.2f steps %.2fus each",
+                 starting_brightness, brightness, num_steps, step_time.count());
+    }
+
     if (current_brightness < brightness)
     {
         while (current_brightness < brightness)
@@ -206,6 +217,12 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
             set_brightness_value(current_brightness);
             std::this_thread::sleep_for(step_time);
         }
+    }
+
+    if (starting_brightness != brightness)
+    {
+        log->log(log_tag, "Transitioning brightness %.2f => %.2f done",
+                 starting_brightness, current_brightness);
     }
 
     if (starting_brightness != brightness)

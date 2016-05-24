@@ -327,6 +327,7 @@ repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
             the_backlight(),
             the_light_sensor(),
             std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
+            the_log(),
             *the_device_config());
     }
 

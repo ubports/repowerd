@@ -23,6 +23,7 @@
 #include "src/adapters/light_sensor.h"
 
 #include "fake_device_config.h"
+#include "fake_log.h"
 #include "virtual_filesystem.h"
 #include "fake_shared.h"
 
@@ -174,10 +175,12 @@ struct ABacklightBrightnessControl : Test
     FakeBacklight backlight;
     FakeLightSensor light_sensor;
     FakeAutobrightnessAlgorithm autobrightness_algorithm;
+    rt::FakeLog fake_log;
     repowerd::BacklightBrightnessControl brightness_control{
         rt::fake_shared(backlight), 
         rt::fake_shared(light_sensor), 
         rt::fake_shared(autobrightness_algorithm),
+        rt::fake_shared(fake_log),
         fake_device_config};
 
     float const normal_percent =
@@ -412,4 +415,22 @@ TEST_F(ABacklightBrightnessControl, does_not_notify_if_brightness_does_not_chang
     autobrightness_algorithm.emit_autobrightness(backlight.starting_brightness);
 
     EXPECT_THAT(notified_brightness, Eq(-1.0f));
+}
+
+TEST_F(ABacklightBrightnessControl, logs_brightness_transition)
+{
+    brightness_control.set_off_brightness();
+
+    EXPECT_TRUE(fake_log.contains_line(
+        {std::to_string(normal_percent).substr(0, 4), "0.00", "steps"}));
+    EXPECT_TRUE(fake_log.contains_line(
+        {std::to_string(normal_percent).substr(0, 4), "0.00", "done"}));
+}
+
+TEST_F(ABacklightBrightnessControl, does_not_log_null_brightness_transition)
+{
+    brightness_control.set_normal_brightness();
+
+    EXPECT_FALSE(fake_log.contains_line({"steps"}));
+    EXPECT_FALSE(fake_log.contains_line({"done"}));
 }

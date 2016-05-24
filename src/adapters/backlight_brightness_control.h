@@ -31,6 +31,7 @@ class AutobrightnessAlgorithm;
 class Backlight;
 class DeviceConfig;
 class LightSensor;
+class Log;
 
 class BacklightBrightnessControl : public BrightnessControl, public BrightnessNotification
 {
@@ -39,6 +40,7 @@ public:
         std::shared_ptr<Backlight> const& backlight,
         std::shared_ptr<LightSensor> const& light_sensor,
         std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
+        std::shared_ptr<Log> const& log,
         DeviceConfig const& device_config);
 
     void disable_autobrightness() override;
@@ -59,7 +61,8 @@ private:
 
     std::shared_ptr<Backlight> const backlight;
     std::shared_ptr<LightSensor> const light_sensor;
-    std::shared_ptr<AutobrightnessAlgorithm> autobrightness_algorithm;
+    std::shared_ptr<AutobrightnessAlgorithm> const autobrightness_algorithm;
+    std::shared_ptr<Log> const log;
     bool const ab_supported;
 
     EventLoop event_loop;
