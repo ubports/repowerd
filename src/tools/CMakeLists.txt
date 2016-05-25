@@ -65,3 +65,12 @@ target_link_libraries(
     repowerd-core
     repowerd-adapters
 )
+
+install(
+    TARGETS
+        repowerd-brightness-tool
+        repowerd-light-tool
+        repowerd-proximity-tool
+        repowerd-wakeup-tool
+    RUNTIME DESTINATION sbin
+)

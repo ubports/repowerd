@@ -41,5 +41,5 @@ target_link_libraries(
 
 install(
   TARGETS repowerd
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION sbin
 )
