@@ -1,1 +1,2 @@
 usr/sbin/repowerd
+etc/dbus-1/system.d/*.conf

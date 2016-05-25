@@ -15,8 +15,14 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 FILE(GLOB device_config_files "${CMAKE_CURRENT_SOURCE_DIR}/device-configs/*.xml")
+FILE(GLOB dbus_config_files "${CMAKE_CURRENT_SOURCE_DIR}/dbus-configs/*.conf")
 
 install(
   FILES ${device_config_files}
   DESTINATION ${REPOWERD_DEVICE_CONFIGS_PATH}
+)
+
+install(
+  FILES ${dbus_config_files}
+  DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/dbus-1/system.d
 )

@@ -21,6 +21,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 option(REPOWERD_ENABLE_TESTS "Build repowerd tests" ON)
 
+# Work around cmake setting conf dir to "/usr/etc" instead of "/etc"
+# when prefix is "/usr"
+if (NOT DEFINED CMAKE_INSTALL_SYSCONFDIR AND CMAKE_INSTALL_PREFIX STREQUAL "/usr")
+    set(CMAKE_INSTALL_SYSCONFDIR "/etc")
+endif()
+
 enable_testing()
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)
