@@ -1,0 +1,12 @@
+[Unit]
+Description=monitor and control system power state
+Requires=lxc-android-config.service
+After=lxc-android-config.service
+
+[Service]
+Type=dbus
+BusName=com.canonical.powerd
+ExecStart=/usr/sbin/repowerd
+
+[Install]
+WantedBy=multi-user.target

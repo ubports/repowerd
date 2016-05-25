@@ -1,0 +1,7 @@
+author "Alexandros Frantzis <alexandros.frantzis@canonical.com>"
+
+start on started dbus and android
+
+respawn
+
+exec /usr/sbin/repowerd
