@@ -14,32 +14,9 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_definitions(-DREPOWERD_DEVICE_CONFIGS_PATH=\"${REPOWERD_DEVICE_CONFIGS_PATH}\")
-
-include_directories(
-    ${CMAKE_SOURCE_DIR}
-)
-
-add_subdirectory(core)
-add_subdirectory(adapters)
-add_subdirectory(tools)
-
-add_executable(
-    repowerd
-
-    default_daemon_config.cpp
-    main.cpp
-)
-
-target_link_libraries(
-    repowerd
-
-    repowerd-core
-    repowerd-adapters
-)
-
+FILE(GLOB device_config_files "${CMAKE_CURRENT_SOURCE_DIR}/device-configs/*.xml")
 
 install(
-  TARGETS repowerd
-  RUNTIME DESTINATION bin
+  FILES ${device_config_files}
+  DESTINATION ${REPOWERD_DEVICE_CONFIGS_PATH}
 )

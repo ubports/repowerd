@@ -58,7 +58,10 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     link_libraries(tsan) # Workaround for LP:1413474
 endif()
 
+set(REPOWERD_DEVICE_CONFIGS_PATH "${CMAKE_INSTALL_FULL_DATAROOTDIR}/repowerd/device-configs")
+
 add_subdirectory(src/)
+add_subdirectory(data/)
 
 if(REPOWERD_ENABLE_TESTS)
     find_package(GtestGmock REQUIRED)

@@ -365,7 +365,7 @@ repowerd::DefaultDaemonConfig::the_device_config()
     if (!device_config)
     {
         device_config = std::make_shared<AndroidDeviceConfig>(
-            "/usr/share/powerd/device_configs");
+            REPOWERD_DEVICE_CONFIGS_PATH);
     }
 
     return device_config;
