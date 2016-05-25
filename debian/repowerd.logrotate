@@ -1,0 +1,12 @@
+/var/log/repowerd.log {
+    daily
+    missingok
+    rotate 4
+    compress
+    notifempty
+    delaycompress
+    maxsize 10M
+    postrotate
+        invoke-rc.d rsyslog rotate > /dev/null
+    endscript
+}
