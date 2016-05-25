@@ -14,14 +14,47 @@ Build-Depends: debhelper (>= 9),
                libubuntu-application-api-dev,
                libubuntu-platform-hardware-api-headers,
                pkg-config
-Standards-Version: 3.9.4
+Standards-Version: 3.9.7
 Homepage: https://launchpad.net/repowerd
 Vcs-Git: https://code.launchpad.net/repowerd
 
 Package: repowerd
 Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, repowerd-data
+Replaces: powerd (<< 2016.05~)
+Breaks: powerd (<< 2016.05~)
+Provides: powerd
+Description: Power daemon to monitor and control system power state
+ This daemon monitors and controls system power states for Ubuntu
+ phone and tablet.
+ .
+ This package contains repowerd daemon itself.
+
+Package: repowerd-data
+Architecture: all
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: powerd (<< 2016.05~)
+Description: Power daemon to monitor and control system power state
+ This daemon monitors and controls system power states for Ubuntu
+ phone and tablet.
+ .
+ This package contains data files needed by repowerd.
+
+Package: repowerd-tools
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, repowerd-data
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
  phone and tablet. It provides a dbus interface for system services to request
  a power state, essentially allowing services to block suspend.
+ .
+ This package contains tools that use the repowerd infrastructure to interact
+ with various hardware components. These tools are mainly useful for manual
+ integration testing.
+
+Package: powerd
+Architecture: all
+Depends: ${misc:Depends}, repowerd
+Section: oldlibs
+Description: Transitional dummy package
+ This is a transitional dummy package.
