@@ -22,6 +22,7 @@ add_library(
     fake_log.cpp
     fake_notification_service.cpp
     fake_power_button.cpp
+    fake_power_source.cpp
     fake_proximity_sensor.cpp
     fake_suspend_control.cpp
     fake_timer.cpp

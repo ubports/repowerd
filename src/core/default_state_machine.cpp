@@ -224,6 +224,21 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     power_button_long_press_alarm_id = AlarmId::invalid;
 }
 
+void repowerd::DefaultStateMachine::handle_power_source_change()
+{
+    log->log(log_tag, "handle_power_source_change");
+
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        brighten_display();
+        schedule_reduced_user_inactivity_alarm();
+    }
+    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    {
+        turn_on_display_with_reduced_timeout(DisplayPowerChangeReason::notification);
+    }
+}
+
 void repowerd::DefaultStateMachine::handle_proximity_far()
 {
     log->log(log_tag, "handle_proximity_far");

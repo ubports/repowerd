@@ -34,6 +34,7 @@ class NotificationService;
 class PerformanceBooster;
 class PowerButton;
 class PowerButtonEventSink;
+class PowerSource;
 class ProximitySensor;
 class StateMachine;
 class SuspendControl;
@@ -56,6 +57,7 @@ public:
     virtual std::shared_ptr<PerformanceBooster> the_performance_booster() = 0;
     virtual std::shared_ptr<PowerButton> the_power_button() = 0;
     virtual std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() = 0;
+    virtual std::shared_ptr<PowerSource> the_power_source() = 0;
     virtual std::shared_ptr<ProximitySensor> the_proximity_sensor() = 0;
     virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
     virtual std::shared_ptr<SuspendControl> the_suspend_control() = 0;

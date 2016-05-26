@@ -29,6 +29,7 @@
 #include "mock_performance_booster.h"
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
+#include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_suspend_control.h"
 #include "fake_timer.h"
@@ -87,6 +88,11 @@ std::shared_ptr<repowerd::PowerButton> rt::DaemonConfig::the_power_button()
 std::shared_ptr<repowerd::PowerButtonEventSink> rt::DaemonConfig::the_power_button_event_sink()
 {
     return the_mock_power_button_event_sink();
+}
+
+std::shared_ptr<repowerd::PowerSource> rt::DaemonConfig::the_power_source()
+{
+    return the_fake_power_source();
 }
 
 std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_sensor()
@@ -240,6 +246,14 @@ rt::DaemonConfig::the_mock_power_button_event_sink()
         mock_power_button_event_sink = std::make_shared<NiceMock<rt::MockPowerButtonEventSink>>();
 
     return mock_power_button_event_sink;
+}
+
+std::shared_ptr<rt::FakePowerSource> rt::DaemonConfig::the_fake_power_source()
+{
+    if (!fake_power_source)
+        fake_power_source = std::make_shared<rt::FakePowerSource>();
+
+    return fake_power_source;
 }
 
 std::shared_ptr<rt::FakeProximitySensor> rt::DaemonConfig::the_fake_proximity_sensor()

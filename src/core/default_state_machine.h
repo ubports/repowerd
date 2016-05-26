@@ -47,6 +47,8 @@ public:
     void handle_power_button_press() override;
     void handle_power_button_release() override;
 
+    void handle_power_source_change() override;
+
     void handle_proximity_far() override;
     void handle_proximity_near() override;
 

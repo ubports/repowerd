@@ -23,6 +23,7 @@ add_executable(
     test_notification.cpp
     test_performance_booster.cpp
     test_power_button.cpp
+    test_power_source.cpp
     test_proximity_sensor.cpp
     test_suspend_control.cpp
     test_turn_on_display_at_startup.cpp

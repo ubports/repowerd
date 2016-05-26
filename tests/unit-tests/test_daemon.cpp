@@ -20,6 +20,7 @@
 #include "fake_client_requests.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
+#include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
@@ -52,6 +53,8 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_power_button_press, void());
     MOCK_METHOD0(handle_power_button_release, void());
+
+    MOCK_METHOD0(handle_power_source_change, void());
 
     MOCK_METHOD0(handle_proximity_far, void());
     MOCK_METHOD0(handle_proximity_near, void());
@@ -501,4 +504,28 @@ TEST_F(ADaemon, turns_on_display_at_startup_if_configured)
                 handle_turn_on_display());
 
     start_daemon_with_config(config_with_turn_on_display);
+}
+
+TEST_F(ADaemon, registers_and_unregisters_power_source_change_handler)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(config.the_fake_power_source()->mock, register_power_source_change_handler(_));
+    EXPECT_CALL(config.the_fake_power_source()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_power_source().get());
+
+    EXPECT_CALL(config.the_fake_power_source()->mock, unregister_power_source_change_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_power_source().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_power_source_change)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_source_change());
+
+    config.the_fake_power_source()->emit_power_source_change();
 }

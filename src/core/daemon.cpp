@@ -23,6 +23,7 @@
 #include "display_power_control.h"
 #include "notification_service.h"
 #include "power_button.h"
+#include "power_source.h"
 #include "proximity_sensor.h"
 #include "state_machine.h"
 #include "timer.h"
@@ -36,6 +37,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       client_requests{config.the_client_requests()},
       notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
+      power_source{config.the_power_source()},
       proximity_sensor{config.the_proximity_sensor()},
       state_machine{config.the_state_machine()},
       timer{config.the_timer()},
@@ -210,6 +212,14 @@ repowerd::Daemon::register_event_handlers()
                     [this] { brightness_control->enable_autobrightness(); });
             }));
 
+    registrations.push_back(
+        power_source->register_power_source_change_handler(
+            [this]
+            {
+                enqueue_action(
+                    [this] { state_machine->handle_power_source_change(); });
+            }));
+
     return registrations;
 }
 
@@ -218,6 +228,7 @@ void repowerd::Daemon::start_event_processing()
     client_requests->start_processing();
     notification_service->start_processing();
     power_button->start_processing();
+    power_source->start_processing();
     user_activity->start_processing();
     voice_call_service->start_processing();
 }

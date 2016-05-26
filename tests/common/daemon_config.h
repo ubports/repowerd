@@ -37,6 +37,7 @@ class FakeNotificationService;
 class MockPerformanceBooster;
 class FakePowerButton;
 class MockPowerButtonEventSink;
+class FakePowerSource;
 class FakeProximitySensor;
 class FakeSuspendControl;
 class FakeTimer;
@@ -56,6 +57,7 @@ public:
     std::shared_ptr<PerformanceBooster> the_performance_booster() override;
     std::shared_ptr<PowerButton> the_power_button() override;
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
+    std::shared_ptr<PowerSource> the_power_source() override;
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<SuspendControl> the_suspend_control() override;
@@ -81,6 +83,7 @@ public:
     std::shared_ptr<testing::NiceMock<MockPerformanceBooster>> the_mock_performance_booster();
     std::shared_ptr<FakePowerButton> the_fake_power_button();
     std::shared_ptr<testing::NiceMock<MockPowerButtonEventSink>> the_mock_power_button_event_sink();
+    std::shared_ptr<FakePowerSource> the_fake_power_source();
     std::shared_ptr<FakeProximitySensor> the_fake_proximity_sensor();
     std::shared_ptr<FakeSuspendControl> the_fake_suspend_control();
     std::shared_ptr<FakeTimer> the_fake_timer();
@@ -100,6 +103,7 @@ private:
     std::shared_ptr<testing::NiceMock<MockPerformanceBooster>> mock_performance_booster;
     std::shared_ptr<FakePowerButton> fake_power_button;
     std::shared_ptr<testing::NiceMock<MockPowerButtonEventSink>> mock_power_button_event_sink;
+    std::shared_ptr<FakePowerSource> fake_power_source;
     std::shared_ptr<FakeProximitySensor> fake_proximity_sensor;
     std::shared_ptr<FakeSuspendControl> fake_suspend_control;
     std::shared_ptr<FakeTimer> fake_timer;

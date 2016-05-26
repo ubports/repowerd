@@ -27,6 +27,7 @@
 #include "fake_log.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
+#include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
@@ -170,6 +171,12 @@ void rt::AcceptanceTest::emit_no_notification()
 void rt::AcceptanceTest::emit_notification()
 {
     config.the_fake_notification_service()->emit_notification();
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::emit_power_source_change()
+{
+    config.the_fake_power_source()->emit_power_source_change();
     daemon.flush();
 }
 

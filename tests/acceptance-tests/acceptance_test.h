@@ -54,6 +54,7 @@ struct AcceptanceTest : testing::Test
     void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
     void emit_no_notification();
     void emit_notification();
+    void emit_power_source_change();
     void emit_proximity_state_far();
     void emit_proximity_state_far_if_enabled();
     void emit_proximity_state_near();

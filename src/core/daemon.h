@@ -53,6 +53,7 @@ private:
     std::shared_ptr<ClientRequests> const client_requests;
     std::shared_ptr<NotificationService> const notification_service;
     std::shared_ptr<PowerButton> const power_button;
+    std::shared_ptr<PowerSource> const power_source;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<StateMachine> const state_machine;
     std::shared_ptr<Timer> const timer;
