@@ -24,6 +24,7 @@
 #include <cctype>
 #include <algorithm>
 #include <array>
+#include <sys/stat.h>
 
 #include <hybris/properties/properties.h>
 
@@ -37,15 +38,23 @@ std::string determine_device_name()
     return name;
 }
 
+bool file_exists(std::string const& filename)
+{
+    struct stat sb;
+    return stat(filename.c_str(), &sb) == 0 &&
+           S_ISREG(sb.st_mode);
 }
 
-repowerd::AndroidDeviceConfig::AndroidDeviceConfig(std::string const& config_dir)
+}
+
+repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
+    std::vector<std::string> const& config_dirs)
 {
-    parse_file(config_dir + "/config-default.xml");
+    parse_first_matching_file_in_dirs(config_dirs, "config-default.xml");
 
     auto const device_name = determine_device_name();
     if (device_name != "")
-        parse_file(config_dir + "/config-" + device_name + ".xml");
+        parse_first_matching_file_in_dirs(config_dirs, "config-" + device_name + ".xml");
 }
 
 std::string repowerd::AndroidDeviceConfig::get(
@@ -56,6 +65,20 @@ std::string repowerd::AndroidDeviceConfig::get(
         return iter->second;
     else
         return default_value;
+}
+
+void repowerd::AndroidDeviceConfig::parse_first_matching_file_in_dirs(
+    std::vector<std::string> const& config_dirs, std::string const& filename)
+{
+    for (auto const& config_dir : config_dirs)
+    {
+        auto const full_file_path = config_dir + "/" + filename;
+        if (file_exists(full_file_path))
+        {
+            parse_file(full_file_path);
+            break;
+        }
+    }
 }
 
 void repowerd::AndroidDeviceConfig::parse_file(std::string const& file)

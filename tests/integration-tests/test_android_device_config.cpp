@@ -31,7 +31,7 @@ namespace rt = repowerd::test;
 namespace
 {
 
-char const* const config_default = R"(
+char const* const config_default1 = R"(
 <resources xmlns:xliff='urn:oasis:names:tc:xliff:document:1.2'>
   <bool name='config_boolconfig'>false</bool>
   <integer name='config_integerconfig'>4</integer>
@@ -41,6 +41,21 @@ char const* const config_default = R"(
     <item>4</item>
     <item>6</item>
   </integer-array>
+  <integer name='config_id'>1</integer>
+</resources>
+)";
+
+char const* const config_default2 = R"(
+<resources xmlns:xliff='urn:oasis:names:tc:xliff:document:1.2'>
+  <bool name='config_boolconfig'>false</bool>
+  <integer name='config_integerconfig'>4</integer>
+  <integer name='integerconfigwithoutprefix'>680</integer>
+  <integer-array name='config_integerarrayconfig'>
+    <item>2</item>
+    <item>4</item>
+    <item>6</item>
+  </integer-array>
+  <integer name='config_id'>2</integer>
 </resources>
 )";
 
@@ -48,17 +63,20 @@ struct AnAndroidDeviceConfig : Test
 {
     AnAndroidDeviceConfig()
     {
-        vfs.add_file_with_contents("/config-default.xml", config_default);
+        vfs1.add_file_with_contents("/config-default.xml", config_default1);
+        vfs2.add_file_with_contents("/config-default.xml", config_default2);
     }
 
-    rt::VirtualFilesystem vfs;
+    rt::VirtualFilesystem vfs1;
+    rt::VirtualFilesystem vfs2;
+    rt::VirtualFilesystem vfs_empty;
 };
 
 }
 
 TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 {
-    repowerd::AndroidDeviceConfig config{vfs.mount_point()};
+    repowerd::AndroidDeviceConfig config{{vfs1.mount_point()}};
 
     EXPECT_THAT(config.get("boolconfig", ""), StrEq("false"));
     EXPECT_THAT(config.get("integerconfig", ""), StrEq("4"));
@@ -68,7 +86,15 @@ TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 
 TEST_F(AnAndroidDeviceConfig, returns_default_value_for_unknown_key)
 {
-    repowerd::AndroidDeviceConfig config{vfs.mount_point()};
+    repowerd::AndroidDeviceConfig config{{vfs1.mount_point()}};
 
     EXPECT_THAT(config.get("unknown", "bla"), StrEq("bla"));
+}
+
+TEST_F(AnAndroidDeviceConfig, reads_first_default_config_file_from_config_dirs)
+{
+    repowerd::AndroidDeviceConfig config{
+        {vfs_empty.mount_point(), vfs2.mount_point(), vfs1.mount_point()}};
+
+    EXPECT_THAT(config.get("id", ""), StrEq("2"));
 }

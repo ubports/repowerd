@@ -77,7 +77,8 @@ auto create_light_sensor()
 
 int main()
 {
-    repowerd::AndroidDeviceConfig device_config{REPOWERD_DEVICE_CONFIGS_PATH};
+    repowerd::AndroidDeviceConfig device_config{
+        {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
     auto const backlight = create_backlight();
     auto const light_sensor = create_light_sensor();
     auto const log = std::make_shared<repowerd::ConsoleLog>();

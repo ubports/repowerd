@@ -23,6 +23,7 @@
 #include <glib.h>
 
 #include <unordered_map>
+#include <vector>
 
 namespace repowerd
 {
@@ -30,7 +31,7 @@ namespace repowerd
 class AndroidDeviceConfig : public DeviceConfig
 {
 public:
-    AndroidDeviceConfig(std::string const& config_dir);
+    AndroidDeviceConfig(std::vector<std::string> const& config_dirs);
 
     std::string get(
         std::string const& name, std::string const& default_value) const override;
@@ -55,6 +56,8 @@ private:
         gpointer user_data,
         GError** error);
 
+    void parse_first_matching_file_in_dirs(
+        std::vector<std::string> const& dirs, std::string const& filename);
     void parse_file(std::string const& file);
     void xml_start_element(
         std::string const& element_name,
