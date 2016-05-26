@@ -44,7 +44,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       running{false}
 {
     if (config.turn_on_display_at_startup())
-        enqueue_event([this] { state_machine->handle_turn_on_display(); });
+        enqueue_action([this] { state_machine->handle_turn_on_display(); });
 }
 
 void repowerd::Daemon::run()
@@ -56,14 +56,14 @@ void repowerd::Daemon::run()
 
     while (running)
     {
-        auto const ev = dequeue_event();
+        auto const ev = dequeue_action();
         ev();
     }
 }
 
 void repowerd::Daemon::stop()
 {
-    enqueue_priority_event([this] { running = false; });
+    enqueue_priority_action([this] { running = false; });
 }
 
 void repowerd::Daemon::flush()
@@ -71,7 +71,7 @@ void repowerd::Daemon::flush()
     std::promise<void> flushed_promise;
     auto flushed_future = flushed_promise.get_future();
 
-    enqueue_event([&flushed_promise] { flushed_promise.set_value(); });
+    enqueue_action([&flushed_promise] { flushed_promise.set_value(); });
 
     flushed_future.wait();
 }
@@ -86,16 +86,16 @@ repowerd::Daemon::register_event_handlers()
             [this] (PowerButtonState state)
             {
                 if (state == PowerButtonState::pressed)
-                    enqueue_event([this] { state_machine->handle_power_button_press(); });
+                    enqueue_action([this] { state_machine->handle_power_button_press(); });
                 else if (state == PowerButtonState::released)
-                    enqueue_event([this] { state_machine->handle_power_button_release(); } );
+                    enqueue_action([this] { state_machine->handle_power_button_release(); } );
             }));
 
     registrations.push_back(
         timer->register_alarm_handler(
             [this] (AlarmId id)
             {
-                enqueue_event([this, id] { state_machine->handle_alarm(id); });
+                enqueue_action([this, id] { state_machine->handle_alarm(id); });
             }));
 
     registrations.push_back(
@@ -104,12 +104,12 @@ repowerd::Daemon::register_event_handlers()
             {
                 if (type == UserActivityType::change_power_state)
                 {
-                    enqueue_event(
+                    enqueue_action(
                         [this] { state_machine->handle_user_activity_changing_power_state(); });
                 }
                 else if (type == UserActivityType::extend_power_state)
                 {
-                    enqueue_event(
+                    enqueue_action(
                         [this] { state_machine->handle_user_activity_extending_power_state(); });
                 }
             }));
@@ -120,12 +120,12 @@ repowerd::Daemon::register_event_handlers()
             {
                 if (state == ProximityState::far)
                 {
-                    enqueue_event(
+                    enqueue_action(
                         [this] { state_machine->handle_proximity_far(); });
                 }
                 else if (state == ProximityState::near)
                 {
-                    enqueue_event(
+                    enqueue_action(
                         [this] { state_machine->handle_proximity_near(); });
                 }
             }));
@@ -134,7 +134,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_enable_inactivity_timeout_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_enable_inactivity_timeout(); });
             }));
 
@@ -142,7 +142,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_disable_inactivity_timeout_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_disable_inactivity_timeout(); });
             }));
 
@@ -150,7 +150,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_set_inactivity_timeout_handler(
             [this] (std::chrono::milliseconds timeout)
             {
-                enqueue_event(
+                enqueue_action(
                     [this,timeout] { state_machine->handle_set_inactivity_timeout(timeout); });
             }));
 
@@ -158,7 +158,7 @@ repowerd::Daemon::register_event_handlers()
         notification_service->register_notification_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_notification(); });
             }));
 
@@ -166,7 +166,7 @@ repowerd::Daemon::register_event_handlers()
         notification_service->register_no_notification_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_no_notification(); });
             }));
 
@@ -174,7 +174,7 @@ repowerd::Daemon::register_event_handlers()
         voice_call_service->register_active_call_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_active_call(); });
             }));
 
@@ -182,7 +182,7 @@ repowerd::Daemon::register_event_handlers()
         voice_call_service->register_no_active_call_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { state_machine->handle_no_active_call(); });
             }));
 
@@ -190,7 +190,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_set_normal_brightness_value_handler(
             [this] (float value)
             {
-                enqueue_event(
+                enqueue_action(
                     [this,value] { brightness_control->set_normal_brightness_value(value); });
             }));
 
@@ -198,7 +198,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_disable_autobrightness_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { brightness_control->disable_autobrightness(); });
             }));
 
@@ -206,7 +206,7 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_enable_autobrightness_handler(
             [this]
             {
-                enqueue_event(
+                enqueue_action(
                     [this] { brightness_control->enable_autobrightness(); });
             }));
 
@@ -222,28 +222,28 @@ void repowerd::Daemon::start_event_processing()
     voice_call_service->start_processing();
 }
 
-void repowerd::Daemon::enqueue_event(Event const& event)
+void repowerd::Daemon::enqueue_action(Action const& action)
 {
-    std::lock_guard<std::mutex> lock{event_queue_mutex};
+    std::lock_guard<std::mutex> lock{action_queue_mutex};
 
-    event_queue.push_back(event);
-    event_queue_cv.notify_one();
+    action_queue.push_back(action);
+    action_queue_cv.notify_one();
 }
 
-void repowerd::Daemon::enqueue_priority_event(Event const& event)
+void repowerd::Daemon::enqueue_priority_action(Action const& action)
 {
-    std::lock_guard<std::mutex> lock{event_queue_mutex};
+    std::lock_guard<std::mutex> lock{action_queue_mutex};
 
-    event_queue.push_front(event);
-    event_queue_cv.notify_one();
+    action_queue.push_front(action);
+    action_queue_cv.notify_one();
 }
 
-repowerd::Daemon::Event repowerd::Daemon::dequeue_event()
+repowerd::Daemon::Action repowerd::Daemon::dequeue_action()
 {
-    std::unique_lock<std::mutex> lock{event_queue_mutex};
+    std::unique_lock<std::mutex> lock{action_queue_mutex};
 
-    event_queue_cv.wait(lock, [this] { return !event_queue.empty(); });
-    auto ev = event_queue.front();
-    event_queue.pop_front();
+    action_queue_cv.wait(lock, [this] { return !action_queue.empty(); });
+    auto ev = action_queue.front();
+    action_queue.pop_front();
     return ev;
 }

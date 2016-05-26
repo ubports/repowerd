@@ -41,13 +41,13 @@ public:
     void flush();
 
 private:
-    using Event = std::function<void()>;
+    using Action = std::function<void()>;
 
     std::vector<HandlerRegistration> register_event_handlers();
     void start_event_processing();
-    void enqueue_event(Event const& event);
-    void enqueue_priority_event(Event const& event);
-    Event dequeue_event();
+    void enqueue_action(Action const& event);
+    void enqueue_priority_action(Action const& event);
+    Action dequeue_action();
 
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<ClientRequests> const client_requests;
@@ -61,9 +61,9 @@ private:
 
     bool running;
 
-    std::mutex event_queue_mutex;
-    std::condition_variable event_queue_cv;
-    std::deque<Event> event_queue;
+    std::mutex action_queue_mutex;
+    std::condition_variable action_queue_cv;
+    std::deque<Action> action_queue;
 };
 
 }
