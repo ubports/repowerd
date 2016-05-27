@@ -19,7 +19,6 @@
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
 #include "core/power_source.h"
-#include "core/shutdown_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -34,6 +33,7 @@
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
+#include "adapters/system_shutdown_control.h"
 #include "adapters/ubuntu_light_sensor.h"
 #include "adapters/ubuntu_performance_booster.h"
 #include "adapters/ubuntu_proximity_sensor.h"
@@ -110,11 +110,6 @@ struct NullPowerSource : repowerd::PowerSource
     {
         return NullHandlerRegistration{};
     }
-};
-
-struct NullShutdownControl : repowerd::ShutdownControl
-{
-    void power_off() override {}
 };
 
 struct NullProximitySensor : repowerd::ProximitySensor
@@ -259,7 +254,7 @@ std::shared_ptr<repowerd::ShutdownControl>
 repowerd::DefaultDaemonConfig::the_shutdown_control()
 {
     if (!shutdown_control)
-        shutdown_control = std::make_shared<NullShutdownControl>();
+        shutdown_control = std::make_shared<SystemShutdownControl>(the_log());
     return shutdown_control;
 }
 
