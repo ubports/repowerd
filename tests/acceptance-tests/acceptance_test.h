@@ -46,6 +46,7 @@ struct AcceptanceTest : testing::Test
     void expect_no_display_brightness_change();
     void expect_display_power_off_notification(DisplayPowerChangeReason);
     void expect_display_power_on_notification(DisplayPowerChangeReason);
+    void expect_system_powers_off();
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
@@ -55,6 +56,7 @@ struct AcceptanceTest : testing::Test
     void emit_no_notification();
     void emit_notification();
     void emit_power_source_change();
+    void emit_power_source_critical();
     void emit_proximity_state_far();
     void emit_proximity_state_far_if_enabled();
     void emit_proximity_state_near();

@@ -30,6 +30,7 @@
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_power_source.h"
+#include "mock_shutdown_control.h"
 #include "fake_proximity_sensor.h"
 #include "fake_suspend_control.h"
 #include "fake_timer.h"
@@ -98,6 +99,11 @@ std::shared_ptr<repowerd::PowerSource> rt::DaemonConfig::the_power_source()
 std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_sensor()
 {
     return the_fake_proximity_sensor();
+}
+
+std::shared_ptr<repowerd::ShutdownControl> rt::DaemonConfig::the_shutdown_control()
+{
+    return the_mock_shutdown_control();
 }
 
 std::shared_ptr<repowerd::StateMachine> rt::DaemonConfig::the_state_machine()
@@ -262,6 +268,15 @@ std::shared_ptr<rt::FakeProximitySensor> rt::DaemonConfig::the_fake_proximity_se
         fake_proximity_sensor = std::make_shared<rt::FakeProximitySensor>();
 
     return fake_proximity_sensor;
+}
+
+std::shared_ptr<NiceMock<rt::MockShutdownControl>>
+rt::DaemonConfig::the_mock_shutdown_control()
+{
+    if (!mock_shutdown_control)
+        mock_shutdown_control = std::make_shared<NiceMock<rt::MockShutdownControl>>();
+
+    return mock_shutdown_control;
 }
 
 std::shared_ptr<rt::FakeSuspendControl>

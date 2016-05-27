@@ -23,6 +23,7 @@
 #include "mock_display_power_control.h"
 #include "mock_display_power_event_sink.h"
 #include "mock_power_button_event_sink.h"
+#include "mock_shutdown_control.h"
 #include "fake_client_requests.h"
 #include "fake_log.h"
 #include "fake_notification_service.h"
@@ -123,6 +124,11 @@ void rt::AcceptanceTest::expect_display_power_on_notification(
                 notify_display_power_on(reason));
 }
 
+void rt::AcceptanceTest::expect_system_powers_off()
+{
+    EXPECT_CALL(*config.the_mock_shutdown_control(), power_off());
+}
+
 bool rt::AcceptanceTest::log_contains_line(std::vector<std::string> const& words)
 {
     return config.the_fake_log()->contains_line(words);
@@ -177,6 +183,12 @@ void rt::AcceptanceTest::emit_notification()
 void rt::AcceptanceTest::emit_power_source_change()
 {
     config.the_fake_power_source()->emit_power_source_change();
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::emit_power_source_critical()
+{
+    config.the_fake_power_source()->emit_power_source_critical();
     daemon.flush();
 }
 

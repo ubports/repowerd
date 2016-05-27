@@ -220,6 +220,14 @@ repowerd::Daemon::register_event_handlers()
                     [this] { state_machine->handle_power_source_change(); });
             }));
 
+    registrations.push_back(
+        power_source->register_power_source_critical_handler(
+            [this]
+            {
+                enqueue_action(
+                    [this] { state_machine->handle_power_source_critical(); });
+            }));
+
     return registrations;
 }
 

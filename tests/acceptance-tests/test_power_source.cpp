@@ -79,9 +79,23 @@ TEST_F(APowerSource, change_extends_timeout_if_display_is_already_on)
     advance_time_by(1ms);
 }
 
+TEST_F(APowerSource, critical_state_powers_off_system)
+{
+    expect_system_powers_off();
+
+    emit_power_source_critical();
+}
+
 TEST_F(APowerSource, change_is_logged)
 {
     emit_power_source_change();
 
     EXPECT_TRUE(log_contains_line({"power_source_change"}));
+}
+
+TEST_F(APowerSource, critical_state_is_logged)
+{
+    emit_power_source_critical();
+
+    EXPECT_TRUE(log_contains_line({"power_source_critical"}));
 }

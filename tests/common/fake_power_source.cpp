@@ -38,7 +38,25 @@ repowerd::HandlerRegistration rt::FakePowerSource::register_power_source_change_
         }};
 }
 
+repowerd::HandlerRegistration rt::FakePowerSource::register_power_source_critical_handler(
+    PowerSourceChangeHandler const& handler)
+{
+    mock.register_power_source_critical_handler(handler);
+    this->power_source_critical_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_power_source_critical_handler();
+            this->power_source_critical_handler = []{};
+        }};
+}
+
 void rt::FakePowerSource::emit_power_source_change()
 {
     power_source_change_handler();
+}
+
+void rt::FakePowerSource::emit_power_source_critical()
+{
+    power_source_critical_handler();
 }

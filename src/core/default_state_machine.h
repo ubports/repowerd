@@ -48,6 +48,7 @@ public:
     void handle_power_button_release() override;
 
     void handle_power_source_change() override;
+    void handle_power_source_critical() override;
 
     void handle_proximity_far() override;
     void handle_proximity_near() override;
@@ -95,6 +96,7 @@ private:
     std::shared_ptr<PerformanceBooster> const performance_booster;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
+    std::shared_ptr<ShutdownControl> const shutdown_control;
     std::shared_ptr<SuspendControl> const suspend_control;
     std::shared_ptr<Timer> const timer;
 

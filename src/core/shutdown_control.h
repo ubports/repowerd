@@ -18,33 +18,20 @@
 
 #pragma once
 
-#include "handler_registration.h"
-
-#include <functional>
-
 namespace repowerd
 {
 
-using PowerSourceChangeHandler = std::function<void()>;
-using PowerSourceCriticalHandler = std::function<void()>;
-
-class PowerSource
+class ShutdownControl
 {
 public:
-    virtual ~PowerSource() = default;
+    virtual ~ShutdownControl() = default;
 
-    virtual void start_processing() = 0;
-
-    virtual HandlerRegistration register_power_source_change_handler(
-        PowerSourceChangeHandler const& handler) = 0;
-
-    virtual HandlerRegistration register_power_source_critical_handler(
-        PowerSourceCriticalHandler const& handler) = 0;
+    virtual void power_off() = 0;
 
 protected:
-    PowerSource() = default;
-    PowerSource (PowerSource const&) = default;
-    PowerSource& operator=(PowerSource const&) = default;
+    ShutdownControl() = default;
+    ShutdownControl (ShutdownControl const&) = default;
+    ShutdownControl& operator=(ShutdownControl const&) = default;
 };
 
 }

@@ -19,6 +19,7 @@
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
 #include "core/power_source.h"
+#include "core/shutdown_control.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -103,6 +104,17 @@ struct NullPowerSource : repowerd::PowerSource
     {
         return NullHandlerRegistration{};
     }
+
+    repowerd::HandlerRegistration register_power_source_critical_handler(
+        repowerd::PowerSourceCriticalHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
+struct NullShutdownControl : repowerd::ShutdownControl
+{
+    void power_off() override {}
 };
 
 struct NullProximitySensor : repowerd::ProximitySensor
@@ -241,6 +253,14 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
     }
 
     return proximity_sensor;
+}
+
+std::shared_ptr<repowerd::ShutdownControl>
+repowerd::DefaultDaemonConfig::the_shutdown_control()
+{
+    if (!shutdown_control)
+        shutdown_control = std::make_shared<NullShutdownControl>();
+    return shutdown_control;
 }
 
 std::shared_ptr<repowerd::StateMachine>

@@ -18,33 +18,20 @@
 
 #pragma once
 
-#include "handler_registration.h"
+#include "src/core/shutdown_control.h"
 
-#include <functional>
+#include <gmock/gmock.h>
 
 namespace repowerd
 {
+namespace test
+{
 
-using PowerSourceChangeHandler = std::function<void()>;
-using PowerSourceCriticalHandler = std::function<void()>;
-
-class PowerSource
+class MockShutdownControl : public ShutdownControl
 {
 public:
-    virtual ~PowerSource() = default;
-
-    virtual void start_processing() = 0;
-
-    virtual HandlerRegistration register_power_source_change_handler(
-        PowerSourceChangeHandler const& handler) = 0;
-
-    virtual HandlerRegistration register_power_source_critical_handler(
-        PowerSourceCriticalHandler const& handler) = 0;
-
-protected:
-    PowerSource() = default;
-    PowerSource (PowerSource const&) = default;
-    PowerSource& operator=(PowerSource const&) = default;
+    MOCK_METHOD0(power_off, void());
 };
 
+}
 }

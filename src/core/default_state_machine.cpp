@@ -27,6 +27,7 @@
 #include "performance_booster.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
+#include "shutdown_control.h"
 #include "suspend_control.h"
 #include "timer.h"
 
@@ -45,6 +46,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
       performance_booster{config.the_performance_booster()},
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
+      shutdown_control{config.the_shutdown_control()},
       suspend_control{config.the_suspend_control()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
@@ -237,6 +239,13 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
     {
         turn_on_display_with_reduced_timeout(DisplayPowerChangeReason::notification);
     }
+}
+
+void repowerd::DefaultStateMachine::handle_power_source_critical()
+{
+    log->log(log_tag, "handle_power_source_critical");
+
+    shutdown_control->power_off();
 }
 
 void repowerd::DefaultStateMachine::handle_proximity_far()
