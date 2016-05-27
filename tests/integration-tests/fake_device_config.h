@@ -41,6 +41,7 @@ struct FakeDeviceConfig : repowerd::DeviceConfig
     int const brightness_max_value = 100;
     int const brightness_default_value = 50;
     bool const brightness_autobrightness_supported = true;
+    int const shutdown_battery_temperature = 990;
 
 private:
     std::unordered_map<std::string,std::string> properties;

@@ -41,6 +41,19 @@ target_link_libraries(
 )
 
 add_executable(
+    repowerd-power-source-tool
+
+    power_source_tool.cpp
+)
+
+target_link_libraries(
+    repowerd-power-source-tool
+
+    repowerd-core
+    repowerd-adapters
+)
+
+add_executable(
     repowerd-proximity-tool
 
     proximity_tool.cpp

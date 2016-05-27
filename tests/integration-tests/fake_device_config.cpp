@@ -25,6 +25,7 @@ repowerd::test::FakeDeviceConfig::FakeDeviceConfig()
     set("screenBrightnessSettingMaximum", std::to_string(brightness_max_value));
     set("screenBrightnessSettingDefault", std::to_string(brightness_default_value));
     set("automatic_brightness_available", "true");
+    set("shutdownBatteryTemperature", std::to_string(shutdown_battery_temperature));
 }
 
 std::string repowerd::test::FakeDeviceConfig::get(

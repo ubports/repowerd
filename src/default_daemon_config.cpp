@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine.h"
-#include "core/power_source.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -41,6 +40,7 @@
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
+#include "adapters/upower_power_source.h"
 
 using namespace std::chrono_literals;
 
@@ -93,23 +93,6 @@ struct NullPerformanceBooster : repowerd::PerformanceBooster
 {
     void enable_interactive_mode() override {}
     void disable_interactive_mode() override {}
-};
-
-struct NullPowerSource : repowerd::PowerSource
-{
-    void start_processing() override {}
-
-    repowerd::HandlerRegistration register_power_source_change_handler(
-        repowerd::PowerSourceChangeHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-
-    repowerd::HandlerRegistration register_power_source_critical_handler(
-        repowerd::PowerSourceCriticalHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
 };
 
 struct NullProximitySensor : repowerd::ProximitySensor
@@ -227,7 +210,10 @@ std::shared_ptr<repowerd::PowerSource>
 repowerd::DefaultDaemonConfig::the_power_source()
 {
     if (!power_source)
-        power_source = std::make_shared<NullPowerSource>();
+    {
+        power_source = std::make_shared<UPowerPowerSource>(
+            the_log(), *the_device_config(), the_dbus_bus_address());
+    }
 
     return power_source;
 }

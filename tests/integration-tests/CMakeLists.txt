@@ -31,6 +31,7 @@ add_executable(
     fake_device_config.cpp
     fake_libhardware.cpp
     fake_ofono.cpp
+    fake_upower.cpp
     fake_wakeup_service.cpp
     run_command.cpp
     temporary_environment_value.cpp
@@ -52,6 +53,7 @@ add_executable(
     test_unity_power_button.cpp
     test_unity_screen_service.cpp
     test_unity_user_activity.cpp
+    test_upower_power_source.cpp
     test_virtual_filesystem.cpp
 )
 
