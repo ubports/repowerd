@@ -32,7 +32,7 @@ public:
     virtual void enable_autobrightness() = 0;
     virtual void set_dim_brightness() = 0;
     virtual void set_normal_brightness() = 0;
-    virtual void set_normal_brightness_value(float) = 0;
+    virtual void set_normal_brightness_value(double) = 0;
     virtual void set_off_brightness() = 0;
 
 protected:

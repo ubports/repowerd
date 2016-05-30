@@ -26,8 +26,8 @@ class Backlight
 public:
     virtual ~Backlight() = default;
 
-    virtual void set_brightness(float) = 0;
-    virtual float get_brightness() = 0;
+    virtual void set_brightness(double) = 0;
+    virtual double get_brightness() = 0;
 
 protected:
     Backlight() = default;

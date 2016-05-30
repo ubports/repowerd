@@ -384,7 +384,7 @@ TEST_F(ADaemon, notifies_brightness_control_of_set_normal_brightness_value)
 {
     start_daemon();
 
-    auto const value = 0.7f;
+    auto const value = 0.7;
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
 
     config.the_fake_client_requests()->emit_set_normal_brightness_value(value);

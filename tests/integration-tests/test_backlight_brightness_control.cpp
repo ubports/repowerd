@@ -44,12 +44,12 @@ namespace
 class FakeBacklight : public repowerd::Backlight
 {
 public:
-    void set_brightness(float v) override
+    void set_brightness(double v) override
     {
         brightness_history.push_back(v);
     }
 
-    float get_brightness() override
+    double get_brightness() override
     {
         return brightness_history.back();
     }
@@ -61,15 +61,16 @@ public:
         brightness_history.push_back(last);
     }
 
-    std::vector<float> brightness_steps()
+    std::vector<double> brightness_steps()
     {
         auto steps = brightness_history;
         std::adjacent_difference(steps.begin(), steps.end(), steps.begin());
         steps.erase(steps.begin());
+        std::transform(steps.begin(), steps.end(), steps.begin(), fabs);
         return steps;
     }
 
-    float brightness_steps_stddev()
+    double brightness_steps_stddev()
     {
         auto const steps = brightness_steps();
 
@@ -83,8 +84,8 @@ public:
         return sqrt(accum / (steps.size() - 1));
     }
 
-    float const starting_brightness = 0.5f;
-    std::vector<float> brightness_history{starting_brightness};
+    double const starting_brightness = 0.5;
+    std::vector<double> brightness_history{starting_brightness};
 };
 
 class FakeLightSensor : public repowerd::LightSensor
@@ -157,7 +158,7 @@ public:
 
 struct ABacklightBrightnessControl : Test
 {
-    void expect_brightness_value(float brightness)
+    void expect_brightness_value(double brightness)
     {
         EXPECT_THAT(backlight.brightness_history.back(), Eq(brightness));
     }
@@ -183,12 +184,12 @@ struct ABacklightBrightnessControl : Test
         rt::fake_shared(fake_log),
         fake_device_config};
 
-    float const normal_percent =
-        static_cast<float>(fake_device_config.brightness_default_value) /
+    double const normal_percent =
+        static_cast<double>(fake_device_config.brightness_default_value) /
             fake_device_config.brightness_max_value;
 
-    float const dim_percent =
-        static_cast<float>(fake_device_config.brightness_dim_value) /
+    double const dim_percent =
+        static_cast<double>(fake_device_config.brightness_dim_value) /
             fake_device_config.brightness_max_value;
 };
 
@@ -377,7 +378,7 @@ TEST_F(ABacklightBrightnessControl, notifies_of_brightness_change)
     brightness_control.set_normal_brightness();
     brightness_control.set_normal_brightness_value(0.9);
 
-    EXPECT_THAT(notified_brightness, Eq(0.9f));
+    EXPECT_THAT(notified_brightness, Eq(0.9));
 
     brightness_control.set_dim_brightness();
 
@@ -396,7 +397,7 @@ TEST_F(ABacklightBrightnessControl, notifies_of_autobrightness_change)
     brightness_control.enable_autobrightness();
     autobrightness_algorithm.emit_autobrightness(0.9);
 
-    EXPECT_THAT(notified_brightness, Eq(0.9f));
+    EXPECT_THAT(notified_brightness, Eq(0.9));
 }
 
 TEST_F(ABacklightBrightnessControl, does_not_notify_if_brightness_does_not_change)
@@ -414,7 +415,7 @@ TEST_F(ABacklightBrightnessControl, does_not_notify_if_brightness_does_not_chang
     brightness_control.enable_autobrightness();
     autobrightness_algorithm.emit_autobrightness(backlight.starting_brightness);
 
-    EXPECT_THAT(notified_brightness, Eq(-1.0f));
+    EXPECT_THAT(notified_brightness, Eq(-1.0));
 }
 
 TEST_F(ABacklightBrightnessControl, logs_brightness_transition)

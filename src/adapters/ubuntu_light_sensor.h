@@ -38,7 +38,7 @@ public:
 
 private:
     static void static_sensor_reading_callback(UASLightEvent* event, void* context);
-    void handle_light_event(float light_value);
+    void handle_light_event(double light_value);
 
     UASensorsLight* const sensor;
     EventLoop event_loop;

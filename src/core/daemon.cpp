@@ -190,7 +190,7 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         client_requests->register_set_normal_brightness_value_handler(
-            [this] (float value)
+            [this] (double value)
             {
                 enqueue_action(
                     [this,value] { brightness_control->set_normal_brightness_value(value); });

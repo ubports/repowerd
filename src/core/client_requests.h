@@ -29,7 +29,7 @@ namespace repowerd
 using EnableInactivityTimeoutHandler = std::function<void()>;
 using DisableInactivityTimeoutHandler = std::function<void()>;
 using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds)>;
-using SetNormalBrightnessValueHandler = std::function<void(float)>;
+using SetNormalBrightnessValueHandler = std::function<void(double)>;
 using EnableAutobrightnessHandler = std::function<void()>;
 using DisableAutobrightnessHandler = std::function<void()>;
 

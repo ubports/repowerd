@@ -90,17 +90,17 @@ repowerd::SysfsBacklight::SysfsBacklight(std::string const& sysfs_base_dir)
 {
 }
 
-void repowerd::SysfsBacklight::set_brightness(float value)
+void repowerd::SysfsBacklight::set_brightness(double value)
 {
     std::ofstream fs{sysfs_backlight_dir + "/brightness"};
     fs << static_cast<int>(round(value * max_brightness));
     fs.flush();
 }
 
-float repowerd::SysfsBacklight::get_brightness()
+double repowerd::SysfsBacklight::get_brightness()
 {
     std::ifstream fs{sysfs_backlight_dir + "/brightness"};
     int brightness = 0;
     fs >> brightness;
-    return static_cast<float>(brightness) / max_brightness;
+    return static_cast<double>(brightness) / max_brightness;
 }

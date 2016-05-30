@@ -30,8 +30,8 @@ class SysfsBacklight : public Backlight
 public:
     SysfsBacklight(std::string const& sysfs_base_dir);
 
-    void set_brightness(float) override;
-    float get_brightness() override;
+    void set_brightness(double) override;
+    double get_brightness() override;
 
 private:
     std::string const sysfs_backlight_dir;

@@ -53,7 +53,7 @@ public:
     void emit_set_inactivity_timeout(std::chrono::milliseconds timeout);
     void emit_disable_autobrightness();
     void emit_enable_autobrightness();
-    void emit_set_normal_brightness_value(float f);
+    void emit_set_normal_brightness_value(double f);
 
     struct Mock
     {

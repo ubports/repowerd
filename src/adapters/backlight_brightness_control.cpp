@@ -39,16 +39,16 @@ namespace
 char const* const log_tag = "BacklightBrightnessControl";
 auto const null_handler = [](double){};
 
-float normal_brightness_percent(repowerd::DeviceConfig const& device_config)
+double normal_brightness_percent(repowerd::DeviceConfig const& device_config)
 {
     auto brightness_params = repowerd::BrightnessParams::from_device_config(device_config);
-    return static_cast<float>(brightness_params.default_value) / brightness_params.max_value;
+    return static_cast<double>(brightness_params.default_value) / brightness_params.max_value;
 }
 
-float dim_brightness_percent(repowerd::DeviceConfig const& device_config)
+double dim_brightness_percent(repowerd::DeviceConfig const& device_config)
 {
     auto const brightness_params = repowerd::BrightnessParams::from_device_config(device_config);
-    return static_cast<float>(brightness_params.dim_value) / brightness_params.max_value;
+    return static_cast<double>(brightness_params.dim_value) / brightness_params.max_value;
 }
 
 }
@@ -146,7 +146,7 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness()
         }).get();
 }
 
-void repowerd::BacklightBrightnessControl::set_normal_brightness_value(float v)
+void repowerd::BacklightBrightnessControl::set_normal_brightness_value(double v)
 {
     event_loop.enqueue(
         [this,v]
@@ -181,15 +181,15 @@ repowerd::BacklightBrightnessControl::register_brightness_handler(
 }
 
 void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
-    float brightness, TransitionSpeed transition_speed)
+    double brightness, TransitionSpeed transition_speed)
 {
     auto const starting_brightness = get_brightness_value();
     auto current_brightness = starting_brightness;
     auto const step = 0.01;
     auto const num_steps = fabs(current_brightness - brightness) / step;
     auto const step_time = (transition_speed == TransitionSpeed::slow ||
-                            starting_brightness == 0.0f
-                            || brightness == 0.0f) ?
+                            starting_brightness == 0.0
+                            || brightness == 0.0) ?
                             100000us / num_steps : 1000us;
 
     if (starting_brightness != brightness)
@@ -229,12 +229,12 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
         brightness_handler(brightness);
 }
 
-void repowerd::BacklightBrightnessControl::set_brightness_value(float brightness)
+void repowerd::BacklightBrightnessControl::set_brightness_value(double brightness)
 {
     backlight->set_brightness(brightness);
 }
 
-float repowerd::BacklightBrightnessControl::get_brightness_value()
+double repowerd::BacklightBrightnessControl::get_brightness_value()
 {
     return backlight->get_brightness();
 }

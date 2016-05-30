@@ -117,7 +117,7 @@ TEST_F(ASysfsBacklight, uses_sysfs_backlight_if_present)
     set_up_sysfs_backlight();
 
     auto const backlight = create_sysfs_backlight();
-    backlight->set_brightness(0.5f);
+    backlight->set_brightness(0.5);
 
     EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1));
 }
@@ -127,7 +127,7 @@ TEST_F(ASysfsBacklight, uses_sysfs_led_backlight_if_present)
     set_up_sysfs_led_backlight();
 
     auto const backlight = create_sysfs_backlight();
-    backlight->set_brightness(0.5f);
+    backlight->set_brightness(0.5);
 
     EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Gt(1));
 }
@@ -138,7 +138,7 @@ TEST_F(ASysfsBacklight, prefers_sysfs_backlight_over_led_backlight_if_both_prese
     set_up_sysfs_led_backlight();
 
     auto const backlight = create_sysfs_backlight();
-    backlight->set_brightness(0.5f);
+    backlight->set_brightness(0.5);
 
     EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1));
     EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Eq(1));
@@ -148,7 +148,7 @@ TEST_F(ASysfsBacklight, writes_brightness_value_based_on_max_brightness)
 {
     set_up_sysfs_backlight();
 
-    auto const normalized_brightness = 0.7f;
+    auto const normalized_brightness = 0.7;
 
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(normalized_brightness);
@@ -160,7 +160,7 @@ TEST_F(ASysfsBacklight, writes_zero_brightness_value_for_zero_brightness)
 {
     set_up_sysfs_backlight();
 
-    auto const normalized_brightness = 0.0f;
+    auto const normalized_brightness = 0.0;
 
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(normalized_brightness);

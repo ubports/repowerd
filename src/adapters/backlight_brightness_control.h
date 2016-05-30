@@ -47,7 +47,7 @@ public:
     void enable_autobrightness() override;
     void set_dim_brightness() override;
     void set_normal_brightness() override;
-    void set_normal_brightness_value(float) override;
+    void set_normal_brightness_value(double) override;
     void set_off_brightness() override;
 
     HandlerRegistration register_brightness_handler(
@@ -55,9 +55,9 @@ public:
 
 private:
     enum TransitionSpeed {normal, slow};
-    void transition_to_brightness_value(float brightness, TransitionSpeed transition_speed);
-    void set_brightness_value(float brightness);
-    float get_brightness_value();
+    void transition_to_brightness_value(double brightness, TransitionSpeed transition_speed);
+    void set_brightness_value(double brightness);
+    double get_brightness_value();
 
     std::shared_ptr<Backlight> const backlight;
     std::shared_ptr<LightSensor> const light_sensor;
@@ -70,9 +70,9 @@ private:
     HandlerRegistration ab_handler_registration;
     BrightnessHandler brightness_handler;
 
-    float dim_brightness;
-    float normal_brightness;
-    float user_normal_brightness;
+    double dim_brightness;
+    double normal_brightness;
+    double user_normal_brightness;
     bool normal_brightness_active;
     bool ab_active;
 };

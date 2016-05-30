@@ -495,7 +495,7 @@ TEST_F(APowerdService, logs_wakeup_signal)
 
 TEST_F(APowerdService, logs_brightness_signal)
 {
-    float const brightness = 0.7;
+    double const brightness = 0.7;
     std::promise<void> brightness_promise;
     auto brightness_future = brightness_promise.get_future();
 

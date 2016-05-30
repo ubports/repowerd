@@ -67,7 +67,7 @@ struct AUnityScreenService : testing::Test
                 [this] { mock_handlers.enable_autobrightness(); }));
         registrations.push_back(
             service.register_set_normal_brightness_value_handler(
-                [this] (float v)
+                [this] (double v)
                 {
                     mock_handlers.set_normal_brightness_value(v);
                 }));
@@ -90,7 +90,7 @@ struct AUnityScreenService : testing::Test
 
         MOCK_METHOD0(disable_autobrightness, void());
         MOCK_METHOD0(enable_autobrightness, void());
-        MOCK_METHOD1(set_normal_brightness_value, void(float));
+        MOCK_METHOD1(set_normal_brightness_value, void(double));
 
         MOCK_METHOD0(notification, void());
         MOCK_METHOD0(no_notification, void());
@@ -311,8 +311,8 @@ TEST_F(AUnityScreenService, forwards_user_auto_brightness_enable_request)
 TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
 {
     int const brightness = 10;
-    float const brightness_normalized =
-        brightness / static_cast<float>(fake_device_config.brightness_max_value);
+    double const brightness_normalized =
+        brightness / static_cast<double>(fake_device_config.brightness_max_value);
 
     EXPECT_CALL(mock_handlers, set_normal_brightness_value(brightness_normalized));
     client.request_set_user_brightness(brightness);

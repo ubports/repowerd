@@ -26,7 +26,7 @@ rt::FakeClientRequests::FakeClientRequests()
       set_inactivity_timeout_handler{[](std::chrono::milliseconds){}},
       disable_autobrightness_handler{[]{}},
       enable_autobrightness_handler{[]{}},
-      set_normal_brightness_value_handler{[](float){}}
+      set_normal_brightness_value_handler{[](double){}}
 {
 }
 
@@ -109,7 +109,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_bright
         [this]
         {
             mock.unregister_set_normal_brightness_value_handler();
-            set_normal_brightness_value_handler = [](float){};
+            set_normal_brightness_value_handler = [](double){};
         }};
 }
 
@@ -138,7 +138,7 @@ void rt::FakeClientRequests::emit_enable_autobrightness()
     enable_autobrightness_handler();
 }
 
-void rt::FakeClientRequests::emit_set_normal_brightness_value(float f)
+void rt::FakeClientRequests::emit_set_normal_brightness_value(double f)
 {
     set_normal_brightness_value_handler(f);
 }

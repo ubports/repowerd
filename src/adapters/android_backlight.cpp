@@ -24,7 +24,7 @@
 #include <cstring>
 
 repowerd::AndroidBacklight::AndroidBacklight()
-    : brightness{0.0f}
+    : brightness{0.0}
 {
     hw_module_t const* hwmod;
 
@@ -43,7 +43,7 @@ repowerd::AndroidBacklight::~AndroidBacklight()
     light_dev->common.close(reinterpret_cast<hw_device_t*>(light_dev));
 }
 
-void repowerd::AndroidBacklight::set_brightness(float value)
+void repowerd::AndroidBacklight::set_brightness(double value)
 {
     int const value_abs = value * 255;
 
@@ -58,7 +58,7 @@ void repowerd::AndroidBacklight::set_brightness(float value)
     if (!err) brightness = value;
 }
 
-float repowerd::AndroidBacklight::get_brightness()
+double repowerd::AndroidBacklight::get_brightness()
 {
     return brightness;
 }

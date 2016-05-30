@@ -72,7 +72,7 @@ void repowerd::UbuntuLightSensor::static_sensor_reading_callback(
     uls->event_loop.enqueue([uls, light_value] { uls->handle_light_event(light_value); });
 }
 
-void repowerd::UbuntuLightSensor::handle_light_event(float light)
+void repowerd::UbuntuLightSensor::handle_light_event(double light)
 {
     handler(light);
 }

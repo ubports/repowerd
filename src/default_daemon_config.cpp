@@ -58,7 +58,7 @@ struct NullBrightnessControl : repowerd::BrightnessControl
     void enable_autobrightness() override {}
     void set_dim_brightness() override {}
     void set_normal_brightness() override {}
-    void set_normal_brightness_value(float)  override {}
+    void set_normal_brightness_value(double)  override {}
     void set_off_brightness() override {}
 };
 

@@ -598,7 +598,7 @@ void repowerd::UnityScreenService::dbus_setUserBrightness(int32_t brightness)
     log->log(log_tag, "dbus_setUserBrightness(%d)", brightness);
 
     set_normal_brightness_value_handler(
-        brightness/static_cast<float>(brightness_params.max_value));
+        brightness/static_cast<double>(brightness_params.max_value));
 }
 
 void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
