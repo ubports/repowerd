@@ -20,7 +20,9 @@ Vcs-Git: https://code.launchpad.net/repowerd
 
 Package: repowerd
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, repowerd-data
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         repowerd-data (= ${source:Version})
 Replaces: powerd (<< 2016.05~)
 Breaks: powerd (<< 2016.05~)
 Provides: powerd
@@ -32,7 +34,7 @@ Description: Power daemon to monitor and control system power state
 
 Package: repowerd-data
 Architecture: all
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}
 Conflicts: powerd (<< 2016.05~)
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
@@ -42,7 +44,9 @@ Description: Power daemon to monitor and control system power state
 
 Package: repowerd-tools
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, repowerd-data
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         repowerd-data (= ${source:Version})
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
  phone and tablet. It provides a dbus interface for system services to request
@@ -54,7 +58,8 @@ Description: Power daemon to monitor and control system power state
 
 Package: powerd
 Architecture: all
-Depends: ${misc:Depends}, repowerd
+Depends: ${misc:Depends},
+         repowerd (= ${source:Version})
 Section: oldlibs
 Description: Transitional dummy package
  This is a transitional dummy package.
