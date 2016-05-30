@@ -435,3 +435,14 @@ TEST_F(ABacklightBrightnessControl, does_not_log_null_brightness_transition)
     EXPECT_FALSE(fake_log.contains_line({"steps"}));
     EXPECT_FALSE(fake_log.contains_line({"done"}));
 }
+
+TEST_F(ABacklightBrightnessControl, transitions_directly_to_new_value_if_current_is_unknown)
+{
+    backlight.set_brightness(repowerd::Backlight::unknown_brightness);
+    auto const prev_history_size = backlight.brightness_history.size();
+
+    brightness_control.set_dim_brightness();
+
+    EXPECT_THAT(backlight.brightness_history.size(), Eq(prev_history_size + 1));
+    expect_brightness_value(dim_percent);
+}

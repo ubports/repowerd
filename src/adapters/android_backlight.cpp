@@ -24,7 +24,7 @@
 #include <cstring>
 
 repowerd::AndroidBacklight::AndroidBacklight()
-    : brightness{0.0}
+    : brightness{Backlight::unknown_brightness}
 {
     hw_module_t const* hwmod;
 

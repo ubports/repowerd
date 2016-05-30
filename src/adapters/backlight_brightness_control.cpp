@@ -183,10 +183,12 @@ repowerd::BacklightBrightnessControl::register_brightness_handler(
 void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
     double brightness, TransitionSpeed transition_speed)
 {
-    auto const starting_brightness = get_brightness_value();
-    auto current_brightness = starting_brightness;
     auto const step = 0.01;
-    auto const num_steps = fabs(current_brightness - brightness) / step;
+    auto const backlight_brightness = get_brightness_value();
+    auto const starting_brightness =
+        backlight_brightness == Backlight::unknown_brightness ?
+        brightness - step : backlight_brightness;
+    auto const num_steps = fabs(starting_brightness - brightness) / step;
     auto const step_time = (transition_speed == TransitionSpeed::slow ||
                             starting_brightness == 0.0
                             || brightness == 0.0) ?
@@ -197,6 +199,8 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
         log->log(log_tag, "Transitioning brightness %.2f => %.2f in %.2f steps %.2fus each",
                  starting_brightness, brightness, num_steps, step_time.count());
     }
+
+    auto current_brightness = starting_brightness;
 
     if (current_brightness < brightness)
     {

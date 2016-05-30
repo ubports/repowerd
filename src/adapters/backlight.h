@@ -29,6 +29,8 @@ public:
     virtual void set_brightness(double) = 0;
     virtual double get_brightness() = 0;
 
+    static double constexpr unknown_brightness = -1.0;
+
 protected:
     Backlight() = default;
     Backlight(Backlight const&) = delete;
