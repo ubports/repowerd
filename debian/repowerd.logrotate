@@ -7,6 +7,6 @@
     delaycompress
     maxsize 10M
     postrotate
-        invoke-rc.d rsyslog rotate > /dev/null
+        kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
