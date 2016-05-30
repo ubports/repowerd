@@ -142,6 +142,15 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
     log->log(log_tag, "handle_disable_inactivity_timeout");
 
     disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
+
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        brighten_display();
+    }
+    else
+    {
+        turn_on_display_without_timeout(DisplayPowerChangeReason::notification);
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(

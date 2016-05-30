@@ -35,6 +35,20 @@ struct AClientRequest : rt::AcceptanceTest
 
 }
 
+TEST_F(AClientRequest, to_disable_inactivity_timeout_turns_on_display)
+{
+    expect_display_turns_on();
+    client_request_disable_inactivity_timeout();
+}
+
+TEST_F(AClientRequest, to_disable_inactivity_timeout_brightens_display_if_already_on)
+{
+    turn_on_display();
+
+    expect_display_brightens();
+    client_request_disable_inactivity_timeout();
+}
+
 TEST_F(AClientRequest, to_disable_inactivity_timeout_works)
 {
     turn_on_display();

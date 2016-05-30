@@ -182,6 +182,9 @@ TEST_F(ANotification,
 {
     expect_display_turns_on();
     emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
     client_request_disable_inactivity_timeout();
     emit_no_notification();
     verify_expectations();
@@ -206,12 +209,12 @@ TEST_F(ANotification,
 TEST_F(ANotification,
        turns_off_display_when_done_if_a_client_has_previously_disabled_inactivity_timeout)
 {
-    client_request_disable_inactivity_timeout();
-
     expect_display_turns_on();
+    client_request_disable_inactivity_timeout();
+    verify_expectations();
+
     emit_notification();
     emit_no_notification();
-    verify_expectations();
 
     expect_display_turns_off();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
