@@ -28,6 +28,19 @@ target_link_libraries(
 )
 
 add_executable(
+    repowerd-cli
+
+    cli.cpp
+)
+
+target_link_libraries(
+    repowerd-cli
+
+    repowerd-core
+    repowerd-adapters
+)
+
+add_executable(
     repowerd-light-tool
 
     light_tool.cpp
@@ -82,6 +95,7 @@ target_link_libraries(
 install(
     TARGETS
         repowerd-brightness-tool
+        repowerd-cli
         repowerd-light-tool
         repowerd-proximity-tool
         repowerd-wakeup-tool

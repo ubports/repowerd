@@ -1,3 +1,4 @@
 usr/sbin/repowerd
+usr/sbin/repowerd-cli
 etc/dbus-1/system.d/*.conf
 debian/20-repowerd.conf etc/rsyslog.d/
