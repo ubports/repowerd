@@ -23,8 +23,10 @@
 #include <system_error>
 #include <cstring>
 #include <iostream>
+#include <chrono>
 
 namespace rt = repowerd::test;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -112,8 +114,11 @@ rt::VirtualFilesystem::VirtualFilesystem()
 
 rt::VirtualFilesystem::~VirtualFilesystem()
 {
-    if (system(("fusermount -u " + mount_point_).c_str()) != 0)
-        std::cerr << "Failed to unmount fuse filesystem" << std::endl;
+    while (system(("fusermount -u " + mount_point_).c_str()) != 0)
+    {
+        std::cerr << "Failed to unmount fuse filesystem, retrying..." << std::endl;
+        std::this_thread::sleep_for(100ms);
+    }
     vfs_thread.join();
     rmdir(mount_point_.c_str());
 }
