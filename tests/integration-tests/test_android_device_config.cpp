@@ -150,11 +150,23 @@ TEST_F(AnAndroidDeviceConfig, keeps_value_only_in_default_or_device_specific)
     EXPECT_THAT(config.get("integerconfigwithoutprefixnew", ""), StrEq("123"));
 }
 
-TEST_F(AnAndroidDeviceConfig, logs_device_specific_file_read)
+TEST_F(AnAndroidDeviceConfig, logs_device_specific_file_path)
 {
     set_device_name();
     repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
 
     EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-default.xml")}));
     EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-device.xml")}));
+}
+
+TEST_F(AnAndroidDeviceConfig, logs_properties)
+{
+    set_device_name();
+    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+
+    EXPECT_TRUE(fake_log->contains_line({"Property", "boolconfig", "true"}));
+    EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfig", "5"}));
+    EXPECT_TRUE(fake_log->contains_line({"Property", "integerarrayconfig", "1,3,5"}));
+    EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfigwithoutprefix", "680"}));
+    EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfigwithoutprefixnew", "123"}));
 }

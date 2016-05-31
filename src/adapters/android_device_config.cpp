@@ -60,6 +60,8 @@ repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
     auto const device_name = determine_device_name();
     if (device_name != "")
         parse_first_matching_file_in_dirs(config_dirs, "config-" + device_name + ".xml");
+
+    log_properties();
 }
 
 std::string repowerd::AndroidDeviceConfig::get(
@@ -213,3 +215,11 @@ void repowerd::AndroidDeviceConfig::xml_text(std::string const& text)
         config[last_config_name] = clean_text;
 }
 
+void repowerd::AndroidDeviceConfig::log_properties()
+{
+    for (auto const& property : config)
+    {
+        log->log(log_tag, "Property: %s=%s",
+                 property.first.c_str(), property.second.c_str());
+    }
+}

@@ -68,6 +68,7 @@ private:
         std::unordered_map<std::string,std::string> const& attribs);
     void xml_end_element(std::string const& element_name);
     void xml_text(std::string const& text);
+    void log_properties();
 
     std::shared_ptr<Log> const log;
     std::string last_config_name;
