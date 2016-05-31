@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9),
                libglib2.0-dev,
                libhardware-dev,
                libubuntu-application-api-dev,
-               libubuntu-platform-hardware-api-headers,
+               libubuntu-platform-hardware-api-dev,
                pkg-config
 Standards-Version: 3.9.7
 Homepage: https://launchpad.net/repowerd
