@@ -18,6 +18,7 @@
 
 #include "src/adapters/android_device_config.h"
 
+#include "fake_log.h"
 #include "virtual_filesystem.h"
 
 #include <algorithm>
@@ -67,6 +68,7 @@ struct AnAndroidDeviceConfig : Test
         vfs2.add_file_with_contents("/config-default.xml", config_default2);
     }
 
+    std::shared_ptr<rt::FakeLog> fake_log{std::make_shared<rt::FakeLog>()};
     rt::VirtualFilesystem vfs1;
     rt::VirtualFilesystem vfs2;
     rt::VirtualFilesystem vfs_empty;
@@ -76,7 +78,7 @@ struct AnAndroidDeviceConfig : Test
 
 TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 {
-    repowerd::AndroidDeviceConfig config{{vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
 
     EXPECT_THAT(config.get("boolconfig", ""), StrEq("false"));
     EXPECT_THAT(config.get("integerconfig", ""), StrEq("4"));
@@ -86,7 +88,7 @@ TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 
 TEST_F(AnAndroidDeviceConfig, returns_default_value_for_unknown_key)
 {
-    repowerd::AndroidDeviceConfig config{{vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
 
     EXPECT_THAT(config.get("unknown", "bla"), StrEq("bla"));
 }
@@ -94,7 +96,15 @@ TEST_F(AnAndroidDeviceConfig, returns_default_value_for_unknown_key)
 TEST_F(AnAndroidDeviceConfig, reads_first_default_config_file_from_config_dirs)
 {
     repowerd::AndroidDeviceConfig config{
+        fake_log,
         {vfs_empty.mount_point(), vfs2.mount_point(), vfs1.mount_point()}};
 
     EXPECT_THAT(config.get("id", ""), StrEq("2"));
+}
+
+TEST_F(AnAndroidDeviceConfig, logs_config_files_read)
+{
+    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+
+    EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-default.xml")}));
 }

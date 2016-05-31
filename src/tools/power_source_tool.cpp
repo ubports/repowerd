@@ -26,14 +26,13 @@
 
 int main()
 {
+    auto const log = std::make_shared<repowerd::ConsoleLog>();
     repowerd::AndroidDeviceConfig device_config{
-        {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
+        log, {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
 
     auto bus_cstr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr);
     std::string const bus{bus_cstr};
     g_free(bus_cstr);
-
-    auto const log = std::make_shared<repowerd::ConsoleLog>();
 
     repowerd::UPowerPowerSource power_source{log, device_config, bus};
     power_source.start_processing();

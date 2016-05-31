@@ -22,16 +22,20 @@
 
 #include <glib.h>
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace repowerd
 {
+class Log;
 
 class AndroidDeviceConfig : public DeviceConfig
 {
 public:
-    AndroidDeviceConfig(std::vector<std::string> const& config_dirs);
+    AndroidDeviceConfig(
+        std::shared_ptr<Log> const& log,
+        std::vector<std::string> const& config_dirs);
 
     std::string get(
         std::string const& name, std::string const& default_value) const override;
@@ -65,6 +69,7 @@ private:
     void xml_end_element(std::string const& element_name);
     void xml_text(std::string const& text);
 
+    std::shared_ptr<Log> const log;
     std::string last_config_name;
     std::unordered_map<std::string,std::string> config;
 };

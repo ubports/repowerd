@@ -17,6 +17,7 @@
  */
 
 #include "android_device_config.h"
+#include "src/core/log.h"
 
 #include <memory>
 #include <fstream>
@@ -30,6 +31,8 @@
 
 namespace
 {
+
+char const* const log_tag = "AndroidDeviceConfig";
 
 std::string determine_device_name()
 {
@@ -48,7 +51,9 @@ bool file_exists(std::string const& filename)
 }
 
 repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
+    std::shared_ptr<Log> const& log,
     std::vector<std::string> const& config_dirs)
+    : log{log}
 {
     parse_first_matching_file_in_dirs(config_dirs, "config-default.xml");
 
@@ -83,6 +88,8 @@ void repowerd::AndroidDeviceConfig::parse_first_matching_file_in_dirs(
 
 void repowerd::AndroidDeviceConfig::parse_file(std::string const& file)
 {
+    log->log(log_tag, "parse_file(%s)", file.c_str());
+
     GMarkupParser parser;
     parser.start_element = static_xml_start_element;
     parser.end_element = static_xml_end_element;
