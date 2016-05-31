@@ -27,6 +27,7 @@ add_executable(
 
     dbus_bus.cpp
     dbus_client.cpp
+    fake_android_properties.cpp
     fake_brightness_notification.cpp
     fake_device_config.cpp
     fake_libhardware.cpp

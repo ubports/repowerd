@@ -184,6 +184,8 @@ void repowerd::AndroidDeviceConfig::xml_start_element(
     if (config_name.find("config_") == 0)
         config_name = config_name.substr(strlen("config_"));
     last_config_name = config_name;
+
+    config.erase(last_config_name);
 }
 
 void repowerd::AndroidDeviceConfig::xml_end_element(
