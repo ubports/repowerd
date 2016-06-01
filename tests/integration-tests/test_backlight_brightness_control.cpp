@@ -32,6 +32,7 @@
 
 #include <thread>
 #include <algorithm>
+#include <numeric>
 
 namespace rt = repowerd::test;
 
