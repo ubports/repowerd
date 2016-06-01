@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <cmath>
 
 repowerd::AndroidBacklight::AndroidBacklight()
     : brightness{Backlight::unknown_brightness}
@@ -45,7 +46,7 @@ repowerd::AndroidBacklight::~AndroidBacklight()
 
 void repowerd::AndroidBacklight::set_brightness(double value)
 {
-    int const value_abs = value * 255;
+    int const value_abs = round(value * 255);
 
     light_state_t state;
     memset(&state, 0, sizeof(light_state_t));

@@ -35,6 +35,7 @@
 #include <gmock/gmock.h>
 
 #include <chrono>
+#include <cmath>
 
 using namespace testing;
 
@@ -404,7 +405,7 @@ TEST_F(APowerdService, emits_brightness_property_change)
 
     ASSERT_THAT(brightness_future.wait_for(default_timeout),
                 Eq(std::future_status::ready));
-    EXPECT_THAT(brightness_future.get(), Eq(0.7 * fake_device_config.brightness_max_value));
+    EXPECT_THAT(brightness_future.get(), Eq(round(0.7 * fake_device_config.brightness_max_value)));
 }
 
 TEST_F(APowerdService, logs_request_sys_state_request)
@@ -512,6 +513,6 @@ TEST_F(APowerdService, logs_brightness_signal)
             "emit", "brightness",
             std::to_string(brightness),
             std::to_string(
-                static_cast<int>(brightness * fake_device_config.brightness_max_value))
+                static_cast<int>(round(brightness * fake_device_config.brightness_max_value)))
             }));
 }

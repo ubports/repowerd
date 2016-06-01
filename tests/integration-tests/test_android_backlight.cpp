@@ -63,5 +63,5 @@ TEST_F(AnAndroidBacklight, sets_brightness)
     backlight->set_brightness(1.0);
 
     EXPECT_THAT(fake_libhardware.backlight_state_history(),
-                ElementsAre(LightState(0), LightState(127), LightState(255)));
+                ElementsAre(LightState(0), LightState(128), LightState(255)));
 }

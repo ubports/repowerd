@@ -26,6 +26,8 @@
 #include "src/core/log.h"
 #include "src/core/suspend_control.h"
 
+#include <cmath>
+
 namespace
 {
 
@@ -768,7 +770,7 @@ void repowerd::UnityScreenService::dbus_emit_Wakeup()
 
 void repowerd::UnityScreenService::dbus_emit_brightness(double brightness)
 {
-    int32_t const brightness_abs = brightness * brightness_params.max_value;
+    int32_t const brightness_abs = round(brightness * brightness_params.max_value);
 
     log->log(log_tag, "dbus_emit_brightness(%f), brightness_value=%d",
              brightness, brightness_abs);
