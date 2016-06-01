@@ -19,7 +19,8 @@ project(repowerd)
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-option(REPOWERD_ENABLE_TESTS "Build repowerd tests" ON)
+option(REPOWERD_BUILD_TESTS "Build tests" ON)
+option(REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS "Don't run integration tests that use FUSE" OFF)
 
 # Work around cmake setting conf dir to "/usr/etc" instead of "/etc"
 # when prefix is "/usr"
@@ -70,7 +71,7 @@ set(REPOWERD_DEVICE_CONFIGS_PATH "${CMAKE_INSTALL_FULL_DATAROOTDIR}/repowerd/dev
 add_subdirectory(src/)
 add_subdirectory(data/)
 
-if(REPOWERD_ENABLE_TESTS)
+if(REPOWERD_BUILD_TESTS)
     find_package(GtestGmock REQUIRED)
     add_subdirectory(tests/)
 endif()

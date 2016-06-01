@@ -71,6 +71,13 @@ target_link_libraries(
     ${FUSE_LDFLAGS} ${FUSE_LIBRARIES}
 )
 
-add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)
+if (REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS)
+    add_test(repowerd-integration-tests
+        ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests
+        --gtest_filter=-AnAndroidDeviceConfig.*:ADevAlarmWakeupService.*:ABacklightBrightnessControl.*:AVirtualFilesystem.*
+        )
+else()
+    add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)
+endif()
 
 add_dependencies(repowerd-integration-tests GMock)

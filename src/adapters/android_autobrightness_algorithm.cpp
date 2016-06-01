@@ -23,6 +23,7 @@
 #include "event_loop_handler_registration.h"
 #include "monotone_spline.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <sstream>
 #include <vector>

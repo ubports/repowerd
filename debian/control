@@ -5,6 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
                android-headers,
                cmake,
+               dbus,
                fuse,
                google-mock,
                libandroid-properties-dev,
