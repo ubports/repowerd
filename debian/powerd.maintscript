@@ -1,2 +1,2 @@
-rm_conffile /etc/dbus-1/system.d/powerd.conf 2016.06~
-rm_conffile /etc/init/powerd.conf 2016.06~
+rm_conffile /etc/dbus-1/system.d/powerd.conf 2016.06~ powerd
+rm_conffile /etc/init/powerd.conf 2016.06~ powerd
