@@ -34,8 +34,8 @@ int main()
     bool running = true;
 
     std::cout << "Commands (press enter after command letter): "<< std::endl
-              << "  e => enable proximity events" << std::endl
-              << "  d => disable proximity events" << std::endl
+              << "  e => enable light events" << std::endl
+              << "  d => disable light events" << std::endl
               << "  q => quit" << std::endl;
 
     while (running)

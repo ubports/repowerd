@@ -48,11 +48,25 @@ void print_wakeup_event(std::string const& cookie)
     std::cout << "Wakeup with cookie '" << cookie << "'" << std::endl;
 }
 
+void print_usage(std::string const& progname)
+{
+    std::cout << "Usage: " << progname << " <wakeups-in-seconds>" << std::endl;
+    std::cout << "Schedules and waits for hardware wakeups" << std::endl;
+    std::cout << "Example: " << progname << " 1 3 5" << std::endl;
+}
+
 int main(int argc, char** argv)
 {
     repowerd::DevAlarmWakeupService wakeup_service{"/dev"};
 
     auto const wakeups = parse_wakeups(argc, argv);
+
+    if (wakeups.empty())
+    {
+        print_usage(argv[0]);
+        return 1;
+    }
+
     print_wakeups(wakeups);
 
     std::promise<void> done;
