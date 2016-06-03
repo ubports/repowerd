@@ -72,12 +72,16 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS)
-    add_test(repowerd-integration-tests
-        ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests
-        --gtest_filter=-AnAndroidDeviceConfig.*:ADevAlarmWakeupService.*:ABacklightBrightnessControl.*:AVirtualFilesystem.*
-        )
-else()
-    add_test(repowerd-integration-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests)
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:AVirtualFilesystem.*")
 endif()
+
+if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:AnEventLoopTimer.*")
+endif()
+
+add_test(
+    repowerd-integration-tests
+    ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests --gtest_filter=-${INTEGRATION_TESTS_FILTER}
+)
 
 add_dependencies(repowerd-integration-tests GMock)

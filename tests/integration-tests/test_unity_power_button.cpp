@@ -143,7 +143,7 @@ TEST_F(AUnityPowerButton, does_not_calls_unregistered_handlers)
     client.emit_power_button_release();
 
     // Give some time for dbus signals to be delivered
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(100ms);
 }
 
 TEST_F(AUnityPowerButton, emits_long_press_signal)

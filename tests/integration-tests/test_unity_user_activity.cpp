@@ -123,5 +123,5 @@ TEST_F(AUnityUserActivity, does_not_calls_unregistered_handlers)
     client.emit_user_activity_extending_power_state();
 
     // Give some time for dbus signals to be delivered
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(100ms);
 }

@@ -30,6 +30,7 @@
 
 #include "fake_shared.h"
 #include "wait_condition.h"
+#include "spin_wait.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -280,10 +281,10 @@ TEST_F(APowerdService,
 
     client.disconnect();
 
-    // Allow some time for disconnect notification to reach us
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    EXPECT_TRUE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_TRUE(
+        rt::spin_wait_for_condition_or_timeout(
+            [&] { return fake_suspend_control.is_suspend_allowed(); },
+            default_timeout));
 }
 
 TEST_F(APowerdService,
