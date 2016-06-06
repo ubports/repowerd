@@ -18,26 +18,26 @@
 
 #pragma once
 
-#include "backlight.h"
-
-#include "path.h"
+#include <string>
+#include <vector>
 
 namespace repowerd
 {
 
-class SysfsBacklight : public Backlight
+class Path
 {
 public:
-    SysfsBacklight(std::string const& sysfs_base_dir);
+    Path(std::string const& path);
 
-    void set_brightness(double) override;
-    double get_brightness() override;
+    bool is_directory() const;
+    bool is_regular_file() const;
+    std::vector<Path> subdirs() const;
+
+    operator std::string() const;
+    Path operator/(std::string const& path) const;
 
 private:
-    Path const sysfs_backlight_dir;
-    Path const sysfs_brightness_file;
-    int const max_brightness;
+    std::string const path;
 };
 
 }
-

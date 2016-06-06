@@ -23,6 +23,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cmath>
+#include <unistd.h>
+
 namespace rt = repowerd::test;
 
 using namespace testing;
@@ -44,6 +47,33 @@ public:
             "/class/backlight/acpi0/max_brightness");
         brightness_contents->push_back("0");
         max_brightness_contents->push_back(std::to_string(max_brightness));
+    }
+
+    std::shared_ptr<std::vector<std::string>> brightness_contents;
+    std::shared_ptr<std::vector<std::string>> max_brightness_contents;
+};
+
+class FakeLinkedSysfsBacklight
+{
+public:
+    FakeLinkedSysfsBacklight(rt::VirtualFilesystem& vfs, int max_brightness)
+    {
+        vfs.add_directory("/class");
+        vfs.add_directory("/class/myclass");
+        vfs.add_directory("/class/myclass/acpi0");
+        brightness_contents = vfs.add_file_with_live_contents(
+            "/class/myclass/acpi0/brightness");
+        max_brightness_contents = vfs.add_file_with_live_contents(
+            "/class/myclass/acpi0/max_brightness");
+        brightness_contents->push_back("0");
+        max_brightness_contents->push_back(std::to_string(max_brightness));
+
+        vfs.add_directory("/class/backlight");
+        if (symlink(vfs.full_path("/class/myclass/acpi0").c_str(),
+                    vfs.full_path("/class/backlight/acpi0").c_str()) != 0)
+        {
+            throw std::runtime_error("Failed to create sysfs backlight symlink");
+        }
     }
 
     std::shared_ptr<std::vector<std::string>> brightness_contents;
@@ -78,6 +108,11 @@ struct ASysfsBacklight : Test
         sysfs_backlight = std::make_unique<FakeSysfsBacklight>(vfs, max_brightness);
     }
 
+    void set_up_linked_sysfs_backlight()
+    {
+        linked_sysfs_backlight = std::make_unique<FakeLinkedSysfsBacklight>(vfs, max_brightness);
+    }
+
     void set_up_sysfs_led_backlight()
     {
         sysfs_led_backlight = std::make_unique<FakeSysfsLedBacklight>(vfs, max_brightness);
@@ -85,8 +120,7 @@ struct ASysfsBacklight : Test
 
     std::unique_ptr<repowerd::SysfsBacklight> create_sysfs_backlight()
     {
-        return std::make_unique<repowerd::SysfsBacklight>(
-            vfs.mount_point(), fake_device_config);
+        return std::make_unique<repowerd::SysfsBacklight>(vfs.mount_point());
     }
 
     void expect_brightness_value(int brightness)
@@ -100,6 +134,7 @@ struct ASysfsBacklight : Test
     int const max_brightness = 255;
     std::shared_ptr<std::vector<std::string>> sysfs_backlight_live_contents;
     std::unique_ptr<FakeSysfsBacklight> sysfs_backlight;
+    std::unique_ptr<FakeLinkedSysfsBacklight> linked_sysfs_backlight;
     std::unique_ptr<FakeSysfsLedBacklight> sysfs_led_backlight;
 };
 
@@ -144,6 +179,16 @@ TEST_F(ASysfsBacklight, prefers_sysfs_backlight_over_led_backlight_if_both_prese
     EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Eq(1));
 }
 
+TEST_F(ASysfsBacklight, accepts_linked_directories_in_sysfs_backlight)
+{
+    set_up_linked_sysfs_backlight();
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(0.5);
+
+    EXPECT_THAT(linked_sysfs_backlight->brightness_contents->size(), Gt(1));
+}
+
 TEST_F(ASysfsBacklight, writes_brightness_value_based_on_max_brightness)
 {
     set_up_sysfs_backlight();
@@ -153,7 +198,7 @@ TEST_F(ASysfsBacklight, writes_brightness_value_based_on_max_brightness)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(normalized_brightness);
 
-    expect_brightness_value(max_brightness * normalized_brightness);
+    expect_brightness_value(round(max_brightness * normalized_brightness));
 }
 
 TEST_F(ASysfsBacklight, writes_zero_brightness_value_for_zero_brightness)

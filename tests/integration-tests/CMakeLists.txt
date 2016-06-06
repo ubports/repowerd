@@ -48,6 +48,8 @@ add_executable(
     test_ofono_voice_call_service.cpp
     test_powerd_service.cpp
     test_backlight_brightness_control.cpp
+    test_path.cpp
+    test_sysfs_backlight.cpp
     test_ubuntu_light_sensor.cpp
     test_ubuntu_proximity_sensor.cpp
     test_unity_display_power_control.cpp
@@ -72,7 +74,7 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:AVirtualFilesystem.*")
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:APath.*:AVirtualFilesystem.*")
 endif()
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)

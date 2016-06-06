@@ -17,6 +17,8 @@
  */
 
 #include "android_device_config.h"
+#include "path.h"
+
 #include "src/core/log.h"
 
 #include <memory>
@@ -25,7 +27,6 @@
 #include <cctype>
 #include <algorithm>
 #include <array>
-#include <sys/stat.h>
 
 #include <hybris/properties/properties.h>
 
@@ -39,13 +40,6 @@ std::string determine_device_name()
     char name[PROP_VALUE_MAX] = "";
     property_get("ro.product.device", name, "");
     return name;
-}
-
-bool file_exists(std::string const& filename)
-{
-    struct stat sb;
-    return stat(filename.c_str(), &sb) == 0 &&
-           S_ISREG(sb.st_mode);
 }
 
 }
@@ -79,8 +73,8 @@ void repowerd::AndroidDeviceConfig::parse_first_matching_file_in_dirs(
 {
     for (auto const& config_dir : config_dirs)
     {
-        auto const full_file_path = config_dir + "/" + filename;
-        if (file_exists(full_file_path))
+        auto const full_file_path = Path{config_dir}/filename;
+        if (full_file_path.is_regular_file())
         {
             parse_file(full_file_path);
             break;
