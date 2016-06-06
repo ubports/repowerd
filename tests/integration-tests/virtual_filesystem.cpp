@@ -89,6 +89,8 @@ rt::VirtualFilesystem::VirtualFilesystem()
     fuse_ops.write = vfs_write;
     fuse_ops.truncate = vfs_truncate;
     fuse_ops.ioctl = vfs_ioctl;
+    fuse_ops.readlink = vfs_readlink;
+    fuse_ops.symlink = vfs_symlink;
 
     auto fuse_chan_handle = fuse_mount(mount_point_.c_str(), &args);
     if (!fuse_chan_handle)
@@ -250,6 +252,21 @@ int rt::VirtualFilesystem::vfs_ioctl(
     return vfs()->ioctl(path, cmd, arg, fi, flags, data);
 }
 
+int rt::VirtualFilesystem::vfs_readlink(
+    char const* path,
+    char* buf,
+    size_t size)
+{
+    return vfs()->readlink(path, buf, size);
+}
+
+int rt::VirtualFilesystem::vfs_symlink(
+    char const* to,
+    char const* from)
+{
+    return vfs()->symlink(to, from);
+}
+
 int rt::VirtualFilesystem::getattr(char const* path, struct stat* stbuf)
 {
     int result = 0;
@@ -265,6 +282,11 @@ int rt::VirtualFilesystem::getattr(char const* path, struct stat* stbuf)
     else if (directories.find(normalize_dir(path)) != directories.end())
     {
         stbuf->st_mode = S_IFDIR | 0755;
+        stbuf->st_nlink = 1;
+    }
+    else if (symlinks.find(path) != symlinks.end())
+    {
+        stbuf->st_mode = S_IFLNK | 0444;
         stbuf->st_nlink = 1;
     }
     else
@@ -351,4 +373,30 @@ int rt::VirtualFilesystem::ioctl(
 
     auto const& file_handlers = files[path];
     return file_handlers.ioctl_handler(path, cmd, arg);
+}
+
+int rt::VirtualFilesystem::readlink(
+    char const* path,
+    char* buf,
+    size_t size)
+{
+    if (symlinks.find(path) == symlinks.end())
+        return -ENOENT;
+
+    auto const nwritten = symlinks[path].copy(buf, size - 1);
+    buf[nwritten] = '\0';
+
+    return 0;
+}
+
+int rt::VirtualFilesystem::symlink(
+    char const* to,
+    char const* from)
+{
+    symlinks[from] = to;
+
+    auto const components = split_path(from);
+    directories[components.first].insert(components.second);
+
+    return 0;
 }

@@ -194,3 +194,26 @@ TEST_F(AVirtualFilesystem, supports_file_ioctl)
     EXPECT_THAT(arg, Eq(cmd + 3));
     EXPECT_THAT(ret, Eq(cmd + 5));
 }
+
+TEST_F(AVirtualFilesystem, supports_links)
+{
+    std::string const file_contents{"abcd1234"};
+
+    vfs.add_directory("/dir");
+    vfs.add_file_with_contents("/file", file_contents);
+
+    EXPECT_THAT(
+        symlink(vfs.full_path("/dir").c_str(), vfs.full_path("/dirlink").c_str()),
+        Eq(0));
+    EXPECT_THAT(
+        symlink(vfs.full_path("/file").c_str(), vfs.full_path("/dir/filelink").c_str()),
+        Eq(0));
+
+    std::ifstream ifs{vfs.full_path("/dirlink/filelink")};
+
+    std::string contents_read{
+        std::istreambuf_iterator<char>{ifs},
+        std::istreambuf_iterator<char>{}};
+
+    EXPECT_THAT(contents_read, StrEq(file_contents));
+}

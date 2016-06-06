@@ -93,6 +93,8 @@ private:
         struct fuse_file_info* fi,
         unsigned int flags,
         void* data);
+    static int vfs_readlink(char const* path, char* buf, size_t size);
+    static int vfs_symlink(char const* to, char const* from);
 
     int getattr(char const* path, struct stat* stbuf);
     int readdir(
@@ -121,6 +123,8 @@ private:
         struct fuse_file_info* fi,
         unsigned int flags,
         void* data);
+    int readlink(char const* path, char* buf, size_t size);
+    int symlink(char const* to, char const* from);
 
     std::string const mount_point_;
     std::unique_ptr<fuse,void(*)(fuse*)> fuse_handle;
@@ -135,6 +139,7 @@ private:
 
     std::unordered_map<std::string,std::unordered_set<std::string>> directories;
     std::unordered_map<std::string,FileHandlers> files;
+    std::unordered_map<std::string,std::string> symlinks;
 };
 
 }
