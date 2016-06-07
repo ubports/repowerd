@@ -23,6 +23,7 @@
 #include "path.h"
 
 #include <memory>
+#include <string>
 
 namespace repowerd
 {

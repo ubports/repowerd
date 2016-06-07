@@ -17,6 +17,7 @@
  */
 
 #include "src/adapters/sysfs_backlight.h"
+#include "src/adapters/path.h"
 
 #include "fake_log.h"
 #include "fake_shared.h"
@@ -38,21 +39,26 @@ namespace
 class FakeSysfsBacklight
 {
 public:
-    FakeSysfsBacklight(rt::VirtualFilesystem& vfs, int max_brightness)
-        : path{vfs.full_path("/class/backlight/acpi0")}
+    FakeSysfsBacklight(
+        rt::VirtualFilesystem& vfs,
+        std::string const& type,
+        int max_brightness)
+        : relpath{repowerd::Path{"/class/backlight"}/type},
+          path{vfs.full_path(relpath)}
     {
         vfs.add_directory("/class");
         vfs.add_directory("/class/backlight");
-        vfs.add_directory("/class/backlight/acpi0");
+        vfs.add_directory(relpath);
+        vfs.add_file_with_contents(relpath/"type" , type);
         brightness_contents = vfs.add_file_with_live_contents(
-            "/class/backlight/acpi0/brightness");
+            relpath/"brightness");
         max_brightness_contents = vfs.add_file_with_live_contents(
-            "/class/backlight/acpi0/max_brightness");
+            relpath/"max_brightness");
         brightness_contents->push_back("0");
         max_brightness_contents->push_back(std::to_string(max_brightness));
-
     }
 
+    repowerd::Path const relpath;
     std::string const path;
     std::shared_ptr<std::vector<std::string>> brightness_contents;
     std::shared_ptr<std::vector<std::string>> max_brightness_contents;
@@ -110,7 +116,12 @@ struct ASysfsBacklight : Test
 {
     void set_up_sysfs_backlight()
     {
-        sysfs_backlight = std::make_unique<FakeSysfsBacklight>(vfs, max_brightness);
+        sysfs_backlight = std::make_unique<FakeSysfsBacklight>(vfs, "firmware", max_brightness);
+    }
+
+    std::unique_ptr<FakeSysfsBacklight> set_up_sysfs_backlight_with_type(std::string const& type)
+    {
+        return std::make_unique<FakeSysfsBacklight>(vfs, type, max_brightness);
     }
 
     void set_up_linked_sysfs_backlight()
@@ -249,4 +260,37 @@ TEST_F(ASysfsBacklight, logs_used_sysfs_backlight_dir)
     auto const backlight = create_sysfs_backlight();
 
     EXPECT_TRUE(fake_log.contains_line({sysfs_backlight->path}));
+}
+
+TEST_F(ASysfsBacklight, prefers_firmware_backlight_over_all_others)
+{
+    auto const firmware = set_up_sysfs_backlight_with_type("firmware");
+    auto const platform = set_up_sysfs_backlight_with_type("platform");
+    auto const raw = set_up_sysfs_backlight_with_type("raw");
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(0.5);
+
+    EXPECT_THAT(firmware->brightness_contents->size(), Gt(1));
+}
+
+TEST_F(ASysfsBacklight, prefers_platform_backlight_over_raw)
+{
+    auto const platform = set_up_sysfs_backlight_with_type("platform");
+    auto const raw = set_up_sysfs_backlight_with_type("raw");
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(0.5);
+
+    EXPECT_THAT(platform->brightness_contents->size(), Gt(1));
+}
+
+TEST_F(ASysfsBacklight, uses_raw_backlight_if_no_other_choice)
+{
+    auto const raw = set_up_sysfs_backlight_with_type("raw");
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(0.5);
+
+    EXPECT_THAT(raw->brightness_contents->size(), Gt(1));
 }

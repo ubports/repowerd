@@ -21,6 +21,7 @@
 #include "path.h"
 #include "src/core/log.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <stdexcept>
@@ -30,6 +31,27 @@ namespace
 {
 char const* const log_tag = "SysfsBacklight";
 
+int get_backlight_priority(repowerd::Path const& backlight_dir)
+{
+    std::ifstream fs{backlight_dir/"type"};
+    std::string type;
+    fs >> type;
+
+    if (type == "firmware")
+        return 1;
+    else if (type == "platform")
+        return 2;
+    else if (type == "raw")
+        return 3;
+
+    return 10;
+}
+
+bool compare_backlight_priority(repowerd::Path const& b1, repowerd::Path const& b2)
+{
+    return get_backlight_priority(b1) < get_backlight_priority(b2);
+}
+
 repowerd::Path determine_sysfs_backlight_dir(std::string const& sysfs_base_dir)
 {
     repowerd::Path const sys_backlight_root{
@@ -37,10 +59,18 @@ repowerd::Path determine_sysfs_backlight_dir(std::string const& sysfs_base_dir)
     repowerd::Path const sys_led_backlight{
         repowerd::Path{sysfs_base_dir}/"class"/"leds"/"lcd-backlight"};
 
+    std::vector<repowerd::Path> backlights;
+
     for (auto const& dir : sys_backlight_root.subdirs())
     {
         if ((dir/"brightness").is_regular_file())
-            return dir;
+            backlights.push_back(dir);
+    }
+
+    if (!backlights.empty())
+    {
+        std::stable_sort(backlights.begin(), backlights.end(), compare_backlight_priority);
+        return backlights.front();
     }
 
     if ((sys_led_backlight/"brightness").is_regular_file())

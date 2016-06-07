@@ -37,7 +37,7 @@ public:
     Path operator/(std::string const& path) const;
 
 private:
-    std::string const path;
+    std::string path;
 };
 
 }
