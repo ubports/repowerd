@@ -37,8 +37,6 @@ void libsuspend_init(int force_mock)
         handler = legacy_detect();
         if (handler)
             return;
-
-        printf("No suspend interface detected, using mock suspend\n");
     }
 
     handler = mocksuspend_detect();

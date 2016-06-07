@@ -23,31 +23,28 @@ static const char mocksuspend_name[] = "mocksuspend";
 
 static int mocksuspend_prepare(void)
 {
-    printf("mocksuspend prepare\n");
     return 0;
 }
 
 static int mocksuspend_enter(void)
 {
-    printf("mocksuspend enter\n");
     return 0;
 }
 
 static int mocksuspend_exit(void)
 {
-    printf("mocksuspend exit\n");
     return 0;
 }
 
 static int mocksuspend_acquire_wake_lock(const char *name)
 {
-    printf("mocksuspend acquire wake lock %s\n", name);
+    (void)name;
     return 0;
 }
 
 static int mocksuspend_release_wake_lock(const char *name)
 {
-    printf("mocksuspend release wake lock %s\n", name);
+    (void)name;
     return 0;
 }
 
