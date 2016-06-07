@@ -34,9 +34,12 @@ public:
     double get_brightness() override;
 
 private:
+    int absolute_brightness_for(double relative_brightness);
+
     Path const sysfs_backlight_dir;
     Path const sysfs_brightness_file;
     int const max_brightness;
+    double last_set_brightness;
 };
 
 }

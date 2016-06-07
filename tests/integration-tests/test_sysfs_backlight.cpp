@@ -132,7 +132,6 @@ struct ASysfsBacklight : Test
 
     rt::VirtualFilesystem vfs;
     int const max_brightness = 255;
-    std::shared_ptr<std::vector<std::string>> sysfs_backlight_live_contents;
     std::unique_ptr<FakeSysfsBacklight> sysfs_backlight;
     std::unique_ptr<FakeLinkedSysfsBacklight> linked_sysfs_backlight;
     std::unique_ptr<FakeSysfsLedBacklight> sysfs_led_backlight;
@@ -211,4 +210,27 @@ TEST_F(ASysfsBacklight, writes_zero_brightness_value_for_zero_brightness)
     backlight->set_brightness(normalized_brightness);
 
     expect_brightness_value(0);
+}
+
+TEST_F(ASysfsBacklight, gets_last_set_brightness)
+{
+    set_up_sysfs_backlight();
+
+    auto const normalized_brightness = 0.7123;
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(normalized_brightness);
+
+    EXPECT_THAT(backlight->get_brightness(), Eq(normalized_brightness));
+}
+
+TEST_F(ASysfsBacklight, gets_real_brightness_if_brightness_changed_externally)
+{
+    set_up_sysfs_backlight();
+
+    auto const backlight = create_sysfs_backlight();
+    backlight->set_brightness(0.7);
+
+    sysfs_backlight->brightness_contents->push_back("102");
+    EXPECT_THAT(backlight->get_brightness(), Eq(102.0/max_brightness));
 }

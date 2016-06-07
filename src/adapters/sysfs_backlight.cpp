@@ -60,21 +60,32 @@ int determine_max_brightness(repowerd::Path const& backlight_dir)
 repowerd::SysfsBacklight::SysfsBacklight(std::string const& sysfs_base_dir)
     : sysfs_backlight_dir{determine_sysfs_backlight_dir(sysfs_base_dir)},
       sysfs_brightness_file{sysfs_backlight_dir/"brightness"},
-      max_brightness{determine_max_brightness(sysfs_backlight_dir)}
+      max_brightness{determine_max_brightness(sysfs_backlight_dir)},
+      last_set_brightness{-1.0}
 {
 }
 
 void repowerd::SysfsBacklight::set_brightness(double value)
 {
     std::ofstream fs{sysfs_brightness_file};
-    fs << static_cast<int>(round(value * max_brightness));
+    fs << absolute_brightness_for(value);
     fs.flush();
+    last_set_brightness = value;
 }
 
 double repowerd::SysfsBacklight::get_brightness()
 {
     std::ifstream fs{sysfs_brightness_file};
-    int brightness = 0;
-    fs >> brightness;
-    return static_cast<double>(brightness) / max_brightness;
+    int abs_brightness = 0;
+    fs >> abs_brightness;
+
+    if (absolute_brightness_for(last_set_brightness) == abs_brightness)
+        return last_set_brightness;
+    else
+        return static_cast<double>(abs_brightness) / max_brightness;
+}
+
+int repowerd::SysfsBacklight::absolute_brightness_for(double rel_brightness)
+{
+    return static_cast<int>(round(rel_brightness * max_brightness));
 }
