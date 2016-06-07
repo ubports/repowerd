@@ -447,7 +447,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
     {
         unity_screen_service = std::make_shared<UnityScreenService>(
             the_wakeup_service(),
-            the_backlight_brightness_control(),
+            the_brightness_notification(),
             the_log(),
             the_suspend_control(),
             *the_device_config(),
