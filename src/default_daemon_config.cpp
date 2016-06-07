@@ -350,7 +350,7 @@ repowerd::DefaultDaemonConfig::the_backlight()
         try
         {
             if (!backlight)
-                backlight = std::make_shared<SysfsBacklight>("/sys");
+                backlight = std::make_shared<SysfsBacklight>(the_log(), "/sys");
         }
         catch (std::exception const& e)
         {

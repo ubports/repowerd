@@ -39,7 +39,7 @@ struct NullLightSensor : repowerd::LightSensor
     void disable_light_events() override {}
 };
 
-auto create_backlight()
+auto create_backlight(std::shared_ptr<repowerd::Log> const& log)
 {
     std::shared_ptr<repowerd::Backlight> backlight;
 
@@ -52,7 +52,7 @@ auto create_backlight()
     }
 
     if (!backlight)
-        backlight = std::make_shared<repowerd::SysfsBacklight>("/sys");
+        backlight = std::make_shared<repowerd::SysfsBacklight>(log, "/sys");
 
     return backlight;
 }
@@ -80,7 +80,7 @@ int main()
     auto const log = std::make_shared<repowerd::ConsoleLog>();
     repowerd::AndroidDeviceConfig device_config{
         log, {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
-    auto const backlight = create_backlight();
+    auto const backlight = create_backlight(log);
     auto const light_sensor = create_light_sensor();
     auto const ab_algorithm =
         std::make_shared<repowerd::AndroidAutobrightnessAlgorithm>(device_config);

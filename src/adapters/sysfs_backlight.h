@@ -22,13 +22,18 @@
 
 #include "path.h"
 
+#include <memory>
+
 namespace repowerd
 {
+class Log;
 
 class SysfsBacklight : public Backlight
 {
 public:
-    SysfsBacklight(std::string const& sysfs_base_dir);
+    SysfsBacklight(
+        std::shared_ptr<Log> const& log,
+        std::string const& sysfs_base_dir);
 
     void set_brightness(double) override;
     double get_brightness() override;

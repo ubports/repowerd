@@ -18,15 +18,17 @@
 
 #include "sysfs_backlight.h"
 
+#include "path.h"
+#include "src/core/log.h"
+
 #include <cmath>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
 
-#include "path.h"
-
 namespace
 {
+char const* const log_tag = "SysfsBacklight";
 
 repowerd::Path determine_sysfs_backlight_dir(std::string const& sysfs_base_dir)
 {
@@ -57,12 +59,16 @@ int determine_max_brightness(repowerd::Path const& backlight_dir)
 
 }
 
-repowerd::SysfsBacklight::SysfsBacklight(std::string const& sysfs_base_dir)
+repowerd::SysfsBacklight::SysfsBacklight(
+    std::shared_ptr<Log> const& log,
+    std::string const& sysfs_base_dir)
     : sysfs_backlight_dir{determine_sysfs_backlight_dir(sysfs_base_dir)},
       sysfs_brightness_file{sysfs_backlight_dir/"brightness"},
       max_brightness{determine_max_brightness(sysfs_backlight_dir)},
       last_set_brightness{-1.0}
 {
+    log->log(log_tag, "Using backlight %s",
+             std::string{sysfs_backlight_dir}.c_str());
 }
 
 void repowerd::SysfsBacklight::set_brightness(double value)

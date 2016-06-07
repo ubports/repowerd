@@ -18,6 +18,8 @@
 
 #include "src/adapters/sysfs_backlight.h"
 
+#include "fake_log.h"
+#include "fake_shared.h"
 #include "virtual_filesystem.h"
 
 #include <gtest/gtest.h>
@@ -37,6 +39,7 @@ class FakeSysfsBacklight
 {
 public:
     FakeSysfsBacklight(rt::VirtualFilesystem& vfs, int max_brightness)
+        : path{vfs.full_path("/class/backlight/acpi0")}
     {
         vfs.add_directory("/class");
         vfs.add_directory("/class/backlight");
@@ -47,8 +50,10 @@ public:
             "/class/backlight/acpi0/max_brightness");
         brightness_contents->push_back("0");
         max_brightness_contents->push_back(std::to_string(max_brightness));
+
     }
 
+    std::string const path;
     std::shared_ptr<std::vector<std::string>> brightness_contents;
     std::shared_ptr<std::vector<std::string>> max_brightness_contents;
 };
@@ -120,7 +125,8 @@ struct ASysfsBacklight : Test
 
     std::unique_ptr<repowerd::SysfsBacklight> create_sysfs_backlight()
     {
-        return std::make_unique<repowerd::SysfsBacklight>(vfs.mount_point());
+        return std::make_unique<repowerd::SysfsBacklight>(
+            rt::fake_shared(fake_log), vfs.mount_point());
     }
 
     void expect_brightness_value(int brightness)
@@ -130,6 +136,7 @@ struct ASysfsBacklight : Test
                     StrEq(std::to_string(brightness)));
     }
 
+    rt::FakeLog fake_log;
     rt::VirtualFilesystem vfs;
     int const max_brightness = 255;
     std::unique_ptr<FakeSysfsBacklight> sysfs_backlight;
@@ -233,4 +240,13 @@ TEST_F(ASysfsBacklight, gets_real_brightness_if_brightness_changed_externally)
 
     sysfs_backlight->brightness_contents->push_back("102");
     EXPECT_THAT(backlight->get_brightness(), Eq(102.0/max_brightness));
+}
+
+TEST_F(ASysfsBacklight, logs_used_sysfs_backlight_dir)
+{
+    set_up_sysfs_backlight();
+
+    auto const backlight = create_sysfs_backlight();
+
+    EXPECT_TRUE(fake_log.contains_line({sysfs_backlight->path}));
 }
