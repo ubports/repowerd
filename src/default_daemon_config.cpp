@@ -46,6 +46,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
+char const* const log_tag = "DefaultDaemonConfig";
 
 struct NullHandlerRegistration : repowerd::HandlerRegistration
 {
@@ -133,8 +134,10 @@ repowerd::DefaultDaemonConfig::the_brightness_control()
     {
         brightness_control = the_backlight_brightness_control();
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create BrightnessControl: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullBrightnessControl");
         brightness_control = std::make_shared<NullBrightnessControl>();
     }
 
@@ -186,8 +189,11 @@ repowerd::DefaultDaemonConfig::the_performance_booster()
         performance_booster = std::make_shared<UbuntuPerformanceBooster>(
             the_log());
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create UbuntuPerformanceBooster: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullPerformanceBooster");
+
         performance_booster = std::make_shared<NullPerformanceBooster>();
     }
 
@@ -228,8 +234,11 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
             the_log(),
             AndroidDeviceQuirks());
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create UbuntuProximitySensor: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullProximitySensor");
+
         proximity_sensor = std::make_shared<NullProximitySensor>();
     }
 
@@ -329,12 +338,22 @@ repowerd::DefaultDaemonConfig::the_backlight()
         {
             backlight = std::make_shared<AndroidBacklight>();
         }
-        catch (...)
+        catch (std::exception const& e)
         {
+            the_log()->log(log_tag, "Failed to create AndroidBacklight: %s", e.what());
+            the_log()->log(log_tag, "Trying SysfsBacklight");
         }
 
-        if (!backlight)
-            backlight = std::make_shared<SysfsBacklight>("/sys");
+        try
+        {
+            if (!backlight)
+                backlight = std::make_shared<SysfsBacklight>("/sys");
+        }
+        catch (std::exception const& e)
+        {
+            the_log()->log(log_tag, "Failed to create SyfsBacklight: %s", e.what());
+            throw std::runtime_error("Failed to create backlight");
+        }
     }
 
     return backlight;
@@ -364,8 +383,10 @@ repowerd::DefaultDaemonConfig::the_brightness_notification()
     {
         brightness_notification = the_backlight_brightness_control();
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create BrightnessNotification: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullBrightnessNotification");
         brightness_notification = std::make_shared<NullBrightnessNotification>();
     }
 
@@ -403,8 +424,10 @@ repowerd::DefaultDaemonConfig::the_light_sensor()
     {
         light_sensor = std::make_shared<UbuntuLightSensor>();
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create UbuntuLightSensor: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullLightSensor");
         light_sensor = std::make_shared<NullLightSensor>();
     }
 
@@ -473,8 +496,10 @@ repowerd::DefaultDaemonConfig::the_wakeup_service()
     {
         wakeup_service = std::make_shared<DevAlarmWakeupService>("/dev");
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        the_log()->log(log_tag, "Failed to create DevAlarmWakeupService: %s", e.what());
+        the_log()->log(log_tag, "Falling back to NullWakeupService");
         wakeup_service = std::make_shared<NullWakeupService>();
     }
 
