@@ -24,7 +24,6 @@
 
 #include "fake_device_config.h"
 #include "fake_log.h"
-#include "virtual_filesystem.h"
 #include "fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -172,7 +171,6 @@ struct ABacklightBrightnessControl : Test
             std::chrono::steady_clock::now() - start);
     }
 
-    rt::VirtualFilesystem vfs;
     rt::FakeDeviceConfig fake_device_config;
     FakeBacklight backlight;
     FakeLightSensor light_sensor;

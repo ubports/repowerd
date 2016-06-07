@@ -74,11 +74,11 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:APath.*:AVirtualFilesystem.*")
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ADevAlarmWakeupService.*:APath.*:ASysfsBacklight.*:AVirtualFilesystem.*")
 endif()
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ABacklightBrightnessControl.*:ADevAlarmWakeupService.*:AnEventLoopTimer.*")
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ABacklightBrightnessControl.transitions_between_zero_and_non_zero_brightness_in_100ms:ADevAlarmWakeupService.*:AnEventLoopTimer.*")
 endif()
 
 add_test(
