@@ -103,7 +103,10 @@ struct NullProximitySensor : repowerd::ProximitySensor
     {
         return NullHandlerRegistration{};
     }
-    repowerd::ProximityState proximity_state() override { return {}; }
+    repowerd::ProximityState proximity_state() override
+    { 
+        return repowerd::ProximityState::far;
+    }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
 };
