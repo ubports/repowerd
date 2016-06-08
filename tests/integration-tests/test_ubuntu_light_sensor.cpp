@@ -20,6 +20,7 @@
 
 #include "temporary_environment_value.h"
 #include "temporary_file.h"
+#include "test_in_separate_process.h"
 #include "wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -63,14 +64,6 @@ struct AUbuntuLightSensor : testing::Test
 };
 
 }
-
-#define TEST_IN_SEPARATE_PROCESS(CODE) \
-    EXPECT_EXIT({ \
-        CODE \
-        this->~AUbuntuLightSensor(); \
-        exit(HasFailure() ? 1 : 0); \
-        }, \
-        ExitedWithCode(0), "")
 
 TEST_F(AUbuntuLightSensor, reports_light_events)
 {

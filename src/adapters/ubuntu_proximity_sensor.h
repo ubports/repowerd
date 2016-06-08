@@ -69,7 +69,6 @@ private:
     std::vector<EnablementMode> enablements;
 
     ProximityHandler handler;
-    bool handler_enabled;
     int synthetic_event_seqno;
     std::chrono::milliseconds const synthetic_event_delay;
     ProximityState const synthetic_event_state;
