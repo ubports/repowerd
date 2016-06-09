@@ -16,6 +16,8 @@
 
 project(repowerd)
 
+set(REPOWERD_VERSION "2016.06")
+
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -68,6 +70,8 @@ endif()
 
 set(POWERD_DEVICE_CONFIGS_PATH "${CMAKE_INSTALL_FULL_DATAROOTDIR}/powerd/device_configs")
 set(REPOWERD_DEVICE_CONFIGS_PATH "${CMAKE_INSTALL_FULL_DATAROOTDIR}/repowerd/device-configs")
+
+add_definitions(-DREPOWERD_VERSION="${REPOWERD_VERSION}")
 
 add_subdirectory(src/)
 add_subdirectory(data/)

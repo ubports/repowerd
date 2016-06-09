@@ -73,7 +73,7 @@ int main()
     repowerd::DefaultDaemonConfig config;
     auto const log = config.the_log();
 
-    log->log(log_tag, "Starting repowerd");
+    log->log(log_tag, "Starting repowerd %s", REPOWERD_VERSION);
 
     repowerd::Daemon daemon{config};
     SignalHandler signal_handler{&daemon, log.get()};
