@@ -1,5 +1,5 @@
-repowerd (2016.06-0ubuntu1) xenial; urgency=medium
+repowerd (2016.06-0ubuntu1) yakkety; urgency=medium
 
   * Initial release
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 25 May 2016 13:45:10 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 09 Jun 2016 11:48:29 +0300
