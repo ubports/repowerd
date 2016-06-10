@@ -26,6 +26,7 @@ namespace repowerd
 class Backlight;
 class BacklightBrightnessControl;
 class BrightnessNotification;
+class Chrono;
 class DeviceConfig;
 class Filesystem;
 class LightSensor;
@@ -67,6 +68,7 @@ public:
     std::shared_ptr<Backlight> the_backlight();
     std::shared_ptr<BacklightBrightnessControl> the_backlight_brightness_control();
     std::shared_ptr<BrightnessNotification> the_brightness_notification();
+    std::shared_ptr<Chrono> the_chrono();
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
     std::shared_ptr<Filesystem> the_filesystem();
@@ -81,6 +83,7 @@ private:
     std::shared_ptr<BacklightBrightnessControl> backlight_brightness_control;
     std::shared_ptr<BrightnessControl> brightness_control;
     std::shared_ptr<BrightnessNotification> brightness_notification;
+    std::shared_ptr<Chrono> chrono;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<Filesystem> filesystem;

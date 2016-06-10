@@ -30,6 +30,7 @@
 #include "adapters/libsuspend_suspend_control.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
+#include "adapters/real_chrono.h"
 #include "adapters/real_filesystem.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
@@ -375,6 +376,7 @@ repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
             the_backlight(),
             the_light_sensor(),
             std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
+            the_chrono(),
             the_log(),
             *the_device_config());
     }
@@ -398,6 +400,15 @@ repowerd::DefaultDaemonConfig::the_brightness_notification()
     }
 
     return brightness_notification;
+}
+
+std::shared_ptr<repowerd::Chrono>
+repowerd::DefaultDaemonConfig::the_chrono()
+{
+    if (!chrono)
+        chrono = std::make_shared<RealChrono>();
+
+    return chrono;
 }
 
 std::string repowerd::DefaultDaemonConfig::the_dbus_bus_address()

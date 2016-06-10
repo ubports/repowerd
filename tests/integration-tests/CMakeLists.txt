@@ -21,6 +21,7 @@ add_executable(
     dbus_client.cpp
     fake_android_properties.cpp
     fake_brightness_notification.cpp
+    fake_chrono.cpp
     fake_device_config.cpp
     fake_filesystem.cpp
     fake_libhardware.cpp
@@ -41,6 +42,7 @@ add_executable(
     test_powerd_service.cpp
     test_backlight_brightness_control.cpp
     test_path.cpp
+    test_real_chrono.cpp
     test_real_filesystem.cpp
     test_sysfs_backlight.cpp
     test_ubuntu_light_sensor.cpp
@@ -65,7 +67,7 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ABacklightBrightnessControl.transitions_between_zero_and_non_zero_brightness_in_100ms:ADevAlarmWakeupService.*:AnEventLoopTimer.*")
+    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*")
 endif()
 
 add_test(

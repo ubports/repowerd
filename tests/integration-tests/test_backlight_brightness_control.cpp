@@ -22,6 +22,7 @@
 #include "src/adapters/event_loop_handler_registration.h"
 #include "src/adapters/light_sensor.h"
 
+#include "fake_chrono.h"
 #include "fake_device_config.h"
 #include "fake_log.h"
 #include "fake_shared.h"
@@ -165,21 +166,23 @@ struct ABacklightBrightnessControl : Test
 
     std::chrono::milliseconds duration_of(std::function<void()> const& func)
     {
-        auto start = std::chrono::steady_clock::now();
+        auto start = fake_chrono.steady_now();
         func();
         return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
+            fake_chrono.steady_now() - start);
     }
 
     rt::FakeDeviceConfig fake_device_config;
     FakeBacklight backlight;
     FakeLightSensor light_sensor;
     FakeAutobrightnessAlgorithm autobrightness_algorithm;
+    rt::FakeChrono fake_chrono;
     rt::FakeLog fake_log;
     repowerd::BacklightBrightnessControl brightness_control{
         rt::fake_shared(backlight), 
         rt::fake_shared(light_sensor), 
         rt::fake_shared(autobrightness_algorithm),
+        rt::fake_shared(fake_chrono),
         rt::fake_shared(fake_log),
         fake_device_config};
 
@@ -194,7 +197,7 @@ struct ABacklightBrightnessControl : Test
 
 MATCHER_P(IsAbout, a, "")
 {
-    return arg >= a && arg <= a + 50ms;
+    return arg >= a && arg <= a + 10ms;
 }
 
 }

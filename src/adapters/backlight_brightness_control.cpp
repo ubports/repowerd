@@ -20,6 +20,7 @@
 #include "backlight_brightness_control.h"
 #include "backlight.h"
 #include "brightness_params.h"
+#include "chrono.h"
 #include "event_loop_handler_registration.h"
 #include "light_sensor.h"
 
@@ -57,11 +58,13 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
     std::shared_ptr<Backlight> const& backlight,
     std::shared_ptr<LightSensor> const& light_sensor,
     std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
+    std::shared_ptr<Chrono> const& chrono,
     std::shared_ptr<Log> const& log,
     DeviceConfig const& device_config)
     : backlight{backlight},
       light_sensor{light_sensor},
       autobrightness_algorithm{autobrightness_algorithm},
+      chrono{chrono},
       log{log},
       ab_supported{autobrightness_algorithm->init(event_loop)},
       brightness_handler{null_handler},
@@ -209,7 +212,7 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
             current_brightness += step;
             if (current_brightness > brightness) current_brightness = brightness;
             set_brightness_value(current_brightness);
-            std::this_thread::sleep_for(step_time);
+            chrono->sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(step_time));
         }
     }
     else if (current_brightness > brightness)
@@ -219,7 +222,7 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
             current_brightness -= step;
             if (current_brightness < brightness) current_brightness = brightness;
             set_brightness_value(current_brightness);
-            std::this_thread::sleep_for(step_time);
+            chrono->sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(step_time));
         }
     }
 

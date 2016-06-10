@@ -170,7 +170,7 @@ void repowerd::DevAlarmWakeupService::reset_hardware_alarm()
     }
     else
     {
-        next_wakeup = to_timespec(system_clock::now());
+        next_wakeup = to_timespec(system_clock::time_point{});
     }
 
     ioctl_or_throw(
