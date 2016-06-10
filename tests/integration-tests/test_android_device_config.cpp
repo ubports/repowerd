@@ -20,7 +20,7 @@
 
 #include "fake_android_properties.h"
 #include "fake_log.h"
-#include "virtual_filesystem.h"
+#include "fake_filesystem.h"
 
 #include <algorithm>
 
@@ -79,9 +79,9 @@ struct AnAndroidDeviceConfig : Test
 {
     AnAndroidDeviceConfig()
     {
-        vfs1.add_file_with_contents("/config-default.xml", config_default1);
-        vfs1.add_file_with_contents("/config-device.xml", config_device);
-        vfs2.add_file_with_contents("/config-default.xml", config_default2);
+        fake_fs->add_file_with_contents("/configdir1/config-default.xml", config_default1);
+        fake_fs->add_file_with_contents("/configdir1/config-device.xml", config_device);
+        fake_fs->add_file_with_contents("/configdir2/config-default.xml", config_default2);
     }
 
     void set_device_name()
@@ -91,16 +91,18 @@ struct AnAndroidDeviceConfig : Test
 
     rt::FakeAndroidProperties fake_android_properties;
     std::shared_ptr<rt::FakeLog> fake_log{std::make_shared<rt::FakeLog>()};
-    rt::VirtualFilesystem vfs1;
-    rt::VirtualFilesystem vfs2;
-    rt::VirtualFilesystem vfs_empty;
+    std::shared_ptr<rt::FakeFilesystem> fake_fs{std::make_shared<rt::FakeFilesystem>()};
+    std::string const config_dir_1{"/configdir1"};
+    std::string const config_dir_2{"/configdir2"};
+    std::string const config_dir_empty{"/configdirempty"};
+    rt::FakeFilesystem fs;
 };
 
 }
 
 TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 {
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
     EXPECT_THAT(config.get("boolconfig", ""), StrEq("false"));
     EXPECT_THAT(config.get("integerconfig", ""), StrEq("4"));
@@ -110,7 +112,7 @@ TEST_F(AnAndroidDeviceConfig, reads_default_config_file)
 
 TEST_F(AnAndroidDeviceConfig, returns_default_value_for_unknown_key)
 {
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
     EXPECT_THAT(config.get("unknown", "bla"), StrEq("bla"));
 }
@@ -119,22 +121,23 @@ TEST_F(AnAndroidDeviceConfig, reads_first_default_config_file_from_config_dirs)
 {
     repowerd::AndroidDeviceConfig config{
         fake_log,
-        {vfs_empty.mount_point(), vfs2.mount_point(), vfs1.mount_point()}};
+        fake_fs,
+        {config_dir_empty, config_dir_2, config_dir_1}};
 
     EXPECT_THAT(config.get("id", ""), StrEq("2"));
 }
 
 TEST_F(AnAndroidDeviceConfig, logs_config_files_read)
 {
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
-    EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-default.xml")}));
+    EXPECT_TRUE(fake_log->contains_line({config_dir_1 + "/config-default.xml"}));
 }
 
 TEST_F(AnAndroidDeviceConfig, overwrites_value_from_default_with_device_specific)
 {
     set_device_name();
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
     EXPECT_THAT(config.get("boolconfig", ""), StrEq("true"));
     EXPECT_THAT(config.get("integerconfig", ""), StrEq("5"));
@@ -144,7 +147,7 @@ TEST_F(AnAndroidDeviceConfig, overwrites_value_from_default_with_device_specific
 TEST_F(AnAndroidDeviceConfig, keeps_value_only_in_default_or_device_specific)
 {
     set_device_name();
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
     EXPECT_THAT(config.get("integerconfigwithoutprefix", ""), StrEq("680"));
     EXPECT_THAT(config.get("integerconfigwithoutprefixnew", ""), StrEq("123"));
@@ -153,16 +156,16 @@ TEST_F(AnAndroidDeviceConfig, keeps_value_only_in_default_or_device_specific)
 TEST_F(AnAndroidDeviceConfig, logs_device_specific_file_path)
 {
     set_device_name();
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
-    EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-default.xml")}));
-    EXPECT_TRUE(fake_log->contains_line({vfs1.full_path("/config-device.xml")}));
+    EXPECT_TRUE(fake_log->contains_line({config_dir_1 + "/config-default.xml"}));
+    EXPECT_TRUE(fake_log->contains_line({config_dir_1 + "/config-device.xml"}));
 }
 
 TEST_F(AnAndroidDeviceConfig, logs_properties)
 {
     set_device_name();
-    repowerd::AndroidDeviceConfig config{fake_log, {vfs1.mount_point()}};
+    repowerd::AndroidDeviceConfig config{fake_log, fake_fs, {config_dir_1}};
 
     EXPECT_TRUE(fake_log->contains_line({"Property", "boolconfig", "true"}));
     EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfig", "5"}));

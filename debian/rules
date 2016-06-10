@@ -9,5 +9,4 @@
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-	    -DREPOWERD_DISABLE_FUSE_INTEGRATION_TESTS=ON \
 	    -DREPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS=ON

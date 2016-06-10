@@ -17,6 +17,7 @@
  */
 
 #include "dev_alarm_wakeup_service.h"
+#include "filesystem.h"
 
 #include <android/linux/android_alarm.h>
 
@@ -30,12 +31,15 @@ namespace
 {
 auto null_handler = [](auto){};
 
-void ioctl_or_throw(int fd, unsigned long request, void* args, char const* error_msg)
+void ioctl_or_throw(
+    repowerd::Filesystem& fs,
+    int fd, unsigned long request, void* args,
+    char const* error_msg)
 {
     int retval;
     do
     {
-        retval = args ? ioctl(fd, request, args) : ioctl(fd, request);
+        retval = fs.ioctl(fd, request, args);
     }
     while (retval < 0 && errno == EINTR);
 
@@ -44,8 +48,10 @@ void ioctl_or_throw(int fd, unsigned long request, void* args, char const* error
 }
 }
 
-repowerd::DevAlarmWakeupService::DevAlarmWakeupService(std::string const& dev_dir)
-    : dev_alarm_fd{open((dev_dir + "/alarm").c_str(), O_RDWR)},
+repowerd::DevAlarmWakeupService::DevAlarmWakeupService(
+    std::shared_ptr<Filesystem> const& filesystem)
+    : filesystem{filesystem},
+      dev_alarm_fd{filesystem->open("/dev/alarm", O_RDWR)},
       running{true},
       next_cookie{1},
       wakeup_handler{null_handler}
@@ -64,7 +70,7 @@ repowerd::DevAlarmWakeupService::DevAlarmWakeupService(std::string const& dev_di
             {
                 lock.unlock();
                 ioctl_or_throw(
-                    dev_alarm_fd, ANDROID_ALARM_WAIT, nullptr,
+                    *this->filesystem, dev_alarm_fd, ANDROID_ALARM_WAIT, nullptr,
                     "Failed to wait for alarm on /dev/alarm");
                 lock.lock();
                 if (running && !wakeups.empty())
@@ -168,6 +174,6 @@ void repowerd::DevAlarmWakeupService::reset_hardware_alarm()
     }
 
     ioctl_or_throw(
-        dev_alarm_fd, ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &next_wakeup,
+        *filesystem, dev_alarm_fd, ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &next_wakeup,
         "Failed to set alarm on /dev/alarm");
 }

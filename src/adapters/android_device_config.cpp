@@ -46,8 +46,10 @@ std::string determine_device_name()
 
 repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
     std::shared_ptr<Log> const& log,
+    std::shared_ptr<Filesystem> const& filesystem,
     std::vector<std::string> const& config_dirs)
-    : log{log}
+    : log{log},
+      filesystem{filesystem}
 {
     parse_first_matching_file_in_dirs(config_dirs, "config-default.xml");
 
@@ -74,7 +76,7 @@ void repowerd::AndroidDeviceConfig::parse_first_matching_file_in_dirs(
     for (auto const& config_dir : config_dirs)
     {
         auto const full_file_path = Path{config_dir}/filename;
-        if (full_file_path.is_regular_file())
+        if (filesystem->is_regular_file(full_file_path))
         {
             parse_file(full_file_path);
             break;
@@ -101,7 +103,8 @@ void repowerd::AndroidDeviceConfig::parse_file(std::string const& file)
             nullptr),
         g_markup_parse_context_free};
 
-    std::ifstream ifs{file};
+    auto const ifs_ptr = filesystem->istream(file);
+    auto& ifs = *ifs_ptr;
 
     std::array<char,4096> text;
 

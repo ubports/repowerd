@@ -27,6 +27,7 @@ class Backlight;
 class BacklightBrightnessControl;
 class BrightnessNotification;
 class DeviceConfig;
+class Filesystem;
 class LightSensor;
 class OfonoVoiceCallService;
 class UnityScreenService;
@@ -63,24 +64,26 @@ public:
 
     bool turn_on_display_at_startup() override;
 
-private:
     std::shared_ptr<Backlight> the_backlight();
     std::shared_ptr<BacklightBrightnessControl> the_backlight_brightness_control();
     std::shared_ptr<BrightnessNotification> the_brightness_notification();
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
+    std::shared_ptr<Filesystem> the_filesystem();
     std::shared_ptr<LightSensor> the_light_sensor();
     std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
     std::shared_ptr<WakeupService> the_wakeup_service();
 
+private:
     std::shared_ptr<Backlight> backlight;
     std::shared_ptr<BacklightBrightnessControl> backlight_brightness_control;
     std::shared_ptr<BrightnessControl> brightness_control;
     std::shared_ptr<BrightnessNotification> brightness_notification;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DisplayPowerControl> display_power_control;
+    std::shared_ptr<Filesystem> filesystem;
     std::shared_ptr<LightSensor> light_sensor;
     std::shared_ptr<Log> log;
     std::shared_ptr<ModemPowerControl> modem_power_control;

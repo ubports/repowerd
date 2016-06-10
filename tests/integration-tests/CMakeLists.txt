@@ -14,14 +14,6 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-pkg_check_modules(FUSE REQUIRED fuse)
-
-include_directories(
-    ${FUSE_INCLUDE_DIRS}
-)
-
-add_definitions(${FUSE_CFLAGS})
-
 add_executable(
     repowerd-integration-tests
 
@@ -30,6 +22,7 @@ add_executable(
     fake_android_properties.cpp
     fake_brightness_notification.cpp
     fake_device_config.cpp
+    fake_filesystem.cpp
     fake_libhardware.cpp
     fake_ofono.cpp
     fake_upower.cpp
@@ -38,7 +31,6 @@ add_executable(
     temporary_environment_value.cpp
     temporary_file.cpp
     unity_screen_dbus_client.cpp
-    virtual_filesystem.cpp
 
     test_android_backlight.cpp
     test_android_autobrightness_algorithm.cpp
@@ -49,6 +41,7 @@ add_executable(
     test_powerd_service.cpp
     test_backlight_brightness_control.cpp
     test_path.cpp
+    test_real_filesystem.cpp
     test_sysfs_backlight.cpp
     test_ubuntu_light_sensor.cpp
     test_ubuntu_proximity_sensor.cpp
@@ -57,7 +50,6 @@ add_executable(
     test_unity_screen_service.cpp
     test_unity_user_activity.cpp
     test_upower_power_source.cpp
-    test_virtual_filesystem.cpp
 )
 
 target_link_libraries(
@@ -70,12 +62,7 @@ target_link_libraries(
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARY}
     ${GMOCK_MAIN_LIBRARY}
-    ${FUSE_LDFLAGS} ${FUSE_LIBRARIES}
 )
-
-if (REPOWERD_DISABLE_FUSE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:AnAndroidDeviceConfig.*:ADevAlarmWakeupService.*:APath.*:ASysfsBacklight.*:AVirtualFilesystem.*")
-endif()
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)
     set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ABacklightBrightnessControl.transitions_between_zero_and_non_zero_brightness_in_100ms:ADevAlarmWakeupService.*:AnEventLoopTimer.*")

@@ -27,11 +27,12 @@
 
 namespace repowerd
 {
+class Filesystem;
 
 class DevAlarmWakeupService : public WakeupService
 {
 public:
-    DevAlarmWakeupService(std::string const& dev_dir);
+    DevAlarmWakeupService(std::shared_ptr<Filesystem> const& filesystem);
     ~DevAlarmWakeupService();
 
     std::string schedule_wakeup_at(std::chrono::system_clock::time_point tp) override;
@@ -43,6 +44,7 @@ public:
 private:
     void reset_hardware_alarm();
 
+    std::shared_ptr<Filesystem> const filesystem;
     Fd const dev_alarm_fd;
     std::thread wakeup_thread;
 

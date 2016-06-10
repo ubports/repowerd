@@ -18,37 +18,33 @@
 
 #pragma once
 
-#include "backlight.h"
-
-#include "path.h"
-
+#include <istream>
+#include <ostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace repowerd
 {
-class Log;
-class Filesystem;
+class Fd;
 
-class SysfsBacklight : public Backlight
+class Filesystem
 {
 public:
-    SysfsBacklight(
-        std::shared_ptr<Log> const& log,
-        std::shared_ptr<Filesystem> const& filesystem);
+    virtual ~Filesystem() = default;
 
-    void set_brightness(double) override;
-    double get_brightness() override;
+    virtual bool is_regular_file(std::string const& path) const = 0;
+    virtual std::unique_ptr<std::istream> istream(std::string const& path) const = 0;
+    virtual std::unique_ptr<std::ostream> ostream(std::string const& path) const = 0;
+    virtual std::vector<std::string> subdirs(std::string const& path) const = 0;
 
-private:
-    int absolute_brightness_for(double relative_brightness);
+    virtual Fd open(char const* pathname, int flags) const = 0;
+    virtual int ioctl(int fd, unsigned long request, void* args) const = 0;
 
-    std::shared_ptr<Filesystem> const filesystem;
-    Path const sysfs_backlight_dir;
-    Path const sysfs_brightness_file;
-    int const max_brightness;
-    double last_set_brightness;
+protected:
+    Filesystem() = default;
+    Filesystem(Filesystem const&) = delete;
+    Filesystem& operator=(Filesystem const&) = delete;
 };
 
 }
-

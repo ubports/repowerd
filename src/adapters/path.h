@@ -19,7 +19,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
 namespace repowerd
 {
@@ -28,10 +27,6 @@ class Path
 {
 public:
     Path(std::string const& path);
-
-    bool is_directory() const;
-    bool is_regular_file() const;
-    std::vector<Path> subdirs() const;
 
     operator std::string() const;
     Path operator/(std::string const& path) const;

@@ -38,6 +38,7 @@ set(
     null_log.cpp
     ofono_voice_call_service.cpp
     path.cpp
+    real_filesystem.cpp
     syslog_log.cpp
     sysfs_backlight.cpp
     system_shutdown_control.cpp

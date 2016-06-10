@@ -30,6 +30,7 @@
 #include "adapters/libsuspend_suspend_control.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
+#include "adapters/real_filesystem.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
 #include "adapters/system_shutdown_control.h"
@@ -350,7 +351,10 @@ repowerd::DefaultDaemonConfig::the_backlight()
         try
         {
             if (!backlight)
-                backlight = std::make_shared<SysfsBacklight>(the_log(), "/sys");
+            {
+                backlight = std::make_shared<SysfsBacklight>(
+                    the_log(), the_filesystem());
+            }
         }
         catch (std::exception const& e)
         {
@@ -412,11 +416,21 @@ repowerd::DefaultDaemonConfig::the_device_config()
     {
         device_config = std::make_shared<AndroidDeviceConfig>(
             the_log(),
+            the_filesystem(),
             std::vector<std::string>{
                 POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH});
     }
 
     return device_config;
+}
+
+std::shared_ptr<repowerd::Filesystem>
+repowerd::DefaultDaemonConfig::the_filesystem()
+{
+    if (!filesystem)
+        filesystem = std::make_shared<RealFilesystem>();
+
+    return filesystem;
 }
 
 std::shared_ptr<repowerd::LightSensor>
@@ -497,7 +511,7 @@ repowerd::DefaultDaemonConfig::the_wakeup_service()
     if (!wakeup_service)
     try
     {
-        wakeup_service = std::make_shared<DevAlarmWakeupService>("/dev");
+        wakeup_service = std::make_shared<DevAlarmWakeupService>(the_filesystem());
     }
     catch (std::exception const& e)
     {

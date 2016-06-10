@@ -18,7 +18,8 @@
 
 #include "src/adapters/dev_alarm_wakeup_service.h"
 
-#include "virtual_filesystem.h"
+#include "fake_filesystem.h"
+#include "fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,12 +38,10 @@ namespace
 
 struct FakeDevAlarm
 {
-    FakeDevAlarm()
+    FakeDevAlarm(rt::FakeFilesystem& fake_fs)
     {
-        vfs.add_file_read_write_ioctl(
-            "/alarm",
-            [](auto,auto,auto,auto){ return 0; },
-            [](auto,auto,auto,auto){ return 0; },
+        fake_fs.add_file_ioctl(
+            "/dev/alarm",
             [this](auto, auto cmd, auto arg)
             {
                 if (cmd == ANDROID_ALARM_WAIT)
@@ -90,7 +89,6 @@ struct FakeDevAlarm
         next_wakeup_tp = system_clock::time_point{duration_cast<system_clock::duration>(duration)};
     }
 
-    rt::VirtualFilesystem vfs;
     std::mutex next_wakeup_tp_mutex;
     std::chrono::system_clock::time_point next_wakeup_tp;
     bool fail_on_next_alarm_set_ = false;
@@ -113,8 +111,9 @@ struct ADevAlarmWakeupService : Test
         wakeup_cookies.push_back(cookie);
     }
 
-    FakeDevAlarm fake_dev_alarm;
-    repowerd::DevAlarmWakeupService wakeup_service{fake_dev_alarm.vfs.mount_point()};
+    rt::FakeFilesystem fake_fs;
+    FakeDevAlarm fake_dev_alarm{fake_fs};
+    repowerd::DevAlarmWakeupService wakeup_service{rt::fake_shared(fake_fs)};
     repowerd::HandlerRegistration handler_registration;
     std::vector<std::string> wakeup_cookies;
     std::vector<std::chrono::system_clock::time_point> wakeup_time_points;
@@ -208,8 +207,8 @@ TEST_F(ADevAlarmWakeupService, cancels_one_of_many_wakeups)
 TEST_F(ADevAlarmWakeupService, throws_if_cannot_open_dev_alarm_at_construction)
 {
     EXPECT_THROW({
-        rt::VirtualFilesystem empty_vfs;
-        repowerd::DevAlarmWakeupService wakeup_service{empty_vfs.mount_point()};
+        rt::FakeFilesystem empty_fs;
+        repowerd::DevAlarmWakeupService wakeup_service{rt::fake_shared(empty_fs)};
     }, std::exception);
 }
 
@@ -217,7 +216,7 @@ TEST_F(ADevAlarmWakeupService, throws_if_cannot_set_dev_alarm_at_construction)
 {
     EXPECT_THROW({
         fake_dev_alarm.fail_on_next_alarm_set();
-        repowerd::DevAlarmWakeupService wakeup_service{fake_dev_alarm.vfs.mount_point()};
+        repowerd::DevAlarmWakeupService wakeup_service{rt::fake_shared(fake_fs)};
     }, std::exception);
 }
 

@@ -19,14 +19,20 @@
 #pragma once
 
 #include <unistd.h>
+#include <functional>
 
 namespace repowerd
 {
+
+using FdCloseFunc = std::function<int(int)>;
 
 class Fd
 {
 public:
     Fd(int fd);
+    Fd(int fd, FdCloseFunc const& close_func);
+    Fd(Fd&&) = default;
+    Fd& operator=(Fd&&) = default;
     ~Fd();
 
     operator int() const;
@@ -36,6 +42,7 @@ private:
     Fd& operator=(Fd const&) = delete;
 
     int fd;
+    FdCloseFunc close_func;
 };
 
 }

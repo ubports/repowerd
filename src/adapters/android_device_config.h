@@ -19,6 +19,7 @@
 #pragma once
 
 #include "device_config.h"
+#include "filesystem.h"
 
 #include <glib.h>
 
@@ -35,6 +36,7 @@ class AndroidDeviceConfig : public DeviceConfig
 public:
     AndroidDeviceConfig(
         std::shared_ptr<Log> const& log,
+        std::shared_ptr<Filesystem> const& filesystem,
         std::vector<std::string> const& config_dirs);
 
     std::string get(
@@ -71,6 +73,7 @@ private:
     void log_properties();
 
     std::shared_ptr<Log> const log;
+    std::shared_ptr<Filesystem> const filesystem;
     std::string last_config_name;
     std::unordered_map<std::string,std::string> config;
 };

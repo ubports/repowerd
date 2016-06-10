@@ -16,28 +16,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "fd.h"
+#pragma once
 
-#include <unistd.h>
+#include "filesystem.h"
 
-repowerd::Fd::Fd(int fd)
-    : fd{fd},
-      close_func{close}
+namespace repowerd
 {
-}
 
-repowerd::Fd::Fd(int fd, FdCloseFunc const& close_func)
-    : fd{fd},
-      close_func{close_func}
+class RealFilesystem : public Filesystem
 {
-}
+public:
+    bool is_regular_file(std::string const& path) const override;
+    std::unique_ptr<std::istream> istream(std::string const& path) const override;
+    std::unique_ptr<std::ostream> ostream(std::string const& path) const override;
+    std::vector<std::string> subdirs(std::string const& path) const override;
 
-repowerd::Fd::~Fd()
-{
-    if (fd >= 0) close_func(fd);
-}
+    Fd open(char const* pathname, int flags) const override;
+    int ioctl(int fd, unsigned long request, void* args) const override;
+};
 
-repowerd::Fd::operator int() const
-{
-    return fd;
 }
