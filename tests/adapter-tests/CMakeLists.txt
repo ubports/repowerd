@@ -15,7 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_executable(
-    repowerd-integration-tests
+    repowerd-adapter-tests
 
     dbus_bus.cpp
     dbus_client.cpp
@@ -36,12 +36,13 @@ add_executable(
     test_android_backlight.cpp
     test_android_autobrightness_algorithm.cpp
     test_android_device_config.cpp
+    test_backlight_brightness_control.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp
+    test_monotone_spline.cpp
     test_ofono_voice_call_service.cpp
-    test_powerd_service.cpp
-    test_backlight_brightness_control.cpp
     test_path.cpp
+    test_powerd_service.cpp
     test_real_chrono.cpp
     test_real_filesystem.cpp
     test_sysfs_backlight.cpp
@@ -55,7 +56,7 @@ add_executable(
 )
 
 target_link_libraries(
-    repowerd-integration-tests
+    repowerd-adapter-tests
 
     repowerd-core
     repowerd-adapters
@@ -66,13 +67,13 @@ target_link_libraries(
     ${GMOCK_MAIN_LIBRARY}
 )
 
-if (REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS)
-    set(INTEGRATION_TESTS_FILTER "${INTEGRATION_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*")
+if (REPOWERD_DISABLE_TIME_SENSITIVE_TESTS)
+    set(ADAPTER_TESTS_FILTER "${ADAPTER_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*")
 endif()
 
 add_test(
-    repowerd-integration-tests
-    ${EXECUTABLE_OUTPUT_PATH}/repowerd-integration-tests --gtest_filter=-${INTEGRATION_TESTS_FILTER}
+    repowerd-adapter-tests
+    ${EXECUTABLE_OUTPUT_PATH}/repowerd-adapter-tests --gtest_filter=-${ADAPTER_TESTS_FILTER}
 )
 
-add_dependencies(repowerd-integration-tests GMock)
+add_dependencies(repowerd-adapter-tests GMock)

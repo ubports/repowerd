@@ -21,7 +21,6 @@ include_directories(
     common
 )
 
-add_subdirectory(acceptance-tests/)
+add_subdirectory(adapter-tests/)
+add_subdirectory(core-tests/)
 add_subdirectory(common/)
-add_subdirectory(integration-tests/)
-add_subdirectory(unit-tests/)

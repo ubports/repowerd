@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 option(REPOWERD_BUILD_TESTS "Build tests" ON)
-option(REPOWERD_DISABLE_TIME_SENSITIVE_INTEGRATION_TESTS "Don't run time-sensitive integration tests" OFF)
+option(REPOWERD_DISABLE_TIME_SENSITIVE_TESTS "Don't run time-sensitive tests" OFF)
 
 # Work around cmake setting conf dir to "/usr/etc" instead of "/etc"
 # when prefix is "/usr"

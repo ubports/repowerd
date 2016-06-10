@@ -15,10 +15,22 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_executable(
-    repowerd-acceptance-tests
+    repowerd-core-tests
 
     acceptance_test.cpp
+    daemon_config.cpp
+    fake_client_requests.cpp
+    fake_notification_service.cpp
+    fake_power_button.cpp
+    fake_power_source.cpp
+    fake_proximity_sensor.cpp
+    fake_timer.cpp
+    fake_user_activity.cpp
+    fake_voice_call_service.cpp
+
     test_client_requests.cpp
+    test_daemon.cpp
+    test_fake_timer.cpp
     test_modem_power_control.cpp
     test_notification.cpp
     test_performance_booster.cpp
@@ -32,7 +44,7 @@ add_executable(
 )
 
 target_link_libraries(
-    repowerd-acceptance-tests
+    repowerd-core-tests
 
     repowerd-core
     repowerd-test-common
@@ -42,6 +54,6 @@ target_link_libraries(
     ${GMOCK_MAIN_LIBRARY}
 )
 
-add_test(repowerd-acceptance-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-acceptance-tests)
+add_test(repowerd-core-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-core-tests)
 
-add_dependencies(repowerd-acceptance-tests GMock)
+add_dependencies(repowerd-core-tests GMock)
