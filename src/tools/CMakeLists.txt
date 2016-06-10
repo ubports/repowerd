@@ -25,6 +25,7 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 add_executable(
@@ -51,12 +52,14 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 add_executable(
     repowerd-power-source-tool
 
     power_source_tool.cpp
+    ../default_daemon_config.cpp
 )
 
 target_link_libraries(
@@ -64,6 +67,7 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 add_executable(
@@ -77,6 +81,7 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 add_executable(
@@ -90,6 +95,7 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 install(

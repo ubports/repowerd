@@ -25,10 +25,22 @@ add_subdirectory(core)
 add_subdirectory(adapters)
 add_subdirectory(tools)
 
+add_library(
+    repowerd-default-daemon-config STATIC
+
+    default_daemon_config.cpp
+)
+
+target_link_libraries(
+    repowerd-default-daemon-config
+
+    repowerd-core
+    repowerd-adapters
+)
+
 add_executable(
     repowerd
 
-    default_daemon_config.cpp
     main.cpp
 )
 
@@ -37,6 +49,7 @@ target_link_libraries(
 
     repowerd-core
     repowerd-adapters
+    repowerd-default-daemon-config
 )
 
 

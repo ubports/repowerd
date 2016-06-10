@@ -16,28 +16,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/upower_power_source.h"
-#include "src/adapters/console_log.h"
-#include "src/adapters/android_device_config.h"
+#include "src/default_daemon_config.h"
+#include "src/core/power_source.h"
 
-#include <gio/gio.h>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
 int main()
 {
-    auto const log = std::make_shared<repowerd::ConsoleLog>();
-    repowerd::AndroidDeviceConfig device_config{
-        log, {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
+    setenv("REPOWERD_LOG", "console", 1);
 
-    auto bus_cstr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SYSTEM, nullptr, nullptr);
-    std::string const bus{bus_cstr};
-    g_free(bus_cstr);
+    repowerd::DefaultDaemonConfig config;
+    auto const power_source = config.the_power_source();
 
-    repowerd::UPowerPowerSource power_source{log, device_config, bus};
-    power_source.start_processing();
+    power_source->start_processing();
 
-    auto registration = power_source.register_power_source_change_handler(
+    auto registration = power_source->register_power_source_change_handler(
         []
         {
             std::cout << "Power source changed" << std::endl;

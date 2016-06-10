@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/android_device_quirks.h"
-#include "src/adapters/console_log.h"
-#include "src/adapters/ubuntu_proximity_sensor.h"
+#include "src/default_daemon_config.h"
+#include "src/core/proximity_sensor.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -33,11 +33,12 @@ void print_proximity(std::string const& s, repowerd::ProximityState state)
 
 int main()
 {
-    auto log = std::make_shared<repowerd::ConsoleLog>();
-    repowerd::AndroidDeviceQuirks quirks;
-    repowerd::UbuntuProximitySensor sensor{log, quirks};
+    setenv("REPOWERD_LOG", "console", 1);
 
-    auto registration = sensor.register_proximity_handler(
+    repowerd::DefaultDaemonConfig config;
+    auto const proximity_sensor = config.the_proximity_sensor();
+
+    auto registration = proximity_sensor->register_proximity_handler(
         [] (repowerd::ProximityState state)
         {
             print_proximity("EVENT: ", state);
@@ -63,16 +64,16 @@ int main()
         else if (line == "d")
         {
             std::cout << "Disabling proximity events" << std::endl;
-            sensor.disable_proximity_events();
+            proximity_sensor->disable_proximity_events();
         }
         else if (line == "e")
         {
             std::cout << "Enabling proximity events" << std::endl;
-            sensor.enable_proximity_events();
+            proximity_sensor->enable_proximity_events();
         }
         else if (line == "s")
         {
-            print_proximity("STATE: ", sensor.proximity_state());
+            print_proximity("STATE: ", proximity_sensor->proximity_state());
         }
     }
 }

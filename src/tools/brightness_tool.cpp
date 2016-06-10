@@ -16,76 +16,19 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/android_autobrightness_algorithm.h"
-#include "src/adapters/android_backlight.h"
-#include "src/adapters/android_device_config.h"
-#include "src/adapters/backlight_brightness_control.h"
-#include "src/adapters/console_log.h"
-#include "src/adapters/sysfs_backlight.h"
-#include "src/adapters/ubuntu_light_sensor.h"
+#include "src/default_daemon_config.h"
+#include "src/core/brightness_control.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
-struct NullLightSensor : repowerd::LightSensor
-{
-    repowerd::HandlerRegistration register_light_handler(
-        repowerd::LightHandler const&) override
-    {
-        return repowerd::HandlerRegistration{[]{}};
-    }
-
-    void enable_light_events() override {}
-    void disable_light_events() override {}
-};
-
-auto create_backlight(std::shared_ptr<repowerd::Log> const& log)
-{
-    std::shared_ptr<repowerd::Backlight> backlight;
-
-    try
-    {
-        backlight = std::make_shared<repowerd::AndroidBacklight>();
-    }
-    catch (...)
-    {
-    }
-
-    if (!backlight)
-        backlight = std::make_shared<repowerd::SysfsBacklight>(log, "/sys");
-
-    return backlight;
-}
-
-auto create_light_sensor()
-{
-    std::shared_ptr<repowerd::LightSensor> light_sensor;
-
-    try
-    {
-        light_sensor = std::make_shared<repowerd::UbuntuLightSensor>();
-    }
-    catch (...)
-    {
-    }
-
-    if (!light_sensor)
-        light_sensor = std::make_shared<NullLightSensor>();
-
-    return light_sensor;
-}
-
 int main()
 {
-    auto const log = std::make_shared<repowerd::ConsoleLog>();
-    repowerd::AndroidDeviceConfig device_config{
-        log, {POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH}};
-    auto const backlight = create_backlight(log);
-    auto const light_sensor = create_light_sensor();
-    auto const ab_algorithm =
-        std::make_shared<repowerd::AndroidAutobrightnessAlgorithm>(device_config);
-    repowerd::BacklightBrightnessControl brightness_control{
-        backlight, light_sensor, ab_algorithm, log, device_config};
+    setenv("REPOWERD_LOG", "console", 1);
+
+    repowerd::DefaultDaemonConfig config;
+    auto const brightness_control = config.the_brightness_control();
 
     bool running = true;
 
@@ -110,38 +53,38 @@ int main()
         else if (line == "d")
         {
             std::cout << "Setting dim brightness" << std::endl;
-            brightness_control.set_dim_brightness();
+            brightness_control->set_dim_brightness();
         }
         else if (line == "n")
         {
             std::cout << "Setting normal brightness" << std::endl;
-            brightness_control.set_normal_brightness();
+            brightness_control->set_normal_brightness();
         }
         else if (line == "o")
         {
             std::cout << "Setting off brightness" << std::endl;
-            brightness_control.set_off_brightness();
+            brightness_control->set_off_brightness();
         }
         else if (line == "ae")
         {
             std::cout << "Enabling autobrightness" << std::endl;
-            brightness_control.enable_autobrightness();
+            brightness_control->enable_autobrightness();
         }
         else if (line == "ad")
         {
             std::cout << "Disabling autobrightness" << std::endl;
-            brightness_control.disable_autobrightness();
+            brightness_control->disable_autobrightness();
         }
         else if (line == "0")
         {
             std::cout << "Setting normal brightness value to 100%" << std::endl;
-            brightness_control.set_normal_brightness_value(1.0);
+            brightness_control->set_normal_brightness_value(1.0);
         }
         else if (line.size() == 1 && line[0] >= '1' && line[0] <= '9')
         {
             auto b = line[0] - '0';
             std::cout << "Setting normal brightness value to " << b*10 << "%" << std::endl;
-            brightness_control.set_normal_brightness_value(0.1*b);
+            brightness_control->set_normal_brightness_value(0.1*b);
         }
     }
 }

@@ -16,16 +16,21 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/ubuntu_light_sensor.h"
+#include "src/default_daemon_config.h"
+#include "src/adapters/light_sensor.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
 int main()
 {
-    repowerd::UbuntuLightSensor sensor;
+    setenv("REPOWERD_LOG", "console", 1);
 
-    auto registration = sensor.register_light_handler(
+    repowerd::DefaultDaemonConfig config;
+    auto const light_sensor = config.the_light_sensor();
+
+    auto registration = light_sensor->register_light_handler(
         [] (double light)
         {
             std::cout << "LIGHT: " << light << std::endl;
@@ -50,12 +55,12 @@ int main()
         else if (line == "d")
         {
             std::cout << "Disabling light events" << std::endl;
-            sensor.disable_light_events();
+            light_sensor->disable_light_events();
         }
         else if (line == "e")
         {
             std::cout << "Enabling light events" << std::endl;
-            sensor.enable_light_events();
+            light_sensor->enable_light_events();
         }
     }
 }

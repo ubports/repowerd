@@ -16,9 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/dev_alarm_wakeup_service.h"
+#include "src/default_daemon_config.h"
+#include "src/adapters/wakeup_service.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <vector>
 #include <future>
 #include <iostream>
@@ -57,7 +59,10 @@ void print_usage(std::string const& progname)
 
 int main(int argc, char** argv)
 {
-    repowerd::DevAlarmWakeupService wakeup_service{"/dev"};
+    setenv("REPOWERD_LOG", "console", 1);
+
+    repowerd::DefaultDaemonConfig config;
+    auto const wakeup_service = config.the_wakeup_service();
 
     auto const wakeups = parse_wakeups(argc, argv);
 
@@ -73,7 +78,7 @@ int main(int argc, char** argv)
     auto done_future = done.get_future();
 
     auto wakeup_count = 0u;
-    auto registration = wakeup_service.register_wakeup_handler(
+    auto registration = wakeup_service->register_wakeup_handler(
         [&] (std::string const& cookie)
         { 
             print_wakeup_event(cookie);
@@ -83,7 +88,7 @@ int main(int argc, char** argv)
 
     for (auto const& w : wakeups)
     {
-        wakeup_service.schedule_wakeup_at(
+        wakeup_service->schedule_wakeup_at(
             std::chrono::system_clock::now() + std::chrono::seconds{w});
     }
 
