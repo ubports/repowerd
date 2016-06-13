@@ -48,6 +48,8 @@ public:
     void enable_proximity_events() override;
     void disable_proximity_events() override;
 
+    void emit_proximity_event(ProximityState state);
+
 private:
     enum class EnablementMode{with_handler, without_handler};
 

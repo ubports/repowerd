@@ -114,6 +114,12 @@ void repowerd::UbuntuProximitySensor::disable_proximity_events()
         }).get();
 }
 
+void repowerd::UbuntuProximitySensor::emit_proximity_event(
+    repowerd::ProximityState state)
+{
+    event_loop.enqueue([this, state] { handle_proximity_event(state); }).get();
+}
+
 void repowerd::UbuntuProximitySensor::static_sensor_reading_callback(
     UASProximityEvent* event, void* context)
 {
@@ -128,6 +134,13 @@ void repowerd::UbuntuProximitySensor::static_sensor_reading_callback(
 
 void repowerd::UbuntuProximitySensor::handle_proximity_event(ProximityState new_state)
 {
+    if (!is_enabled())
+    {
+        log->log(log_tag, "handle_proximity_event(%s): ignoring event, sensor is disabled",
+                 proximity_state_to_cstr(new_state));
+        return;
+    }
+
     log->log(log_tag, "handle_proximity_event(%s)",
              proximity_state_to_cstr(new_state));
 

@@ -47,16 +47,16 @@ struct StubDeviceQuirks : repowerd::DeviceQuirks
 
     repowerd::DeviceQuirks::ProximityEventType synthetic_initial_proximity_event_type() const override
     {
-        return synthetic_initial_far_event_type_;
+        return synthetic_initial_event_type_;
     }
 
     void set_synthetic_initial_event_type_near()
     {
-        synthetic_initial_far_event_type_ = repowerd::DeviceQuirks::ProximityEventType::near;
+        synthetic_initial_event_type_ = repowerd::DeviceQuirks::ProximityEventType::near;
     }
 
 private:
-    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_far_event_type_{
+    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_event_type_{
         repowerd::DeviceQuirks::ProximityEventType::far};
 };
 
@@ -247,5 +247,21 @@ TEST_F(AUbuntuProximitySensor, logs_enable_and_disable_proximity_events)
 
         sensor->disable_proximity_events();
         EXPECT_TRUE(fake_log.contains_line({"disable", "proximity_events"}));
+    });
+}
+
+TEST_F(AUbuntuProximitySensor, ignores_stray_proximity_events_when_disabled)
+{
+    TEST_IN_SEPARATE_PROCESS({
+        EXPECT_CALL(mock_handlers, proximity_handler(_)).Times(0);
+
+        set_up_sensor(
+            "create proximity\n");
+
+        sensor->emit_proximity_event(repowerd::ProximityState::near);
+        EXPECT_TRUE(fake_log.contains_line({"handle_proximity_event", "near", "ignoring"}));
+
+        EXPECT_THAT(sensor->proximity_state(), Eq(repowerd::ProximityState::far));
+        std::this_thread::sleep_for(std::chrono::milliseconds{1100});
     });
 }
