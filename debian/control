@@ -3,6 +3,7 @@ Priority: optional
 Section: admin
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
+               dh-systemd,
                android-headers,
                cmake,
                dbus,
@@ -58,7 +59,7 @@ Description: Power daemon to monitor and control system power state
 Package: powerd
 Architecture: all
 Depends: ${misc:Depends},
-         repowerd (= ${source:Version})
+         repowerd (>= ${source:Version})
 Section: oldlibs
 Description: Transitional dummy package
  This is a transitional dummy package.
