@@ -1,6 +1,6 @@
 [Unit]
 Description=monitor and control system power state
-Requires=lxc-android-config.service
+Wants=lxc-android-config.service
 After=lxc-android-config.service
 
 [Service]
