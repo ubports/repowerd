@@ -33,6 +33,7 @@
 #include <thread>
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 
 namespace rt = repowerd::test;
 
@@ -67,7 +68,8 @@ public:
         auto steps = brightness_history;
         std::adjacent_difference(steps.begin(), steps.end(), steps.begin());
         steps.erase(steps.begin());
-        std::transform(steps.begin(), steps.end(), steps.begin(), fabs);
+        std::transform(steps.begin(), steps.end(), steps.begin(),
+                       [](auto s) { return std::fabs(s); });
         return steps;
     }
 

@@ -19,6 +19,8 @@
 #include "fake_filesystem.h"
 #include "src/adapters/fd.h"
 
+#include <gtest/gtest.h>
+
 #include <sstream>
 #include <stdexcept>
 
@@ -78,8 +80,7 @@ private:
 
 repowerd::test::FakeFilesystem::~FakeFilesystem()
 {
-    if (!paths.empty())
-        throw std::runtime_error("Open files at exit");
+    EXPECT_TRUE(paths.empty()) << "Open files at exit";
 }
 
 bool repowerd::test::FakeFilesystem::is_regular_file(
