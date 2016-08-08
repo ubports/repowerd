@@ -3,8 +3,9 @@ repowerd (2016.06-0ubuntu2) yakkety; urgency=medium
   * debian/repowerd.service:
     - Make service dependency on lxc-android-config.service optional
       ('Wants' instead of 'Requires')
+    - Silently fail if lxc-android-config.service is missing
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 25 Jul 2016 17:07:17 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 08 Aug 2016 11:50:50 +0300
 
 repowerd (2016.06+16.10.20160706.1-0ubuntu1) yakkety; urgency=medium
 
