@@ -83,14 +83,14 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     {
         log->log(log_tag, "handle_alarm(display_dim)");
         user_inactivity_display_dim_alarm_id = AlarmId::invalid;
-        if (is_inactivity_timeout_allowed())
+        if (is_inactivity_timeout_application_allowed())
             dim_display();
     }
     else if (id == user_inactivity_display_off_alarm_id)
     {
         log->log(log_tag, "handle_alarm(display_off)");
         user_inactivity_display_off_alarm_id = AlarmId::invalid;
-        if (is_inactivity_timeout_allowed())
+        if (is_inactivity_timeout_application_allowed())
             turn_off_display(DisplayPowerChangeReason::activity);
         scheduled_timeout_type = ScheduledTimeoutType::none;
     }
@@ -149,7 +149,7 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
     }
     else
     {
-        turn_on_display_without_timeout(DisplayPowerChangeReason::notification);
+        turn_on_display_without_timeout(DisplayPowerChangeReason::unknown);
     }
 }
 
@@ -301,6 +301,7 @@ void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
     {
         brighten_display();
         schedule_normal_user_inactivity_alarm();
+        display_power_mode_reason = DisplayPowerChangeReason::activity;
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {
@@ -316,6 +317,7 @@ void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
     {
         brighten_display();
         schedule_normal_user_inactivity_alarm();
+        display_power_mode_reason = DisplayPowerChangeReason::activity;
     }
 }
 
@@ -396,6 +398,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
     if (reason != DisplayPowerChangeReason::proximity)
         modem_power_control->set_low_power_mode();
     display_power_mode = DisplayPowerMode::off;
+    display_power_mode_reason = reason;
     cancel_user_inactivity_alarm();
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
@@ -410,6 +413,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
     performance_booster->enable_interactive_mode();
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;
+    display_power_mode_reason = reason;
     brighten_display();
     modem_power_control->set_normal_power_mode();
     display_power_event_sink->notify_display_power_on(reason);
@@ -466,20 +470,21 @@ bool repowerd::DefaultStateMachine::is_inactivity_timeout_allowed()
     auto const client = inactivity_timeout_allowances[InactivityTimeoutAllowance::client];
     auto const notification = inactivity_timeout_allowances[InactivityTimeoutAllowance::notification];
 
-    if (!notification)
-    {
-        return false;
-    }
-    else if (!client &&
-             (scheduled_timeout_type == ScheduledTimeoutType::normal ||
-              scheduled_timeout_type == ScheduledTimeoutType::none))
-    {
-        return false;
-    }
-    else
+    return notification && client;
+}
+
+bool repowerd::DefaultStateMachine::is_inactivity_timeout_application_allowed()
+{
+    if (is_inactivity_timeout_allowed())
+        return true;
+
+    if (display_power_mode_reason == DisplayPowerChangeReason::notification ||
+        display_power_mode_reason == DisplayPowerChangeReason::call)
     {
         return true;
     }
+
+    return false;
 }
 
 void repowerd::DefaultStateMachine::enable_proximity(

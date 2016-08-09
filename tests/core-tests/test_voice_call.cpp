@@ -91,7 +91,7 @@ TEST_F(AVoiceCall, enables_proximity_events)
     verify_expectations();
 }
 
-TEST_F(AVoiceCall, when_done_turns_on_display_with_reduced_timeout)
+TEST_F(AVoiceCall, when_done_turns_off_display_with_reduced_timeout)
 {
     emit_active_call();
     advance_time_by(user_inactivity_normal_display_off_timeout);
@@ -148,6 +148,38 @@ TEST_F(AVoiceCall, when_done_disables_proximity_events)
     emit_proximity_state_far_if_enabled();
     verify_expectations();
 }
+
+TEST_F(AVoiceCall, when_done_turns_off_screen_if_client_has_disabled_inactivity_timeout_and_display_was_off)
+{
+    expect_display_turns_on();
+    client_request_disable_inactivity_timeout();
+    verify_expectations();
+
+    turn_off_display();
+
+    expect_display_turns_on();
+    emit_active_call();
+    expect_display_brightens();
+    emit_no_active_call();
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+}
+
+TEST_F(AVoiceCall,
+       when_done_does_not_turn_off_display_if_a_client_has_disabled_inactivity_timeout_and_the_display_was_on)
+{
+    expect_display_turns_on();
+    client_request_disable_inactivity_timeout();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_active_call();
+    emit_no_active_call();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+}
+
 
 TEST_F(AVoiceCall, event_notifies_of_display_power_change)
 {

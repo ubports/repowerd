@@ -79,6 +79,30 @@ TEST_F(APowerSource, change_extends_timeout_if_display_is_already_on)
     advance_time_by(1ms);
 }
 
+TEST_F(APowerSource, change_does_not_turn_off_display_if_inactivity_timeout_is_disabled_and_display_was_on)
+{
+    client_request_disable_inactivity_timeout();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    emit_power_source_change();
+    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    verify_expectations();
+}
+
+TEST_F(APowerSource, change_turns_off_display_if_inactivity_timeout_is_disabled_and_display_was_off)
+{
+    client_request_disable_inactivity_timeout();
+    turn_off_display();
+
+    expect_display_turns_on();
+    emit_power_source_change();
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_reduced_display_off_timeout);
+}
+
 TEST_F(APowerSource, critical_state_powers_off_system)
 {
     expect_system_powers_off();

@@ -83,6 +83,7 @@ private:
     void allow_inactivity_timeout(InactivityTimeoutAllowance allowance);
     void disallow_inactivity_timeout(InactivityTimeoutAllowance allowance);
     bool is_inactivity_timeout_allowed();
+    bool is_inactivity_timeout_application_allowed();
     void enable_proximity(ProximityEnablement enablement);
     void disable_proximity(ProximityEnablement enablement);
     bool is_proximity_enabled();
@@ -104,6 +105,7 @@ private:
     std::array<bool,ProximityEnablement::count> proximity_enablements;
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_button_press;
+    DisplayPowerChangeReason display_power_mode_reason;
     AlarmId power_button_long_press_alarm_id;
     bool power_button_long_press_detected;
     std::chrono::milliseconds power_button_long_press_timeout;
