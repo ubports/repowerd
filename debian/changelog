@@ -1,11 +1,19 @@
-repowerd (2016.06-0ubuntu2) yakkety; urgency=medium
+repowerd (2016.08-0ubuntu1) yakkety; urgency=medium
+
+  * New 2016.08 release
+    - Fix "suspends during video playback when USB gets unplugged"
+      (LP: #1602933)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 10 Aug 2016 14:20:12 +0300
+
+repowerd (2016.06+16.10.20160808-0ubuntu1) yakkety; urgency=medium
 
   * debian/repowerd.service:
     - Make service dependency on lxc-android-config.service optional
       ('Wants' instead of 'Requires')
     - Silently fail if lxc-android-config.service is missing
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 08 Aug 2016 11:50:50 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 08 Aug 2016 08:59:28 +0000
 
 repowerd (2016.06+16.10.20160706.1-0ubuntu1) yakkety; urgency=medium
 
