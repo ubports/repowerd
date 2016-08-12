@@ -68,7 +68,7 @@ TEST_F(AClientRequest, to_disable_inactivity_timeout_does_not_affect_power_butto
     release_power_button();
 }
 
-TEST_F(AClientRequest, to_enable_inactivity_timeout_turns_off_display_immediately_if_inactivity_timeout_has_expired)
+TEST_F(AClientRequest, to_enable_inactivity_timeout_turns_off_display_after_normal_timeout_if_inactivity_timeout_has_expired)
 {
     turn_on_display();
 
@@ -77,12 +77,17 @@ TEST_F(AClientRequest, to_enable_inactivity_timeout_turns_off_display_immediatel
     advance_time_by(user_inactivity_normal_display_off_timeout);
     verify_expectations();
 
-    expect_display_turns_off();
+    expect_no_display_power_change();
     client_request_enable_inactivity_timeout();
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
 }
 
 TEST_F(AClientRequest,
-       to_enable_inactivity_timeout_turns_off_display_after_existing_inactivity_timeout_expires)
+       to_enable_inactivity_timeout_turns_off_display_extends_existing_inactivity_timeout)
 {
     turn_on_display();
 
@@ -90,6 +95,7 @@ TEST_F(AClientRequest,
     client_request_disable_inactivity_timeout();
     advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     client_request_enable_inactivity_timeout();
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
     expect_display_turns_off();

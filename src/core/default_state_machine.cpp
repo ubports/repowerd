@@ -451,10 +451,17 @@ void repowerd::DefaultStateMachine::allow_inactivity_timeout(
         inactivity_timeout_allowances[allowance] = true;
 
         if (is_inactivity_timeout_allowed() &&
-            display_power_mode == DisplayPowerMode::on &&
-            scheduled_timeout_type == ScheduledTimeoutType::none)
+            display_power_mode == DisplayPowerMode::on)
         {
-            turn_off_display(DisplayPowerChangeReason::activity);
+            if (allowance == InactivityTimeoutAllowance::notification &&
+                scheduled_timeout_type == ScheduledTimeoutType::none)
+            {
+                turn_off_display(DisplayPowerChangeReason::activity);
+            }
+            else if (allowance == InactivityTimeoutAllowance::client)
+            {
+                schedule_normal_user_inactivity_alarm();
+            }
         }
     }
 }
