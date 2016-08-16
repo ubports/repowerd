@@ -1,10 +1,18 @@
-repowerd (2016.08-0ubuntu1) yakkety; urgency=medium
+repowerd (2016.08.1-0ubuntu1) yakkety; urgency=medium
+
+  * New 2016.08.1 release
+    - Fix "Display turns off right after playing back a long video"
+      (LP: #1602739)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 16 Aug 2016 14:23:54 +0300
+
+repowerd (2016.08+16.10.20160811-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.08 release
     - Fix "suspends during video playback when USB gets unplugged"
       (LP: #1602933)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 10 Aug 2016 14:20:12 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 11 Aug 2016 14:17:03 +0000
 
 repowerd (2016.06+16.10.20160808-0ubuntu1) yakkety; urgency=medium
 
