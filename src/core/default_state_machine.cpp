@@ -94,6 +94,12 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
             turn_off_display(DisplayPowerChangeReason::activity);
         scheduled_timeout_type = ScheduledTimeoutType::none;
     }
+    else if (id == proximity_disable_alarm_id)
+    {
+        log->log(log_tag, "handle_alarm(proximity_disable)");
+        proximity_disable_alarm_id = AlarmId::invalid;
+        disable_proximity(ProximityEnablement::until_far_event_or_timeout);
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_active_call()
@@ -122,9 +128,17 @@ void repowerd::DefaultStateMachine::handle_no_active_call()
         brighten_display();
         schedule_reduced_user_inactivity_alarm();
     }
-    else if (proximity_sensor->proximity_state() == ProximityState::far)
+    else
     {
-        turn_on_display_with_reduced_timeout(DisplayPowerChangeReason::call_done);
+        if (proximity_sensor->proximity_state() == ProximityState::far)
+        {
+            turn_on_display_with_reduced_timeout(DisplayPowerChangeReason::call_done);
+        }
+        else
+        {
+            enable_proximity(ProximityEnablement::until_far_event_or_timeout);
+            schedule_proximity_disable_alarm();
+        }
     }
 
     disable_proximity(ProximityEnablement::until_disabled);
@@ -263,6 +277,7 @@ void repowerd::DefaultStateMachine::handle_proximity_far()
 
     auto const use_reduced_timeout = is_proximity_enabled_only_until_far_event();
     disable_proximity(ProximityEnablement::until_far_event);
+    disable_proximity(ProximityEnablement::until_far_event_or_timeout);
 
     if (display_power_mode == DisplayPowerMode::off)
     {
@@ -388,6 +403,15 @@ void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
         user_inactivity_display_off_time_point = tp;
         scheduled_timeout_type = ScheduledTimeoutType::reduced;
     }
+}
+
+void repowerd::DefaultStateMachine::schedule_proximity_disable_alarm()
+{
+    if (proximity_disable_alarm_id != AlarmId::invalid)
+        timer->cancel_alarm(proximity_disable_alarm_id);
+
+    proximity_disable_alarm_id =
+        timer->schedule_alarm_in(user_inactivity_reduced_display_off_timeout);
 }
 
 void repowerd::DefaultStateMachine::turn_off_display(

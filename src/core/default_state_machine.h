@@ -65,7 +65,7 @@ private:
     };
     using InactivityTimeoutAllowance = InactivityTimeoutAllowanceEnum::Allowance;
     struct ProximityEnablementEnum {
-        enum Enablement {until_far_event, until_disabled, count};
+        enum Enablement {until_far_event, until_disabled, until_far_event_or_timeout, count};
     };
     using ProximityEnablement = ProximityEnablementEnum::Enablement;
     enum class ScheduledTimeoutType {none, normal, post_notification, reduced};
@@ -74,6 +74,7 @@ private:
     void schedule_normal_user_inactivity_alarm();
     void schedule_post_notification_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
+    void schedule_proximity_disable_alarm();
     void turn_off_display(DisplayPowerChangeReason reason);
     void turn_on_display_without_timeout(DisplayPowerChangeReason reason);
     void turn_on_display_with_normal_timeout(DisplayPowerChangeReason reason);
@@ -111,6 +112,7 @@ private:
     std::chrono::milliseconds power_button_long_press_timeout;
     AlarmId user_inactivity_display_dim_alarm_id;
     AlarmId user_inactivity_display_off_alarm_id;
+    AlarmId proximity_disable_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout;

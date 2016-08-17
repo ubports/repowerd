@@ -181,6 +181,53 @@ TEST_F(AVoiceCall,
 }
 
 
+TEST_F(AVoiceCall,
+       when_done_enables_one_off_proximity_far_event_if_display_is_off)
+{
+    turn_on_display();
+
+    expect_display_turns_off();
+    emit_active_call();
+    emit_proximity_state_near_if_enabled();
+    emit_no_active_call();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_on();
+    emit_proximity_state_far_if_enabled();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_proximity_state_near_if_enabled();
+    emit_proximity_state_far_if_enabled();
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+}
+
+TEST_F(AVoiceCall,
+       when_done_enables_one_off_proximity_far_event_if_display_is_off_which_expires_after_reduced_timeout)
+{
+    turn_on_display();
+
+    expect_display_turns_off();
+    emit_active_call();
+    emit_proximity_state_near_if_enabled();
+    emit_no_active_call();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(user_inactivity_reduced_display_off_timeout);
+    emit_proximity_state_far_if_enabled();
+    emit_proximity_state_near_if_enabled();
+    emit_proximity_state_far_if_enabled();
+}
+
 TEST_F(AVoiceCall, event_notifies_of_display_power_change)
 {
     expect_display_power_on_notification(
