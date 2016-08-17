@@ -320,13 +320,13 @@ repowerd::DefaultDaemonConfig::user_inactivity_normal_display_off_timeout()
 std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::user_inactivity_post_notification_display_off_timeout()
 {
-    return 3s;
+    return 5s;
 }
 
 std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
 {
-    return 8s;
+    return 10s;
 }
 
 bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()
