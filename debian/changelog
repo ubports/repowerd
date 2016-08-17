@@ -3,6 +3,8 @@ repowerd (2016.08.1-0ubuntu1) yakkety; urgency=medium
   * New 2016.08.1 release
     - Fix "Display turns off right after playing back a long video"
       (LP: #1602739)
+    - Fix "call screen still turns off after rejecting the call on
+      the remote end without answering." (LP: #1613506)
 
  -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 16 Aug 2016 14:23:54 +0300
 
