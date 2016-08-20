@@ -43,6 +43,7 @@ private:
     UASensorsLight* const sensor;
     EventLoop event_loop;
     LightHandler handler;
+    bool enabled;
 };
 
 }

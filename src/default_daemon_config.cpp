@@ -372,10 +372,15 @@ repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
 {
     if (!backlight_brightness_control)
     {
+        auto const ab_log_env_cstr = getenv("REPOWERD_LOG_AUTOBRIGHTNESS");
+        std::string const ab_log_env{ab_log_env_cstr ? ab_log_env_cstr : ""};
+
+        auto const ab_log = ab_log_env.empty() ? std::make_shared<NullLog>() : the_log();
+
         backlight_brightness_control = std::make_shared<BacklightBrightnessControl>(
             the_backlight(),
             the_light_sensor(),
-            std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config()),
+            std::make_shared<AndroidAutobrightnessAlgorithm>(*the_device_config(), ab_log), 
             the_chrono(),
             the_log(),
             *the_device_config());

@@ -71,6 +71,7 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
       dim_brightness{dim_brightness_percent(device_config)},
       normal_brightness{normal_brightness_percent(device_config)},
       user_normal_brightness{normal_brightness},
+      active_brightness_type{ActiveBrightnessType::off},
       ab_active{false}
 {
     if (ab_supported)
@@ -80,17 +81,25 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
             {
                 if (ab_active)
                 {
+                    this->log->log(log_tag, "new_autobrightness_value(%.2f)", brightness);
+
                     normal_brightness = brightness;
 
-                    if (normal_brightness_active)
+                    if (active_brightness_type == ActiveBrightnessType::normal)
+                    {
                         transition_to_brightness_value(normal_brightness, TransitionSpeed::slow);
+                    }
                 }
             });
 
         light_handler_registration = light_sensor->register_light_handler(
             [this] (double light)
             {
-                this->autobrightness_algorithm->new_light_value(light);
+                event_loop.enqueue(
+                    [this, light]
+                    {
+                        this->autobrightness_algorithm->new_light_value(light);
+                    });
             });
     }
 }
@@ -104,10 +113,11 @@ void repowerd::BacklightBrightnessControl::disable_autobrightness()
         {
             if (ab_active)
             {
+                autobrightness_algorithm->stop();
                 light_sensor->disable_light_events();
                 normal_brightness = user_normal_brightness;
                 ab_active = false;
-                if (normal_brightness_active)
+                if (active_brightness_type == ActiveBrightnessType::normal)
                     transition_to_brightness_value(normal_brightness, TransitionSpeed::slow);
             }
         }).get();
@@ -122,8 +132,11 @@ void repowerd::BacklightBrightnessControl::enable_autobrightness()
         { 
             if (!ab_active)
             {
-                autobrightness_algorithm->reset();
-                light_sensor->enable_light_events();
+                if (active_brightness_type == ActiveBrightnessType::normal)
+                {
+                    autobrightness_algorithm->start();
+                    light_sensor->enable_light_events();
+                }
                 ab_active = true;
             }
         }).get();
@@ -135,7 +148,7 @@ void repowerd::BacklightBrightnessControl::set_dim_brightness()
         [this]
         { 
             transition_to_brightness_value(dim_brightness, TransitionSpeed::normal);
-            normal_brightness_active = false;
+            active_brightness_type = ActiveBrightnessType::dim;
         }).get();
 }
 
@@ -144,8 +157,17 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness()
     event_loop.enqueue(
         [this]
         { 
-            transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
-            normal_brightness_active = true;
+            if (ab_active && active_brightness_type == ActiveBrightnessType::off)
+            {
+                autobrightness_algorithm->start();
+                light_sensor->enable_light_events();
+            }
+            else
+            {
+                transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
+            }
+
+            active_brightness_type = ActiveBrightnessType::normal;
         }).get();
 }
 
@@ -155,7 +177,7 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness_value(double v)
         [this,v]
         { 
             user_normal_brightness = v;
-            if (normal_brightness_active && !ab_active)
+            if (active_brightness_type == ActiveBrightnessType::normal && !ab_active)
             {
                 normal_brightness = user_normal_brightness;
                 transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
@@ -169,7 +191,9 @@ void repowerd::BacklightBrightnessControl::set_off_brightness()
         [this]
         { 
             transition_to_brightness_value(0, TransitionSpeed::normal);
-            normal_brightness_active = false;
+            active_brightness_type = ActiveBrightnessType::off;
+            autobrightness_algorithm->stop();
+            light_sensor->disable_light_events();
         }).get();
 }
 
@@ -191,7 +215,7 @@ void repowerd::BacklightBrightnessControl::transition_to_brightness_value(
     auto const starting_brightness =
         backlight_brightness == Backlight::unknown_brightness ?
         brightness - step : backlight_brightness;
-    auto const num_steps = fabs(starting_brightness - brightness) / step;
+    auto const num_steps = std::ceil(std::fabs(starting_brightness - brightness) / step);
     auto const step_time = (transition_speed == TransitionSpeed::slow ||
                             starting_brightness == 0.0
                             || brightness == 0.0) ?

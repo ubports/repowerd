@@ -129,14 +129,20 @@ public:
         light_history.push_back(light);
     }
 
-    void reset() override
+    void start() override
     {
-        mock.reset();
+        mock.start();
+    }
+
+    void stop() override
+    {
+        mock.stop();
     }
 
     struct MockMethods
     {
-        MOCK_METHOD0(reset, void());
+        MOCK_METHOD0(start, void());
+        MOCK_METHOD0(stop, void());
     };
     NiceMock<MockMethods> mock;
 
@@ -276,7 +282,7 @@ TEST_F(ABacklightBrightnessControl,
 }
 
 TEST_F(ABacklightBrightnessControl,
-       ignores_light_events_when_autobrightness_is_disabled)
+       disables_light_events_when_autobrightness_is_disabled)
 {
     light_sensor.emit_light_if_enabled(500.0);
 
@@ -284,22 +290,54 @@ TEST_F(ABacklightBrightnessControl,
 }
 
 TEST_F(ABacklightBrightnessControl,
-       processes_light_events_when_autobrightness_is_enabled)
+       enables_light_events_when_autobrightness_enabled_while_in_normal_mode)
 {
+    brightness_control.set_normal_brightness();
     brightness_control.enable_autobrightness();
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(1));
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
 }
 
 TEST_F(ABacklightBrightnessControl,
-       updates_brightness_from_autobrightness_algorithm_if_enabled_and_in_normal_mode)
+       enables_light_events_when_set_to_normal_mode_while_autobrightness_enabled)
+{
+    brightness_control.enable_autobrightness();
+    brightness_control.set_normal_brightness();
+    light_sensor.emit_light_if_enabled(500.0);
+
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+}
+
+TEST_F(ABacklightBrightnessControl,
+       updates_brightness_from_autobrightness_algorithm_when_enabled_while_in_normal_mode)
+{
+    brightness_control.set_normal_brightness();
+    brightness_control.enable_autobrightness();
+    autobrightness_algorithm.emit_autobrightness(0.7);
+
+    expect_brightness_value(0.7);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       updates_brightness_from_autobrightness_algorithm_when_set_to_normal_mode_while_enabled)
 {
     brightness_control.enable_autobrightness();
     brightness_control.set_normal_brightness();
     autobrightness_algorithm.emit_autobrightness(0.7);
 
     expect_brightness_value(0.7);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       does_not_set_user_brightness_if_autobrightness_enabled_when_set_to_normal_mode)
+{
+    auto const prev_history_size = backlight.brightness_history.size();
+
+    brightness_control.enable_autobrightness();
+    brightness_control.set_normal_brightness();
+
+    EXPECT_THAT(backlight.brightness_history.size(), Eq(prev_history_size));
 }
 
 TEST_F(ABacklightBrightnessControl,
@@ -363,12 +401,56 @@ TEST_F(ABacklightBrightnessControl,
 }
 
 TEST_F(ABacklightBrightnessControl,
-       resets_autobrightness_algorithm_when_first_enabling_autobrightness)
+       starts_autobrightness_algorithm_when_first_enabling_autobrightness)
 {
-    EXPECT_CALL(autobrightness_algorithm.mock, reset()).Times(1);
+    EXPECT_CALL(autobrightness_algorithm.mock, start()).Times(1);
+    brightness_control.set_normal_brightness();
     brightness_control.enable_autobrightness();
     brightness_control.enable_autobrightness();
     Mock::VerifyAndClearExpectations(&autobrightness_algorithm.mock);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       stops_autobrightness_algorithm_when_first_disabling_autobrightness)
+{
+    EXPECT_CALL(autobrightness_algorithm.mock, start()).Times(1);
+    EXPECT_CALL(autobrightness_algorithm.mock, stop()).Times(1);
+    brightness_control.set_normal_brightness();
+    brightness_control.enable_autobrightness();
+    brightness_control.disable_autobrightness();
+    brightness_control.disable_autobrightness();
+    Mock::VerifyAndClearExpectations(&autobrightness_algorithm.mock);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       stops_autobrightness_algorithm_when_setting_off_brightness)
+{
+    EXPECT_CALL(autobrightness_algorithm.mock, stop()).Times(1);
+    brightness_control.set_off_brightness();
+    Mock::VerifyAndClearExpectations(&autobrightness_algorithm.mock);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       starts_autobrightness_algorithm_when_setting_normal_brightness_if_enabled)
+{
+    EXPECT_CALL(autobrightness_algorithm.mock, start()).Times(1);
+    brightness_control.enable_autobrightness();
+    brightness_control.set_normal_brightness();
+    Mock::VerifyAndClearExpectations(&autobrightness_algorithm.mock);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       applies_last_autobrightness_if_enabled_when_setting_normal_brightness_after_dim)
+{
+    brightness_control.set_normal_brightness();
+    brightness_control.enable_autobrightness();
+    autobrightness_algorithm.emit_autobrightness(0.9);
+    brightness_control.set_dim_brightness();
+    expect_brightness_value(dim_percent);
+
+    brightness_control.set_normal_brightness();
+
+    expect_brightness_value(0.9);
 }
 
 TEST_F(ABacklightBrightnessControl, notifies_of_brightness_change)
@@ -449,4 +531,16 @@ TEST_F(ABacklightBrightnessControl, transitions_directly_to_new_value_if_current
 
     EXPECT_THAT(backlight.brightness_history.size(), Eq(prev_history_size + 1));
     expect_brightness_value(dim_percent);
+}
+
+TEST_F(ABacklightBrightnessControl, logs_autobrightness_values)
+{
+    auto const autobrightness_value = 0.08;
+
+    brightness_control.set_normal_brightness();
+    brightness_control.enable_autobrightness();
+    autobrightness_algorithm.emit_autobrightness(autobrightness_value);
+
+    EXPECT_TRUE(fake_log.contains_line(
+        {"autobrightness", "value", std::to_string(autobrightness_value).substr(0, 4)}));
 }

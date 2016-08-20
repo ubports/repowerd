@@ -56,7 +56,8 @@ public:
         BrightnessHandler const& handler) override;
 
 private:
-    enum TransitionSpeed {normal, slow};
+    enum class ActiveBrightnessType {normal, dim, off};
+    enum class TransitionSpeed {normal, slow};
     void transition_to_brightness_value(double brightness, TransitionSpeed transition_speed);
     void set_brightness_value(double brightness);
     double get_brightness_value();
@@ -76,7 +77,7 @@ private:
     double dim_brightness;
     double normal_brightness;
     double user_normal_brightness;
-    bool normal_brightness_active;
+    ActiveBrightnessType active_brightness_type;
     bool ab_active;
 };
 

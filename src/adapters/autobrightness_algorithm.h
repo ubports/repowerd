@@ -37,7 +37,8 @@ public:
     virtual bool init(EventLoop& event_loop) = 0;
 
     virtual void new_light_value(double light) = 0;
-    virtual void reset() = 0;
+    virtual void start() = 0;
+    virtual void stop() = 0;
 
     virtual HandlerRegistration register_autobrightness_handler(
         AutobrightnessHandler const& handler) = 0;

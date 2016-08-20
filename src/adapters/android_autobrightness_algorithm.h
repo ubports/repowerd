@@ -21,28 +21,35 @@
 #include "autobrightness_algorithm.h"
 
 #include <chrono>
+#include <memory>
 
 namespace repowerd
 {
-
 class DeviceConfig;
+class Log;
 class MonotoneSpline;
 
 class AndroidAutobrightnessAlgorithm : public AutobrightnessAlgorithm
 {
 public:
-    AndroidAutobrightnessAlgorithm(DeviceConfig const& device_config);
+    AndroidAutobrightnessAlgorithm(
+        DeviceConfig const& device_config,
+        std::shared_ptr<Log> const& log);
+
     ~AndroidAutobrightnessAlgorithm();
 
     bool init(EventLoop& event_loop) override;
 
     void new_light_value(double light) override;
-    void reset() override;
+    void start() override;
+    void stop() override;
 
     HandlerRegistration register_autobrightness_handler(
         AutobrightnessHandler const& handler) override;
 
 private:
+    void reset();
+    bool have_previous_light_values();
     void update_averages(double light);
     void schedule_debounce();
     void notify_brightness(double brightness);
@@ -50,14 +57,17 @@ private:
     EventLoop* event_loop;
     std::unique_ptr<MonotoneSpline> const brightness_spline;
     double const max_brightness;
+    std::shared_ptr<Log> const log;
     AutobrightnessHandler autobrightness_handler;
 
+    bool started;
     std::chrono::steady_clock::time_point last_light_tp;
     double last_light;
     double applied_light;
     double fast_average;
     double slow_average;
     bool debouncing;
+    int debouncing_seqnum;
 };
 
 }

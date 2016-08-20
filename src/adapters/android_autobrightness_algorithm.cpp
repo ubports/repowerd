@@ -21,6 +21,7 @@
 #include "device_config.h"
 #include "event_loop.h"
 #include "event_loop_handler_registration.h"
+#include "src/core/log.h"
 #include "monotone_spline.h"
 
 #include <cmath>
@@ -32,6 +33,7 @@
 namespace
 {
 
+char const* const log_tag = "AndroidAutobrightnessAlgorithm";
 auto const null_handler = [](auto){};
 auto constexpr smoothing_factor_slow = 2000.0;
 auto constexpr smoothing_factor_fast = 200.0;
@@ -100,9 +102,13 @@ double exponential_smoothing(
 }
 
 repowerd::AndroidAutobrightnessAlgorithm::AndroidAutobrightnessAlgorithm(
-    DeviceConfig const& device_config)
+    DeviceConfig const& device_config,
+    std::shared_ptr<Log> const& log)
     : brightness_spline{create_brightness_spline(device_config)},
-      max_brightness{get_max_brightness(device_config)}
+      max_brightness{get_max_brightness(device_config)},
+      log{log},
+      started{false},
+      debouncing_seqnum{0}
 {
     reset();
 }
@@ -119,22 +125,43 @@ bool repowerd::AndroidAutobrightnessAlgorithm::init(EventLoop& event_loop)
 
 void repowerd::AndroidAutobrightnessAlgorithm::new_light_value(double light)
 {
-    event_loop->enqueue(
-        [this,light]
-        {
-            update_averages(light);
-            schedule_debounce();
-        });
+    if (!started)
+        return;
+
+    auto const is_first_light_value = !have_previous_light_values();
+
+    log->log(log_tag, "process_new_light_value(%.2f), is_first_light_value=%d",
+             light, is_first_light_value);
+
+    update_averages(light);
+
+    if (is_first_light_value)
+    {
+        notify_brightness(brightness_spline->interpolate(fast_average));
+        applied_light = fast_average;
+    }
+    else
+    {
+        schedule_debounce();
+    }
 }
 
-void repowerd::AndroidAutobrightnessAlgorithm::reset()
+void repowerd::AndroidAutobrightnessAlgorithm::start()
 {
-    last_light = 0.0;
-    last_light_tp = {};
-    applied_light = 0.0;
-    fast_average = 0.0;
-    slow_average = 0.0;
-    debouncing = false;
+    if (!started)
+    {
+        reset();
+        started = true;
+    }
+}
+
+void repowerd::AndroidAutobrightnessAlgorithm::stop()
+{
+    if (started)
+    {
+        reset();
+        started = false;
+    }
 }
 
 repowerd::HandlerRegistration repowerd::AndroidAutobrightnessAlgorithm::register_autobrightness_handler(
@@ -146,11 +173,27 @@ repowerd::HandlerRegistration repowerd::AndroidAutobrightnessAlgorithm::register
         [this]{ this->autobrightness_handler = null_handler; }};
 }
 
+void repowerd::AndroidAutobrightnessAlgorithm::reset()
+{
+    last_light = 0.0;
+    last_light_tp = {};
+    applied_light = 0.0;
+    fast_average = 0.0;
+    slow_average = 0.0;
+    debouncing = false;
+    ++debouncing_seqnum;
+}
+
+bool repowerd::AndroidAutobrightnessAlgorithm::have_previous_light_values()
+{
+    return last_light_tp != std::chrono::steady_clock::time_point{};
+}
+
 void repowerd::AndroidAutobrightnessAlgorithm::update_averages(double light)
 {
     auto const now = std::chrono::steady_clock::now();
 
-    if (last_light_tp == std::chrono::steady_clock::time_point{})
+    if (!have_previous_light_values())
     {
         fast_average = light;
         slow_average = light;
@@ -178,11 +221,21 @@ void repowerd::AndroidAutobrightnessAlgorithm::schedule_debounce()
         return;
 
     debouncing = true;
+    ++debouncing_seqnum;
+
+    log->log(log_tag, "schedule_debounce(), seqnum=%d", debouncing_seqnum);
 
     event_loop->schedule_in(
         debounce_delay,
-        [this]
+        [this, expected_debouncing_seqnum=debouncing_seqnum]
         {
+            if (debouncing_seqnum != expected_debouncing_seqnum)
+            {
+                log->log(log_tag, "debounce() ignored, expected_seqnum=%d, actual_seqnum=%d",
+                         expected_debouncing_seqnum, debouncing_seqnum);
+                return;
+            }
+
             auto constexpr min_hysteresis = 2.0;
 
             debouncing = false;
@@ -191,10 +244,17 @@ void repowerd::AndroidAutobrightnessAlgorithm::schedule_debounce()
             auto const hysteresis = std::max(applied_light * hysteresis_factor, min_hysteresis);
             auto const slow_delta = slow_average - applied_light;
             auto const fast_delta = fast_average - applied_light;
+            log->log(log_tag,
+                     "debounce(), seqnum=%d, applied_light=%.2f, hysteresis=%.2f, "
+                     "slow_average=%.2f, fast_average=%.2f, slow_delta=%.2f, "
+                     "fast_delta=%.2f",
+                     expected_debouncing_seqnum, applied_light, hysteresis, slow_average,
+                     fast_average, slow_delta, fast_delta);
 
             if ((slow_delta >= hysteresis && fast_delta >= hysteresis) ||
                 (-slow_delta >= hysteresis && -fast_delta >= hysteresis))
             {
+                log->log(log_tag, "debounce(), apply light %.2f", fast_average);
                 notify_brightness(brightness_spline->interpolate(fast_average));
                 applied_light = fast_average;
             }

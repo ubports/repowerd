@@ -28,7 +28,8 @@ auto const null_handler = [](double){};
 
 repowerd::UbuntuLightSensor::UbuntuLightSensor()
     : sensor{ua_sensors_light_new()},
-      handler{null_handler}
+      handler{null_handler},
+      enabled{false}
 {
     if (!sensor)
         throw std::runtime_error("Failed to allocate light sensor");
@@ -50,7 +51,11 @@ void repowerd::UbuntuLightSensor::enable_light_events()
     event_loop.enqueue(
         [this]
         {
-            ua_sensors_light_enable(sensor);
+            if (!enabled)
+            {
+                ua_sensors_light_enable(sensor);
+                enabled = true;
+            }
         }).get();
 }
 
@@ -59,7 +64,11 @@ void repowerd::UbuntuLightSensor::disable_light_events()
     event_loop.enqueue(
         [this]
         {
-            ua_sensors_light_disable(sensor);
+            if (enabled)
+            {
+                ua_sensors_light_disable(sensor);
+                enabled = false;
+            }
         }).get();
 }
 
