@@ -1,4 +1,12 @@
-repowerd (2016.08.1-0ubuntu1) yakkety; urgency=medium
+repowerd (2016.08.2-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New 2016.08.2 release
+    - Fix "Regression: In dark conditions autobrightness does not
+      adapt" (LP: #1613871)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 22 Aug 2016 14:11:31 +0300
+
+repowerd (2016.08.1+16.10.20160817.1-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.08.1 release
     - Fix "Display turns off right after playing back a long video"
@@ -6,7 +14,7 @@ repowerd (2016.08.1-0ubuntu1) yakkety; urgency=medium
     - Fix "call screen still turns off after rejecting the call on
       the remote end without answering." (LP: #1613506)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 16 Aug 2016 14:23:54 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 17 Aug 2016 17:48:35 +0000
 
 repowerd (2016.08+16.10.20160811-0ubuntu1) yakkety; urgency=medium
 
