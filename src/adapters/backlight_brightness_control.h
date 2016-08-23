@@ -31,6 +31,7 @@ class AutobrightnessAlgorithm;
 class Backlight;
 class Chrono;
 class DeviceConfig;
+class DeviceQuirks;
 class LightSensor;
 class Log;
 
@@ -43,7 +44,8 @@ public:
         std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
         std::shared_ptr<Chrono> const& chrono,
         std::shared_ptr<Log> const& log,
-        DeviceConfig const& device_config);
+        DeviceConfig const& device_config,
+        DeviceQuirks const& device_quirks);
 
     void disable_autobrightness() override;
     void enable_autobrightness() override;
@@ -67,6 +69,7 @@ private:
     std::shared_ptr<AutobrightnessAlgorithm> const autobrightness_algorithm;
     std::shared_ptr<Chrono> const chrono;
     std::shared_ptr<Log> const log;
+    bool const normal_before_display_on_autobrightness;
     bool const ab_supported;
 
     EventLoop event_loop;

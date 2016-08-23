@@ -49,6 +49,18 @@ synthetic_initial_proximity_event_type_for(std::string device_name)
         return repowerd::AndroidDeviceQuirks::ProximityEventType::near;
 }
 
+bool normal_before_display_on_autobrightness_for(std::string const& device_name)
+{
+    auto const quirk_cstr = getenv("REPOWERD_QUIRK_NORMAL_BEFORE_DISPLAY_ON_AUTOBRIGHTNESS");
+    std::string const quirk{quirk_cstr ? quirk_cstr : ""};
+     
+    // Mako needs us to manually set the brightness before the first
+    // autobrightness setting after turning on the screen. Otherwise, it
+    // doesn't update screen brightness to the proper level until the next
+    // screen content refresh.
+    return (device_name == "mako" || quirk == "always") && quirk != "never";
+}
+
 }
 
 repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks()
@@ -56,7 +68,9 @@ repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks()
       synthetic_initial_proximity_event_delay_{
           synthetic_initial_proximity_event_delay_for(device_name_)},
       synthetic_initial_proximity_event_type_{
-          synthetic_initial_proximity_event_type_for(device_name_)}
+          synthetic_initial_proximity_event_type_for(device_name_)},
+      normal_before_display_on_autobrightness_{
+        normal_before_display_on_autobrightness_for(device_name_)}
 {
 }
 
@@ -70,4 +84,9 @@ repowerd::AndroidDeviceQuirks::ProximityEventType
 repowerd::AndroidDeviceQuirks::synthetic_initial_proximity_event_type() const
 {
     return synthetic_initial_proximity_event_type_;
+}
+
+bool repowerd::AndroidDeviceQuirks::normal_before_display_on_autobrightness() const
+{
+    return normal_before_display_on_autobrightness_;
 }

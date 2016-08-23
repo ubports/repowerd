@@ -19,6 +19,7 @@
 #include "src/adapters/ubuntu_proximity_sensor.h"
 #include "src/adapters/device_quirks.h"
 
+#include "fake_device_quirks.h"
 #include "fake_log.h"
 #include "fake_shared.h"
 #include "temporary_environment_value.h"
@@ -37,29 +38,6 @@ using namespace testing;
 namespace
 {
 
-struct StubDeviceQuirks : repowerd::DeviceQuirks
-{
-    std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override
-    {
-        // Set a high delay to account for valgrind slowness
-        return std::chrono::milliseconds{1000};
-    }
-
-    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_proximity_event_type() const override
-    {
-        return synthetic_initial_event_type_;
-    }
-
-    void set_synthetic_initial_event_type_near()
-    {
-        synthetic_initial_event_type_ = repowerd::DeviceQuirks::ProximityEventType::near;
-    }
-
-private:
-    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_event_type_{
-        repowerd::DeviceQuirks::ProximityEventType::far};
-};
-
 struct AUbuntuProximitySensor : testing::Test
 {
     void set_up_sensor(std::string const& script)
@@ -70,7 +48,7 @@ struct AUbuntuProximitySensor : testing::Test
         command_file.write(script);
 
         sensor = std::make_unique<repowerd::UbuntuProximitySensor>(
-            rt::fake_shared(fake_log), stub_device_quirks);
+            rt::fake_shared(fake_log), fake_device_quirks);
         registration = sensor->register_proximity_handler(
             [this](repowerd::ProximityState state) { mock_handlers.proximity_handler(state); });
     }
@@ -82,7 +60,7 @@ struct AUbuntuProximitySensor : testing::Test
     NiceMock<MockHandlers> mock_handlers;
 
     rt::FakeLog fake_log;
-    StubDeviceQuirks stub_device_quirks;
+    rt::FakeDeviceQuirks fake_device_quirks;
     std::unique_ptr<repowerd::UbuntuProximitySensor> sensor;
     repowerd::HandlerRegistration registration;
 
@@ -160,7 +138,7 @@ TEST_F(AUbuntuProximitySensor, reports_synthetic_event_far_if_no_initial_event_a
 TEST_F(AUbuntuProximitySensor, reports_synthetic_event_near_if_no_initial_event_arrives)
 {
     TEST_IN_SEPARATE_PROCESS({
-        stub_device_quirks.set_synthetic_initial_event_type_near();
+        fake_device_quirks.set_synthetic_initial_event_type_near();
 
         rt::WaitCondition handler_called;
 
@@ -224,7 +202,7 @@ TEST_F(AUbuntuProximitySensor, reports_current_synthetic_state_far_if_no_event_a
 TEST_F(AUbuntuProximitySensor, reports_current_synthetic_state_near_if_no_event_arrives_soon)
 {
     TEST_IN_SEPARATE_PROCESS({
-        stub_device_quirks.set_synthetic_initial_event_type_near();
+        fake_device_quirks.set_synthetic_initial_event_type_near();
 
         set_up_sensor(
             "create proximity\n");

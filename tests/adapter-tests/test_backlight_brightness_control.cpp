@@ -24,6 +24,7 @@
 
 #include "fake_chrono.h"
 #include "fake_device_config.h"
+#include "fake_device_quirks.h"
 #include "fake_log.h"
 #include "fake_shared.h"
 
@@ -186,13 +187,15 @@ struct ABacklightBrightnessControl : Test
     FakeAutobrightnessAlgorithm autobrightness_algorithm;
     rt::FakeChrono fake_chrono;
     rt::FakeLog fake_log;
+    rt::FakeDeviceQuirks fake_device_quirks;
     repowerd::BacklightBrightnessControl brightness_control{
         rt::fake_shared(backlight), 
         rt::fake_shared(light_sensor), 
         rt::fake_shared(autobrightness_algorithm),
         rt::fake_shared(fake_chrono),
         rt::fake_shared(fake_log),
-        fake_device_config};
+        fake_device_config,
+        fake_device_quirks};
 
     double const normal_percent =
         static_cast<double>(fake_device_config.brightness_default_value) /
@@ -330,7 +333,7 @@ TEST_F(ABacklightBrightnessControl,
 }
 
 TEST_F(ABacklightBrightnessControl,
-       does_not_set_user_brightness_if_autobrightness_enabled_when_set_to_normal_mode)
+       does_not_set_normal_brightness_when_set_to_normal_mode_if_autobrightness_enabled)
 {
     auto const prev_history_size = backlight.brightness_history.size();
 
@@ -338,6 +341,32 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.set_normal_brightness();
 
     EXPECT_THAT(backlight.brightness_history.size(), Eq(prev_history_size));
+
+    brightness_control.set_off_brightness();
+    brightness_control.set_normal_brightness();
+
+    expect_brightness_value(0.0);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       sets_normal_brightness_if_autobrightness_enabled_when_set_from_off_to_normal_mode_with_quirk)
+{
+    fake_device_quirks.set_normal_before_display_on_autobrightness(true);
+    repowerd::BacklightBrightnessControl quirked_brightness_control{
+        rt::fake_shared(backlight), 
+        rt::fake_shared(light_sensor), 
+        rt::fake_shared(autobrightness_algorithm),
+        rt::fake_shared(fake_chrono),
+        rt::fake_shared(fake_log),
+        fake_device_config,
+        fake_device_quirks};
+
+    quirked_brightness_control.enable_autobrightness();
+    quirked_brightness_control.set_normal_brightness();
+    quirked_brightness_control.set_off_brightness();
+
+    quirked_brightness_control.set_normal_brightness();
+    expect_brightness_value(normal_percent);
 }
 
 TEST_F(ABacklightBrightnessControl,

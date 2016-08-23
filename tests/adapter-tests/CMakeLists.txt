@@ -23,6 +23,7 @@ add_executable(
     fake_brightness_notification.cpp
     fake_chrono.cpp
     fake_device_config.cpp
+    fake_device_quirks.cpp
     fake_filesystem.cpp
     fake_libhardware.cpp
     fake_ofono.cpp

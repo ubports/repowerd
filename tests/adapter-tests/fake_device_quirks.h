@@ -18,26 +18,28 @@
 
 #pragma once
 
-#include <chrono>
+#include "src/adapters/device_quirks.h"
 
 namespace repowerd
 {
-
-class DeviceQuirks
+namespace test
 {
-public:
-    enum class ProximityEventType {near, far};
 
-    virtual ~DeviceQuirks() = default;
+struct FakeDeviceQuirks : repowerd::DeviceQuirks
+{
+    FakeDeviceQuirks();
 
-    virtual std::chrono::milliseconds synthetic_initial_proximity_event_delay() const = 0;
-    virtual ProximityEventType synthetic_initial_proximity_event_type() const = 0;
-    virtual bool normal_before_display_on_autobrightness() const = 0;
+    std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override;
+    DeviceQuirks::ProximityEventType synthetic_initial_proximity_event_type() const override;
+    bool normal_before_display_on_autobrightness() const override;
 
-protected:
-    DeviceQuirks() = default;
-    DeviceQuirks(DeviceQuirks const&) = delete;
-    DeviceQuirks& operator=(DeviceQuirks const&) = delete;
+    void set_synthetic_initial_event_type_near();
+    void set_normal_before_display_on_autobrightness(bool value);
+
+private:
+    repowerd::DeviceQuirks::ProximityEventType synthetic_initial_event_type_;
+    bool normal_before_display_on_autobrightness_;
 };
 
+}
 }

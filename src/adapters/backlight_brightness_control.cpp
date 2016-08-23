@@ -21,6 +21,7 @@
 #include "backlight.h"
 #include "brightness_params.h"
 #include "chrono.h"
+#include "device_quirks.h"
 #include "event_loop_handler_registration.h"
 #include "light_sensor.h"
 
@@ -60,12 +61,15 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
     std::shared_ptr<AutobrightnessAlgorithm> const& autobrightness_algorithm,
     std::shared_ptr<Chrono> const& chrono,
     std::shared_ptr<Log> const& log,
-    DeviceConfig const& device_config)
+    DeviceConfig const& device_config,
+    DeviceQuirks const& quirks)
     : backlight{backlight},
       light_sensor{light_sensor},
       autobrightness_algorithm{autobrightness_algorithm},
       chrono{chrono},
       log{log},
+      normal_before_display_on_autobrightness{
+          quirks.normal_before_display_on_autobrightness()},
       ab_supported{autobrightness_algorithm->init(event_loop)},
       brightness_handler{null_handler},
       dim_brightness{dim_brightness_percent(device_config)},
@@ -159,6 +163,8 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness()
         { 
             if (ab_active && active_brightness_type == ActiveBrightnessType::off)
             {
+                if (normal_before_display_on_autobrightness)
+                    transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
                 autobrightness_algorithm->start();
                 light_sensor->enable_light_events();
             }
