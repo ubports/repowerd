@@ -237,7 +237,7 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
     {
         proximity_sensor = std::make_shared<UbuntuProximitySensor>(
             the_log(),
-            AndroidDeviceQuirks());
+            *the_device_quirks());
     }
     catch (std::exception const& e)
     {
@@ -384,7 +384,7 @@ repowerd::DefaultDaemonConfig::the_backlight_brightness_control()
             the_chrono(),
             the_log(),
             *the_device_config(),
-            AndroidDeviceQuirks());
+            *the_device_quirks());
     }
 
     return backlight_brightness_control;
@@ -439,6 +439,15 @@ repowerd::DefaultDaemonConfig::the_device_config()
     }
 
     return device_config;
+}
+
+std::shared_ptr<repowerd::DeviceQuirks>
+repowerd::DefaultDaemonConfig::the_device_quirks()
+{
+    if (!device_quirks)
+        device_quirks = std::make_shared<AndroidDeviceQuirks>(*the_log());
+
+    return device_quirks;
 }
 
 std::shared_ptr<repowerd::Filesystem>

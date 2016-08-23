@@ -28,6 +28,7 @@ class BacklightBrightnessControl;
 class BrightnessNotification;
 class Chrono;
 class DeviceConfig;
+class DeviceQuirks;
 class Filesystem;
 class LightSensor;
 class OfonoVoiceCallService;
@@ -71,6 +72,7 @@ public:
     std::shared_ptr<Chrono> the_chrono();
     std::string the_dbus_bus_address();
     std::shared_ptr<DeviceConfig> the_device_config();
+    std::shared_ptr<DeviceQuirks> the_device_quirks();
     std::shared_ptr<Filesystem> the_filesystem();
     std::shared_ptr<LightSensor> the_light_sensor();
     std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
@@ -85,6 +87,7 @@ private:
     std::shared_ptr<BrightnessNotification> brightness_notification;
     std::shared_ptr<Chrono> chrono;
     std::shared_ptr<DeviceConfig> device_config;
+    std::shared_ptr<DeviceQuirks> device_quirks;
     std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<Filesystem> filesystem;
     std::shared_ptr<LightSensor> light_sensor;

@@ -18,12 +18,16 @@
 
 #include "android_device_quirks.h"
 
+#include "src/core/log.h"
+
 #include <hybris/properties/properties.h>
 
 using namespace std::chrono_literals;
 
 namespace
 {
+
+char const* const log_tag = "AndroidDeviceQuirks";
 
 std::string determine_device_name()
 {
@@ -61,9 +65,23 @@ bool normal_before_display_on_autobrightness_for(std::string const& device_name)
     return (device_name == "mako" || quirk == "always") && quirk != "never";
 }
 
+std::string proximity_event_type_to_str(
+    repowerd::AndroidDeviceQuirks::ProximityEventType const type)
+{
+    switch (type)
+    {
+        case repowerd::AndroidDeviceQuirks::ProximityEventType::near: return "near";
+        case repowerd::AndroidDeviceQuirks::ProximityEventType::far: return "far";
+        default: return "unknown";
+    };
+
+    return "unknown";
 }
 
-repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks()
+}
+
+repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks(
+    repowerd::Log& log)
     : device_name_{determine_device_name()},
       synthetic_initial_proximity_event_delay_{
           synthetic_initial_proximity_event_delay_for(device_name_)},
@@ -72,6 +90,13 @@ repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks()
       normal_before_display_on_autobrightness_{
         normal_before_display_on_autobrightness_for(device_name_)}
 {
+    log.log(log_tag, "DeviceName: %s", device_name_.c_str());
+    log.log(log_tag, "Quirk: synthetic_initial_proximit_event_delay=%d",
+            static_cast<int>(synthetic_initial_proximity_event_delay_.count()));
+    log.log(log_tag, "Quirk: synthetic_initial_proximit_event_type=%s",
+            proximity_event_type_to_str(synthetic_initial_proximity_event_type_).c_str());
+    log.log(log_tag, "Quirk: normal_before_display_on_autobrightness=%s",
+            normal_before_display_on_autobrightness_ ? "true" : "false");
 }
 
 std::chrono::milliseconds

@@ -24,11 +24,12 @@
 
 namespace repowerd
 {
+class Log;
 
 class AndroidDeviceQuirks : public DeviceQuirks
 {
 public:
-    AndroidDeviceQuirks();
+    AndroidDeviceQuirks(Log& log);
 
     std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override;
     ProximityEventType synthetic_initial_proximity_event_type() const override;
