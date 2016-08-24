@@ -1,10 +1,10 @@
-repowerd (2016.08.2-0ubuntu1) UNRELEASED; urgency=medium
+repowerd (2016.08.2+16.10.20160823.1-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.08.2 release
     - Fix "Regression: In dark conditions autobrightness does not
       adapt" (LP: #1613871)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 22 Aug 2016 14:11:31 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 23 Aug 2016 14:22:58 +0000
 
 repowerd (2016.08.1+16.10.20160817.1-0ubuntu1) yakkety; urgency=medium
 
