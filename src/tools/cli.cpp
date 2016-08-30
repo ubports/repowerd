@@ -74,6 +74,29 @@ std::unique_ptr<GDBusProxy,void(*)(void*)> create_unity_screen_proxy()
     return {uscreen_proxy, g_object_unref};
 }
 
+std::unique_ptr<GDBusProxy,void(*)(void*)> create_powerd_proxy()
+{
+    repowerd::ScopedGError error;
+
+    auto powerd_proxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SYSTEM,
+        G_DBUS_PROXY_FLAGS_NONE,
+        NULL,
+        "com.canonical.powerd",
+        "/com/canonical/powerd",
+        "com.canonical.powerd",
+        NULL,
+        error);
+
+    if (powerd_proxy == nullptr)
+    {
+        throw std::runtime_error(
+            "Failed to connect to com.canonical.powerd: " + error.message_str());
+    }
+
+    return {powerd_proxy, g_object_unref};
+}
+
 int32_t keep_display_on(GDBusProxy* uscreen_proxy)
 {
     repowerd::ScopedGError error;
@@ -122,6 +145,56 @@ void remove_display_on_request(GDBusProxy* uscreen_proxy, int32_t cookie)
     g_variant_unref(ret);
 }
 
+std::string request_sys_state_active(GDBusProxy* powerd_proxy)
+{
+    static int constexpr active_state = 1;
+    repowerd::ScopedGError error;
+
+    auto const ret = g_dbus_proxy_call_sync(
+        powerd_proxy,
+        "requestSysState",
+        g_variant_new("(si)", "repowerd-cli", active_state),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        error);
+
+    if (ret == nullptr)
+    {
+        throw std::runtime_error(
+            "com.canonical.powerd.requestSysState(active) failed: " + error.message_str());
+    }
+
+    char const* cookie_raw{""};
+    g_variant_get(ret, "(&s)", &cookie_raw);
+    std::string cookie{cookie_raw};
+    g_variant_unref(ret);
+
+    return cookie;
+}
+
+void clear_sys_state(GDBusProxy* powerd_proxy, std::string const& cookie)
+{
+    repowerd::ScopedGError error;
+
+    auto const ret = g_dbus_proxy_call_sync(
+        powerd_proxy,
+        "clearSysState",
+        g_variant_new("(s)", cookie.c_str()),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        error);
+
+    if (ret == nullptr)
+    {
+        throw std::runtime_error(
+            "com.canonical.powerd.clearSysState() failed: " + error.message_str());
+    }
+
+    g_variant_unref(ret);
+}
+
 
 void handle_display_command(GDBusProxy* uscreen_proxy)
 {
@@ -133,6 +206,18 @@ void handle_display_command(GDBusProxy* uscreen_proxy)
     pause();
 
     remove_display_on_request(uscreen_proxy, cookie);
+}
+
+void handle_active_command(GDBusProxy* uscreen_proxy)
+{
+    auto const cookie = request_sys_state_active(uscreen_proxy);
+
+    std::cout << "requestSysState(active) requested, cookie is " << cookie << std::endl;
+    std::cout << "Press ctrl-c to exit" << std::endl;
+
+    pause();
+
+    clear_sys_state(uscreen_proxy, cookie);
 }
 
 void null_signal_handler(int) {}
@@ -152,10 +237,15 @@ try
     }
 
     auto const uscreen_proxy = create_unity_screen_proxy();
+    auto const powerd_proxy = create_powerd_proxy();
 
     if (args[0] == "display")
     {
         handle_display_command(uscreen_proxy.get());
+    }
+    else if (args[0] == "active")
+    {
+        handle_active_command(powerd_proxy.get());
     }
 }
 catch (std::exception const& e)
