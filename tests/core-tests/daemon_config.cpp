@@ -134,6 +134,12 @@ std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_ser
 }
 
 std::chrono::milliseconds
+rt::DaemonConfig::notification_expiration_timeout()
+{
+    return 60s;
+}
+
+std::chrono::milliseconds
 rt::DaemonConfig::power_button_long_press_timeout()
 {
     return 2s;

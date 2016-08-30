@@ -43,7 +43,9 @@
 namespace rt = repowerd::test;
 
 rt::AcceptanceTest::AcceptanceTest()
-    : power_button_long_press_timeout{
+    : notification_expiration_timeout{
+          config.notification_expiration_timeout()},
+      power_button_long_press_timeout{
           config.power_button_long_press_timeout()},
       user_inactivity_normal_display_dim_duration{
           config.user_inactivity_normal_display_dim_duration()},

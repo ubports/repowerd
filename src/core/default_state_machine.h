@@ -65,16 +65,23 @@ private:
     };
     using InactivityTimeoutAllowance = InactivityTimeoutAllowanceEnum::Allowance;
     struct ProximityEnablementEnum {
-        enum Enablement {until_far_event, until_disabled, until_far_event_or_timeout, count};
+        enum Enablement {
+            until_far_event_or_notification_expiration,
+            until_disabled,
+            until_far_event_or_timeout,
+            count};
     };
     using ProximityEnablement = ProximityEnablementEnum::Enablement;
     enum class ScheduledTimeoutType {none, normal, post_notification, reduced};
 
     void cancel_user_inactivity_alarm();
+    void cancel_notification_expiration_alarm();
     void schedule_normal_user_inactivity_alarm();
     void schedule_post_notification_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
     void schedule_proximity_disable_alarm();
+    void schedule_notification_expiration_alarm();
+    void schedule_immediate_user_inactivity_alarm();
     void turn_off_display(DisplayPowerChangeReason reason);
     void turn_on_display_without_timeout(DisplayPowerChangeReason reason);
     void turn_on_display_with_normal_timeout(DisplayPowerChangeReason reason);
@@ -88,7 +95,7 @@ private:
     void enable_proximity(ProximityEnablement enablement);
     void disable_proximity(ProximityEnablement enablement);
     bool is_proximity_enabled();
-    bool is_proximity_enabled_only_until_far_event();
+    bool is_proximity_enabled_only_until_far_event_or_notification_expiration();
 
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
@@ -113,11 +120,13 @@ private:
     AlarmId user_inactivity_display_dim_alarm_id;
     AlarmId user_inactivity_display_off_alarm_id;
     AlarmId proximity_disable_alarm_id;
+    AlarmId notification_expiration_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
+    std::chrono::milliseconds const notification_expiration_timeout;
     ScheduledTimeoutType scheduled_timeout_type;
 };
 

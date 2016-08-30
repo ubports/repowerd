@@ -375,6 +375,80 @@ TEST_F(ANotification,
     verify_expectations();
 }
 
+TEST_F(ANotification,
+       does_not_keep_the_display_on_longer_than_the_notification_expiration_timeout)
+{
+    expect_display_turns_on();
+    emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(notification_expiration_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+    // timer needs extra kick to apply alarm just set in previous advancement
+    advance_time_by(0ms);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_no_notification();
+    verify_expectations();
+}
+
+TEST_F(ANotification,
+       does_not_keep_the_display_on_longer_than_the_notification_expiration_timeout_if_inactivity_is_disabled)
+{
+    expect_display_turns_on();
+    client_request_disable_inactivity_timeout();
+    verify_expectations();
+
+    turn_off_display();
+
+    expect_display_turns_on();
+    emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(notification_expiration_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+    // timer needs extra kick to apply alarm just set in previous advancement
+    advance_time_by(0ms);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_no_notification();
+    verify_expectations();
+}
+
+TEST_F(ANotification,
+       does_not_keep_the_display_on_longer_than_the_notification_expiration_timeout_if_inactivity_timeout_is_infinite)
+{
+    client_request_set_inactivity_timeout(infinite_timeout);
+
+    expect_display_turns_on();
+    emit_notification();
+    verify_expectations();
+
+    expect_no_display_power_change();
+    advance_time_by(notification_expiration_timeout - 1ms);
+    verify_expectations();
+
+    expect_display_turns_off();
+    advance_time_by(1ms);
+    // timer needs extra kick to apply alarm just set in previous advancement
+    advance_time_by(0ms);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_no_notification();
+    verify_expectations();
+}
+
 TEST_F(ANotification, is_logged)
 {
     emit_notification();
@@ -387,4 +461,12 @@ TEST_F(ANotification, done_is_logged)
     emit_no_notification();
 
     EXPECT_TRUE(log_contains_line({"no_notification"}));
+}
+
+TEST_F(ANotification, expiration_timeout_alarm_is_logged)
+{
+    emit_notification();
+    advance_time_by(notification_expiration_timeout);
+
+    EXPECT_TRUE(log_contains_line({"alarm", "notification", "expiration"}));
 }

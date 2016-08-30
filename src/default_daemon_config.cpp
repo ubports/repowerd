@@ -300,6 +300,12 @@ repowerd::DefaultDaemonConfig::the_voice_call_service()
 }
 
 std::chrono::milliseconds
+repowerd::DefaultDaemonConfig::notification_expiration_timeout()
+{
+    return 60s;
+}
+
+std::chrono::milliseconds
 repowerd::DefaultDaemonConfig::power_button_long_press_timeout()
 {
     return 2s;

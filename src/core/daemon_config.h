@@ -67,6 +67,7 @@ public:
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
     virtual std::shared_ptr<VoiceCallService> the_voice_call_service() = 0;
 
+    virtual std::chrono::milliseconds notification_expiration_timeout() = 0;
     virtual std::chrono::milliseconds power_button_long_press_timeout() = 0;
     virtual std::chrono::milliseconds user_inactivity_normal_display_dim_duration() = 0;
     virtual std::chrono::milliseconds user_inactivity_normal_display_off_timeout() = 0;

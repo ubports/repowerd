@@ -58,6 +58,7 @@ public:
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
 
+    std::chrono::milliseconds notification_expiration_timeout() override;
     std::chrono::milliseconds power_button_long_press_timeout() override;
     std::chrono::milliseconds user_inactivity_normal_display_dim_duration() override;
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;

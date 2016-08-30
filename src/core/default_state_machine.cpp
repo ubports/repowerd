@@ -64,6 +64,8 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
           config.user_inactivity_reduced_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
           config.user_inactivity_post_notification_display_off_timeout()},
+      notification_expiration_timeout{
+          config.notification_expiration_timeout()},
       scheduled_timeout_type{ScheduledTimeoutType::none}
 {
       inactivity_timeout_allowances.fill(true);
@@ -99,6 +101,16 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
         log->log(log_tag, "handle_alarm(proximity_disable)");
         proximity_disable_alarm_id = AlarmId::invalid;
         disable_proximity(ProximityEnablement::until_far_event_or_timeout);
+    }
+    else if (id == notification_expiration_alarm_id)
+    {
+        log->log(log_tag, "handle_alarm(notification_expiration)");
+        notification_expiration_alarm_id = AlarmId::invalid;
+        if (display_power_mode == DisplayPowerMode::on)
+            schedule_immediate_user_inactivity_alarm();
+
+        allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+        disable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
     }
 }
 
@@ -191,7 +203,8 @@ void repowerd::DefaultStateMachine::handle_no_notification()
     }
 
     allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
-    disable_proximity(ProximityEnablement::until_far_event);
+    disable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
+    cancel_notification_expiration_alarm();
 }
 
 void repowerd::DefaultStateMachine::handle_notification()
@@ -212,9 +225,11 @@ void repowerd::DefaultStateMachine::handle_notification()
         }
         else
         {
-            enable_proximity(ProximityEnablement::until_far_event);
+            enable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
         }
     }
+
+    schedule_notification_expiration_alarm();
 }
 
 void repowerd::DefaultStateMachine::handle_power_button_press()
@@ -275,8 +290,9 @@ void repowerd::DefaultStateMachine::handle_proximity_far()
 {
     log->log(log_tag, "handle_proximity_far");
 
-    auto const use_reduced_timeout = is_proximity_enabled_only_until_far_event();
-    disable_proximity(ProximityEnablement::until_far_event);
+    auto const use_reduced_timeout =
+        is_proximity_enabled_only_until_far_event_or_notification_expiration();
+    disable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
     disable_proximity(ProximityEnablement::until_far_event_or_timeout);
 
     if (display_power_mode == DisplayPowerMode::off)
@@ -354,6 +370,15 @@ void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
     scheduled_timeout_type = ScheduledTimeoutType::none;
 }
 
+void repowerd::DefaultStateMachine::cancel_notification_expiration_alarm()
+{
+    if (notification_expiration_alarm_id != AlarmId::invalid)
+    {
+        timer->cancel_alarm(notification_expiration_alarm_id);
+        notification_expiration_alarm_id = AlarmId::invalid;
+    }
+}
+
 void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
 {
     cancel_user_inactivity_alarm();
@@ -412,6 +437,32 @@ void repowerd::DefaultStateMachine::schedule_proximity_disable_alarm()
 
     proximity_disable_alarm_id =
         timer->schedule_alarm_in(user_inactivity_reduced_display_off_timeout);
+}
+
+void repowerd::DefaultStateMachine::schedule_notification_expiration_alarm()
+{
+    cancel_notification_expiration_alarm();
+
+    auto const timeout =
+        std::min(
+            user_inactivity_normal_display_off_timeout,
+            notification_expiration_timeout);
+
+    notification_expiration_alarm_id =
+        timer->schedule_alarm_in(timeout);
+}
+
+void repowerd::DefaultStateMachine::schedule_immediate_user_inactivity_alarm()
+{
+    auto const tp = timer->now();
+    if (tp > user_inactivity_display_off_time_point)
+    {
+        cancel_user_inactivity_alarm();
+        user_inactivity_display_off_alarm_id =
+            timer->schedule_alarm_in(std::chrono::milliseconds{0});
+        user_inactivity_display_off_time_point = tp;
+        scheduled_timeout_type = ScheduledTimeoutType::post_notification;
+    }
 }
 
 void repowerd::DefaultStateMachine::turn_off_display(
@@ -551,11 +602,11 @@ bool repowerd::DefaultStateMachine::is_proximity_enabled()
     return false;
 }
 
-bool repowerd::DefaultStateMachine::is_proximity_enabled_only_until_far_event()
+bool repowerd::DefaultStateMachine::is_proximity_enabled_only_until_far_event_or_notification_expiration()
 {
     auto num_enabled = 0;
     for (auto const& enabled : proximity_enablements)
         if (enabled) ++num_enabled;
 
-    return num_enabled == 1 && proximity_enablements[ProximityEnablement::until_far_event];
+    return num_enabled == 1 && proximity_enablements[ProximityEnablement::until_far_event_or_notification_expiration];
 }

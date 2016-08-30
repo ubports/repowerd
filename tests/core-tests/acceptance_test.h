@@ -78,6 +78,7 @@ struct AcceptanceTest : testing::Test
     Daemon daemon{config};
     std::thread daemon_thread;
 
+    std::chrono::milliseconds const notification_expiration_timeout;
     std::chrono::milliseconds const power_button_long_press_timeout;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_timeout;
