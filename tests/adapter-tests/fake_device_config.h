@@ -36,6 +36,8 @@ struct FakeDeviceConfig : repowerd::DeviceConfig
 
     void set(std::string const& name, std::string const& value);
 
+    void clear();
+
     int const brightness_dim_value = 5;
     int const brightness_min_value = 2;
     int const brightness_max_value = 100;

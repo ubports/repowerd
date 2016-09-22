@@ -30,7 +30,7 @@ repowerd::BrightnessParams repowerd::BrightnessParams::from_device_config(
     DeviceConfig const& device_config)
 {
     auto dim_str = device_config.get("screenBrightnessDim", "10");
-    auto min_str = device_config.get("screenBrightnessSettingMininum", "10");
+    auto min_str = device_config.get("screenBrightnessSettingMinimum", "10");
     auto max_str = device_config.get("screenBrightnessSettingMaximum", "255");
     auto default_str = device_config.get("screenBrightnessSettingDefault", "102");
     auto ab_str = device_config.get("automatic_brightness_available", "false");

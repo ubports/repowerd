@@ -21,7 +21,7 @@
 repowerd::test::FakeDeviceConfig::FakeDeviceConfig()
 {
     set("screenBrightnessDim", std::to_string(brightness_dim_value));
-    set("screenBrightnessSettingMininum", std::to_string(brightness_min_value));
+    set("screenBrightnessSettingMinimum", std::to_string(brightness_min_value));
     set("screenBrightnessSettingMaximum", std::to_string(brightness_max_value));
     set("screenBrightnessSettingDefault", std::to_string(brightness_default_value));
     set("automatic_brightness_available", "true");
@@ -43,4 +43,9 @@ void repowerd::test::FakeDeviceConfig::set(
     std::string const& name, std::string const& value)
 {
     properties[name] = value;
+}
+
+void repowerd::test::FakeDeviceConfig::clear()
+{
+    properties.clear();
 }
