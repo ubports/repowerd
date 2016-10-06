@@ -227,6 +227,7 @@ int main(int argc, char** argv)
 try
 {
     signal(SIGINT, null_signal_handler);
+    signal(SIGTERM, null_signal_handler);
 
     auto const progname = get_progname(argc, argv);
     auto const args = get_args(argc, argv);
