@@ -49,6 +49,7 @@ void show_usage(std::string const& progname)
     std::cerr << "Usage: " << progname << " <command>" << std::endl;
     std::cerr << "Available commands: " << std::endl;
     std::cerr << "  display <on>: keep display on until program is terminated" << std::endl;
+    std::cerr << "  active: inhibit device suspend until program is terminated" << std::endl;
 }
 
 std::unique_ptr<GDBusProxy,void(*)(void*)> create_unity_screen_proxy()
