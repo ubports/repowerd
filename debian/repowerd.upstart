@@ -4,4 +4,20 @@ start on started dbus and android
 
 respawn
 
+post-start script
+    # Wait for repowerd to really start.
+    # Time out after a sensible amount of time to avoid looping forever
+    # and consuming power if something fails.
+    num_tries=0
+    while ! dbus-send --print-reply --system --dest=com.canonical.powerd /com/canonical/powerd com.canonical.powerd.getBrightnessParams;
+    do
+        sleep 0.5;
+        num_tries=$((num_tries+1));
+        if [ $num_tries -eq 60 ];
+        then
+            break;
+        fi
+    done
+end script
+
 exec /usr/sbin/repowerd
