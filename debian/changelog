@@ -1,4 +1,4 @@
-repowerd (2016.10-0ubuntu1) UNRELEASED; urgency=medium
+repowerd (2016.10+16.10.20161007-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.10 release
     - Fix typo in brightness config value (LP: #1618391)
@@ -6,8 +6,9 @@ repowerd (2016.10-0ubuntu1) UNRELEASED; urgency=medium
     - Handle SIGTERM gracefully in repowerd-cli
     - Wait for the repowerd DBus API to be accessible before marking
       the upstart job as started (LP: #1623853)
+  * 2016.10 release
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Fri, 07 Oct 2016 13:52:00 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Fri, 07 Oct 2016 11:50:44 +0000
 
 repowerd (2016.08.3+16.10.20160830.1-0ubuntu1) yakkety; urgency=medium
 
