@@ -21,6 +21,9 @@
 #include <functional>
 #include <limits>
 
+namespace repowerd { class AlarmId; }
+namespace std { template<> struct hash<repowerd::AlarmId>;}
+
 namespace repowerd
 {
 
@@ -43,11 +46,21 @@ public:
             return AlarmId{id++};
         }
     }
-    operator int() const { return id; }
+
+    bool operator==(AlarmId const& other) const
+    {
+        return id == other.id;
+    }
+
+    bool operator!=(AlarmId const& other) const
+    {
+        return !(*this == other);
+    }
 
     static int constexpr invalid{-1};
 
 private:
+    friend struct std::hash<AlarmId>;
     int id;
 };
 
@@ -58,9 +71,9 @@ namespace std
 
 template <> struct hash<repowerd::AlarmId>
 {
-    size_t operator()(repowerd::AlarmId const& x) const
+    size_t operator()(repowerd::AlarmId const& alarm_id) const
     {
-        return std::hash<int>{}(static_cast<int>(x));
+        return std::hash<decltype(alarm_id.id)>{}(alarm_id.id);
     }
 };
 
