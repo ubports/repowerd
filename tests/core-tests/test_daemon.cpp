@@ -60,8 +60,8 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_proximity_far, void());
     MOCK_METHOD0(handle_proximity_near, void());
 
-    MOCK_METHOD1(handle_enable_inactivity_timeout, void(std::string const&));
-    MOCK_METHOD1(handle_disable_inactivity_timeout, void(std::string const&));
+    MOCK_METHOD0(handle_enable_inactivity_timeout, void());
+    MOCK_METHOD0(handle_disable_inactivity_timeout, void());
     MOCK_METHOD1(handle_set_inactivity_timeout, void(std::chrono::milliseconds));
 
     MOCK_METHOD0(handle_turn_on_display, void());
@@ -263,13 +263,11 @@ TEST_F(ADaemon, notifies_state_machine_of_enable_inactivity_timeout)
 {
     using namespace testing;
 
-    std::string const id{"id"};
-
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_inactivity_timeout(id));
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_inactivity_timeout());
 
-    config.the_fake_client_requests()->emit_enable_inactivity_timeout(id);
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout("id");
 }
 
 TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
@@ -291,13 +289,11 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
 {
     using namespace testing;
 
-    std::string const id{"id"};
-
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout(id));
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
-    config.the_fake_client_requests()->emit_disable_inactivity_timeout(id);
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout("id");
 }
 
 TEST_F(ADaemon, registers_and_unregisters_set_inactivity_timeout_handler)

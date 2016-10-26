@@ -20,6 +20,7 @@
 
 #include "daemon_config.h"
 #include "handler_registration.h"
+#include "state_event_adapter.h"
 
 #include <memory>
 #include <vector>
@@ -60,6 +61,7 @@ private:
     std::shared_ptr<UserActivity> const user_activity;
     std::shared_ptr<VoiceCallService> const voice_call_service;
 
+    StateEventAdapter state_event_adapter;
     bool running;
 
     std::mutex action_queue_mutex;

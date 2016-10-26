@@ -31,7 +31,6 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
-    std::string const inactivity_id{"inactivity_id"};
 };
 
 }
@@ -236,16 +235,16 @@ TEST_F(AClientRequest, to_disable_inactivity_timeout_works_until_all_requests_ar
 
 TEST_F(AClientRequest, to_disable_inactivity_timeout_is_logged)
 {
-    client_request_disable_inactivity_timeout(inactivity_id);
+    client_request_disable_inactivity_timeout();
 
-    EXPECT_TRUE(log_contains_line({"disable_inactivity_timeout", inactivity_id}));
+    EXPECT_TRUE(log_contains_line({"disable_inactivity_timeout"}));
 }
 
 TEST_F(AClientRequest, to_enable_inactivity_timeout_is_logged)
 {
-    client_request_enable_inactivity_timeout(inactivity_id);
+    client_request_enable_inactivity_timeout();
 
-    EXPECT_TRUE(log_contains_line({"enable_inactivity_timeout", inactivity_id}));
+    EXPECT_TRUE(log_contains_line({"enable_inactivity_timeout"}));
 }
 
 TEST_F(AClientRequest, to_set_inactivity_timeout_is_logged)

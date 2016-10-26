@@ -43,6 +43,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       timer{config.the_timer()},
       user_activity{config.the_user_activity()},
       voice_call_service{config.the_voice_call_service()},
+      state_event_adapter{*state_machine},
       running{false}
 {
     if (config.turn_on_display_at_startup())
@@ -137,7 +138,7 @@ repowerd::Daemon::register_event_handlers()
             [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this, id] { state_machine->handle_enable_inactivity_timeout(id); });
+                    [this, id] { state_event_adapter.handle_enable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
@@ -145,7 +146,7 @@ repowerd::Daemon::register_event_handlers()
             [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this, id] { state_machine->handle_disable_inactivity_timeout(id); });
+                    [this, id] { state_event_adapter.handle_disable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
