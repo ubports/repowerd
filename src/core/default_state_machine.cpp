@@ -35,6 +35,22 @@ namespace
 {
 char const* const log_tag = "DefaultStateMachine";
 char const* const suspend_id = "DefaultStateMachine";
+
+std::string make_client_inactivity_timeout_id(std::string const& base_id)
+{
+    return "client-" + base_id;
+}
+
+bool is_client_inactivity_timeout_id(std::string const& id)
+{
+    return id.find("client") == 0;
+}
+
+bool is_notification_inactivity_timeout_id(std::string const& id)
+{
+    return id.find("notification") == 0;
+}
+
 }
 
 repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
@@ -68,7 +84,6 @@ repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
           config.notification_expiration_timeout()},
       scheduled_timeout_type{ScheduledTimeoutType::none}
 {
-      inactivity_timeout_allowances.fill(true);
       proximity_enablements.fill(false);
 }
 
@@ -109,7 +124,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
         if (display_power_mode == DisplayPowerMode::on)
             schedule_immediate_user_inactivity_alarm();
 
-        allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+        allow_inactivity_timeout("notification");
         disable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
     }
 }
@@ -156,18 +171,18 @@ void repowerd::DefaultStateMachine::handle_no_active_call()
     disable_proximity(ProximityEnablement::until_disabled);
 }
 
-void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout()
+void repowerd::DefaultStateMachine::handle_enable_inactivity_timeout(std::string const& id)
 {
-    log->log(log_tag, "handle_enable_inactivity_timeout");
+    log->log(log_tag, "handle_enable_inactivity_timeout(%s)", id.c_str());
 
-    allow_inactivity_timeout(InactivityTimeoutAllowance::client);
+    allow_inactivity_timeout(make_client_inactivity_timeout_id(id));
 }
 
-void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
+void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout(std::string const& id)
 {
-    log->log(log_tag, "handle_disable_inactivity_timeout");
+    log->log(log_tag, "handle_disable_inactivity_timeout(%s)", id.c_str());
 
-    disallow_inactivity_timeout(InactivityTimeoutAllowance::client);
+    disallow_inactivity_timeout(make_client_inactivity_timeout_id(id));
 
     if (display_power_mode == DisplayPowerMode::on)
     {
@@ -202,7 +217,7 @@ void repowerd::DefaultStateMachine::handle_no_notification()
         schedule_post_notification_user_inactivity_alarm();
     }
 
-    allow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+    allow_inactivity_timeout("notification");
     disable_proximity(ProximityEnablement::until_far_event_or_notification_expiration);
     cancel_notification_expiration_alarm();
 }
@@ -211,7 +226,7 @@ void repowerd::DefaultStateMachine::handle_notification()
 {
     log->log(log_tag, "handle_notification");
 
-    disallow_inactivity_timeout(InactivityTimeoutAllowance::notification);
+    disallow_inactivity_timeout("notification");
 
     if (display_power_mode == DisplayPowerMode::on)
     {
@@ -518,22 +533,21 @@ void repowerd::DefaultStateMachine::dim_display()
     brightness_control->set_dim_brightness();
 }
 
-void repowerd::DefaultStateMachine::allow_inactivity_timeout(
-    InactivityTimeoutAllowance allowance)
+void repowerd::DefaultStateMachine::allow_inactivity_timeout(std::string const& id)
 {
     if (!is_inactivity_timeout_allowed())
     {
-        inactivity_timeout_allowances[allowance] = true;
+        inactivity_timeout_disallowances.erase(id);
 
         if (is_inactivity_timeout_allowed() &&
             display_power_mode == DisplayPowerMode::on)
         {
-            if (allowance == InactivityTimeoutAllowance::notification &&
+            if (is_notification_inactivity_timeout_id(id) &&
                 scheduled_timeout_type == ScheduledTimeoutType::none)
             {
                 turn_off_display(DisplayPowerChangeReason::activity);
             }
-            else if (allowance == InactivityTimeoutAllowance::client)
+            else if (is_client_inactivity_timeout_id(id))
             {
                 schedule_normal_user_inactivity_alarm();
             }
@@ -541,18 +555,14 @@ void repowerd::DefaultStateMachine::allow_inactivity_timeout(
     }
 }
 
-void repowerd::DefaultStateMachine::disallow_inactivity_timeout(
-    InactivityTimeoutAllowance allowance)
+void repowerd::DefaultStateMachine::disallow_inactivity_timeout(std::string const& id)
 {
-    inactivity_timeout_allowances[allowance] = false;
+    inactivity_timeout_disallowances.insert(id);
 }
 
 bool repowerd::DefaultStateMachine::is_inactivity_timeout_allowed()
 {
-    auto const client = inactivity_timeout_allowances[InactivityTimeoutAllowance::client];
-    auto const notification = inactivity_timeout_allowances[InactivityTimeoutAllowance::notification];
-
-    return notification && client;
+    return inactivity_timeout_disallowances.empty();
 }
 
 bool repowerd::DefaultStateMachine::is_inactivity_timeout_application_allowed()

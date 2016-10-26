@@ -151,16 +151,26 @@ void rt::AcceptanceTest::advance_time_by(std::chrono::milliseconds advance)
     daemon.flush();
 }
 
+void rt::AcceptanceTest::client_request_disable_inactivity_timeout(std::string const& id)
+{
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout(id);
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::client_request_enable_inactivity_timeout(std::string const& id)
+{
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout(id);
+    daemon.flush();
+}
+
 void rt::AcceptanceTest::client_request_disable_inactivity_timeout()
 {
-    config.the_fake_client_requests()->emit_disable_inactivity_timeout();
-    daemon.flush();
+    client_request_disable_inactivity_timeout("AcceptanceTestId");
 }
 
 void rt::AcceptanceTest::client_request_enable_inactivity_timeout()
 {
-    config.the_fake_client_requests()->emit_enable_inactivity_timeout();
-    daemon.flush();
+    client_request_enable_inactivity_timeout("AcceptanceTestId");
 }
 
 void rt::AcceptanceTest::client_request_set_inactivity_timeout(

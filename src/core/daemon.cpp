@@ -134,18 +134,18 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         client_requests->register_enable_inactivity_timeout_handler(
-            [this]
+            [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this] { state_machine->handle_enable_inactivity_timeout(); });
+                    [this, id] { state_machine->handle_enable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
         client_requests->register_disable_inactivity_timeout_handler(
-            [this]
+            [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this] { state_machine->handle_disable_inactivity_timeout(); });
+                    [this, id] { state_machine->handle_disable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(

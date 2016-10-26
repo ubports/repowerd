@@ -20,9 +20,14 @@
 
 namespace rt = repowerd::test;
 
+namespace
+{
+auto null_arg_handler = [](auto){};
+}
+
 rt::FakeClientRequests::FakeClientRequests()
-    : disable_inactivity_timeout_handler{[]{}},
-      enable_inactivity_timeout_handler{[]{}},
+    : disable_inactivity_timeout_handler{null_arg_handler},
+      enable_inactivity_timeout_handler{null_arg_handler},
       set_inactivity_timeout_handler{[](std::chrono::milliseconds){}},
       disable_autobrightness_handler{[]{}},
       enable_autobrightness_handler{[]{}},
@@ -44,7 +49,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivit
         [this]
         {
             mock.unregister_disable_inactivity_timeout_handler();
-            disable_inactivity_timeout_handler = []{};
+            disable_inactivity_timeout_handler = null_arg_handler;
         }};
 }
 
@@ -57,7 +62,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity
         [this]
         {
             mock.unregister_enable_inactivity_timeout_handler();
-            enable_inactivity_timeout_handler = []{};
+            enable_inactivity_timeout_handler = null_arg_handler;
         }};
 }
 
@@ -75,7 +80,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_inactivity_ti
 }
 
 repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_autobrightness_handler(
-    DisableInactivityTimeoutHandler const& handler)
+    DisableAutobrightnessHandler const& handler)
 {
     mock.register_disable_autobrightness_handler(handler);
     disable_autobrightness_handler = handler;
@@ -88,7 +93,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_autobrigh
 }
 
 repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_autobrightness_handler(
-    EnableInactivityTimeoutHandler const& handler)
+    EnableAutobrightnessHandler const& handler)
 {
     mock.register_enable_autobrightness_handler(handler);
     enable_autobrightness_handler = handler;
@@ -113,14 +118,14 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_bright
         }};
 }
 
-void rt::FakeClientRequests::emit_disable_inactivity_timeout()
+void rt::FakeClientRequests::emit_disable_inactivity_timeout(std::string const& id)
 {
-    disable_inactivity_timeout_handler();
+    disable_inactivity_timeout_handler(id);
 }
 
-void rt::FakeClientRequests::emit_enable_inactivity_timeout()
+void rt::FakeClientRequests::emit_enable_inactivity_timeout(std::string const& id)
 {
-    enable_inactivity_timeout_handler();
+    enable_inactivity_timeout_handler(id);
 }
 
 void rt::FakeClientRequests::emit_set_inactivity_timeout(std::chrono::milliseconds timeout)

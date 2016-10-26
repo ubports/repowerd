@@ -156,8 +156,8 @@ repowerd::UnityScreenService::UnityScreenService(
       suspend_control{suspend_control},
       log{log},
       dbus_connection{dbus_bus_address},
-      disable_inactivity_timeout_handler{null_handler},
-      enable_inactivity_timeout_handler{null_handler},
+      disable_inactivity_timeout_handler{null_arg_handler},
+      enable_inactivity_timeout_handler{null_arg_handler},
       set_inactivity_timeout_handler{null_arg_handler},
       disable_autobrightness_handler{null_handler},
       enable_autobrightness_handler{null_handler},
@@ -255,7 +255,7 @@ repowerd::UnityScreenService::register_enable_inactivity_timeout_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { enable_inactivity_timeout_handler = handler; },
-        [this] { enable_inactivity_timeout_handler = null_handler; }};
+        [this] { enable_inactivity_timeout_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -265,7 +265,7 @@ repowerd::UnityScreenService::register_disable_inactivity_timeout_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { disable_inactivity_timeout_handler = handler; },
-        [this] { disable_inactivity_timeout_handler = null_handler; }};
+        [this] { disable_inactivity_timeout_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -515,7 +515,7 @@ int32_t repowerd::UnityScreenService::dbus_keepDisplayOn(std::string const& send
 
     auto const id = next_keep_display_on_id++;
     keep_display_on_ids.emplace(sender, id);
-    disable_inactivity_timeout_handler();
+    disable_inactivity_timeout_handler(std::to_string(id));
 
     log->log(log_tag, "dbus_keepDisplayOn(%s) => %d", sender.c_str(), id);
 
@@ -542,8 +542,8 @@ void repowerd::UnityScreenService::dbus_removeDisplayOnRequest(
         }
     }
 
-    if (id_removed && keep_display_on_ids.empty())
-        enable_inactivity_timeout_handler();
+    if (id_removed)
+        enable_inactivity_timeout_handler(std::to_string(id));
 }
 
 void repowerd::UnityScreenService::dbus_NameOwnerChanged(
@@ -561,14 +561,11 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
 
     if (new_owner.empty() && old_owner == name)
     {
-        // If the disconnected client had issued keepDisplayOn requests
-        // and after removing them there are now no more requests left,
-        // tell the screen we don't need to keep the display on.
-        if (keep_display_on_ids.erase(name) > 0 &&
-            keep_display_on_ids.empty())
-        {
-            enable_inactivity_timeout_handler();
-        }
+        auto range = keep_display_on_ids.equal_range(name);
+        for (auto iter = range.first; iter != range.second; ++iter)
+            enable_inactivity_timeout_handler(std::to_string(iter->second));
+
+        keep_display_on_ids.erase(name);
 
         if (request_sys_state_ids.erase(name) > 0 &&
             request_sys_state_ids.empty())

@@ -31,6 +31,7 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
+    std::string const inactivity_id{"inactivity_id"};
 };
 
 }
@@ -199,18 +200,52 @@ TEST_F(AClientRequest, to_set_non_positive_inactivity_timeout_is_ignrored)
     advance_time_by(1ms);
 }
 
+TEST_F(AClientRequest, to_disable_inactivity_timeout_works_until_all_requests_are_removed)
+{
+    std::string const inactivity_id1{"1"};
+    std::string const inactivity_id2{"2"};
+    std::string const inactivity_id3{"3"};
+
+    expect_display_turns_on();
+    client_request_disable_inactivity_timeout(inactivity_id1);
+    verify_expectations();
+
+    expect_display_brightens();
+    client_request_disable_inactivity_timeout(inactivity_id2);
+    verify_expectations();
+
+    expect_display_brightens();
+    client_request_disable_inactivity_timeout(inactivity_id3);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    client_request_enable_inactivity_timeout(inactivity_id1);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    client_request_enable_inactivity_timeout(inactivity_id2);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    verify_expectations();
+
+    expect_display_turns_off();
+    client_request_enable_inactivity_timeout(inactivity_id3);
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    verify_expectations();
+}
+
 TEST_F(AClientRequest, to_disable_inactivity_timeout_is_logged)
 {
-    client_request_disable_inactivity_timeout();
+    client_request_disable_inactivity_timeout(inactivity_id);
 
-    EXPECT_TRUE(log_contains_line({"disable_inactivity_timeout"}));
+    EXPECT_TRUE(log_contains_line({"disable_inactivity_timeout", inactivity_id}));
 }
 
 TEST_F(AClientRequest, to_enable_inactivity_timeout_is_logged)
 {
-    client_request_enable_inactivity_timeout();
+    client_request_enable_inactivity_timeout(inactivity_id);
 
-    EXPECT_TRUE(log_contains_line({"enable_inactivity_timeout"}));
+    EXPECT_TRUE(log_contains_line({"enable_inactivity_timeout", inactivity_id}));
 }
 
 TEST_F(AClientRequest, to_set_inactivity_timeout_is_logged)

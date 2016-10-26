@@ -22,12 +22,13 @@
 
 #include <functional>
 #include <chrono>
+#include <string>
 
 namespace repowerd
 {
 
-using EnableInactivityTimeoutHandler = std::function<void()>;
-using DisableInactivityTimeoutHandler = std::function<void()>;
+using EnableInactivityTimeoutHandler = std::function<void(std::string const&)>;
+using DisableInactivityTimeoutHandler = std::function<void(std::string const&)>;
 using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds)>;
 using SetNormalBrightnessValueHandler = std::function<void(double)>;
 using EnableAutobrightnessHandler = std::function<void()>;

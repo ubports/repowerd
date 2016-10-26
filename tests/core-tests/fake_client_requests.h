@@ -48,8 +48,8 @@ public:
     HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) override;
 
-    void emit_disable_inactivity_timeout();
-    void emit_enable_inactivity_timeout();
+    void emit_disable_inactivity_timeout(std::string const& id);
+    void emit_enable_inactivity_timeout(std::string const& id);
     void emit_set_inactivity_timeout(std::chrono::milliseconds timeout);
     void emit_disable_autobrightness();
     void emit_enable_autobrightness();

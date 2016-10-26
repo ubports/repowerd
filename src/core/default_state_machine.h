@@ -23,6 +23,7 @@
 #include "display_power_change_reason.h"
 
 #include <array>
+#include <set>
 
 namespace repowerd
 {
@@ -37,8 +38,8 @@ public:
     void handle_active_call() override;
     void handle_no_active_call() override;
 
-    void handle_enable_inactivity_timeout() override;
-    void handle_disable_inactivity_timeout() override;
+    void handle_enable_inactivity_timeout(std::string const& id) override;
+    void handle_disable_inactivity_timeout(std::string const& id) override;
     void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) override;
 
     void handle_no_notification() override;
@@ -60,10 +61,6 @@ public:
 
 private:
     enum class DisplayPowerMode {unknown, on, off};
-    struct InactivityTimeoutAllowanceEnum {
-        enum Allowance {client, notification, count};
-    };
-    using InactivityTimeoutAllowance = InactivityTimeoutAllowanceEnum::Allowance;
     struct ProximityEnablementEnum {
         enum Enablement {
             until_far_event_or_notification_expiration,
@@ -88,8 +85,8 @@ private:
     void turn_on_display_with_reduced_timeout(DisplayPowerChangeReason reason);
     void brighten_display();
     void dim_display();
-    void allow_inactivity_timeout(InactivityTimeoutAllowance allowance);
-    void disallow_inactivity_timeout(InactivityTimeoutAllowance allowance);
+    void allow_inactivity_timeout(std::string const& id);
+    void disallow_inactivity_timeout(std::string const& id);
     bool is_inactivity_timeout_allowed();
     bool is_inactivity_timeout_application_allowed();
     void enable_proximity(ProximityEnablement enablement);
@@ -109,7 +106,7 @@ private:
     std::shared_ptr<SuspendControl> const suspend_control;
     std::shared_ptr<Timer> const timer;
 
-    std::array<bool,InactivityTimeoutAllowance::count> inactivity_timeout_allowances;
+    std::set<std::string> inactivity_timeout_disallowances;
     std::array<bool,ProximityEnablement::count> proximity_enablements;
     DisplayPowerMode display_power_mode;
     DisplayPowerMode display_power_mode_at_power_button_press;

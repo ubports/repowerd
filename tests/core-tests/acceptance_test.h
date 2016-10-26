@@ -24,6 +24,7 @@
 
 #include <chrono>
 #include <thread>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -50,6 +51,8 @@ struct AcceptanceTest : testing::Test
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
+    void client_request_disable_inactivity_timeout(std::string const& id);
+    void client_request_enable_inactivity_timeout(std::string const& id);
     void client_request_disable_inactivity_timeout();
     void client_request_enable_inactivity_timeout();
     void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
