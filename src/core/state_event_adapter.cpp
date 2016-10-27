@@ -39,3 +39,20 @@ void repowerd::StateEventAdapter::handle_disable_inactivity_timeout(
 
     state_machine.handle_disable_inactivity_timeout();
 }
+
+void repowerd::StateEventAdapter::handle_notification(
+    std::string const& notification_id)
+{
+    active_notifications.insert(notification_id);
+
+    state_machine.handle_notification();
+}
+
+void repowerd::StateEventAdapter::handle_notification_done(
+    std::string const& notification_id)
+{
+    auto const removed = active_notifications.erase(notification_id) == 1;
+
+    if (removed && active_notifications.empty())
+        state_machine.handle_no_notification();
+}

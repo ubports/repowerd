@@ -180,16 +180,26 @@ void rt::AcceptanceTest::client_request_set_inactivity_timeout(
     daemon.flush();
 }
 
-void rt::AcceptanceTest::emit_no_notification()
+void rt::AcceptanceTest::emit_notification(std::string const& id)
 {
-    config.the_fake_notification_service()->emit_no_notification();
+    config.the_fake_notification_service()->emit_notification(id);
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::emit_notification_done(std::string const& id)
+{
+    config.the_fake_notification_service()->emit_notification_done(id);
     daemon.flush();
 }
 
 void rt::AcceptanceTest::emit_notification()
 {
-    config.the_fake_notification_service()->emit_notification();
-    daemon.flush();
+    emit_notification("AcceptanceTestId");
+}
+
+void rt::AcceptanceTest::emit_notification_done()
+{
+    emit_notification_done("AcceptanceTestId");
 }
 
 void rt::AcceptanceTest::emit_power_source_change()

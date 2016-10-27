@@ -72,8 +72,8 @@ public:
 
     HandlerRegistration register_notification_handler(
         NotificationHandler const& handler) override;
-    HandlerRegistration register_no_notification_handler(
-        NoNotificationHandler const& handler) override;
+    HandlerRegistration register_notification_done_handler(
+        NotificationDoneHandler const& handler) override;
 
     void notify_display_power_on(DisplayPowerChangeReason reason) override;
     void notify_display_power_off(DisplayPowerChangeReason reason) override;
@@ -142,7 +142,7 @@ private:
     EnableAutobrightnessHandler enable_autobrightness_handler;
     SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
     NotificationHandler notification_handler;
-    NoNotificationHandler no_notification_handler;
+    NotificationDoneHandler notification_done_handler;
 
     bool started;
 

@@ -21,12 +21,13 @@
 #include "handler_registration.h"
 
 #include <functional>
+#include <string>
 
 namespace repowerd
 {
 
-using NotificationHandler = std::function<void()>;
-using NoNotificationHandler = std::function<void()>;
+using NotificationHandler = std::function<void(std::string const&)>;
+using NotificationDoneHandler = std::function<void(std::string const&)>;
 
 class NotificationService
 {
@@ -35,11 +36,11 @@ public:
 
     virtual void start_processing() = 0;
 
-    virtual HandlerRegistration register_no_notification_handler(
-        NoNotificationHandler const& handler) = 0;
-
     virtual HandlerRegistration register_notification_handler(
         NotificationHandler const& handler) = 0;
+
+    virtual HandlerRegistration register_notification_done_handler(
+        NotificationDoneHandler const& handler) = 0;
 
 protected:
     NotificationService() = default;

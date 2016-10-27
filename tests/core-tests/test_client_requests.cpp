@@ -165,7 +165,7 @@ TEST_F(AClientRequest,
 {
     expect_display_turns_on();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     perform_user_activity_extending_power_state();

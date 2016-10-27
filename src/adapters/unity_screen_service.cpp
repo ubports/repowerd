@@ -142,6 +142,11 @@ char const* const unity_powerd_service_introspection = R"(
   </interface>
 </node>)";
 
+std::string notification_id(std::string const& sender, size_t index)
+{
+    return sender + "-" + std::to_string(index);
+}
+
 }
 
 repowerd::UnityScreenService::UnityScreenService(
@@ -162,8 +167,8 @@ repowerd::UnityScreenService::UnityScreenService(
       disable_autobrightness_handler{null_handler},
       enable_autobrightness_handler{null_handler},
       set_normal_brightness_value_handler{null_arg_handler},
-      notification_handler{null_handler},
-      no_notification_handler{null_handler},
+      notification_handler{null_arg_handler},
+      notification_done_handler{null_arg_handler},
       started{false},
       next_keep_display_on_id{1},
       next_request_sys_state_id{1},
@@ -315,17 +320,17 @@ repowerd::UnityScreenService::register_notification_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { notification_handler = handler; },
-        [this] { notification_handler = null_handler; }};
+        [this] { notification_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
-repowerd::UnityScreenService::register_no_notification_handler(
-    NoNotificationHandler const& handler)
+repowerd::UnityScreenService::register_notification_done_handler(
+    NotificationDoneHandler const& handler)
 {
     return EventLoopHandlerRegistration{
         dbus_event_loop,
-        [this, &handler] { no_notification_handler = handler; },
-        [this] { no_notification_handler = null_handler; }};
+        [this, &handler] { notification_done_handler = handler; },
+        [this] { notification_done_handler = null_arg_handler; }};
 }
 
 void repowerd::UnityScreenService::notify_display_power_on(
@@ -564,7 +569,6 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         auto range = keep_display_on_ids.equal_range(name);
         for (auto iter = range.first; iter != range.second; ++iter)
             enable_inactivity_timeout_handler(std::to_string(iter->second));
-
         keep_display_on_ids.erase(name);
 
         if (request_sys_state_ids.erase(name) > 0 &&
@@ -573,11 +577,9 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
             suspend_control->allow_suspend(suspend_id);
         }
 
-        if (active_notifications.erase(name) > 0 &&
-            active_notifications.empty())
-        {
-            no_notification_handler();
-        }
+        auto const num_notifications_removed = active_notifications.erase(name);
+        for (auto i = 0u; i < num_notifications_removed; ++i)
+            notification_done_handler(notification_id(name, i));
     }
 }
 
@@ -624,8 +626,9 @@ bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
     {
         if (mode == "on")
         {
+            auto const id = notification_id(sender, active_notifications.count(sender));
             active_notifications.emplace(sender);
-            notification_handler();
+            notification_handler(id);
         }
         else if (mode == "off")
         {
@@ -633,8 +636,8 @@ bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
             if (iter != active_notifications.end())
             {
                 active_notifications.erase(iter);
-                if (active_notifications.empty())
-                    no_notification_handler();
+                auto const id = notification_id(sender, active_notifications.count(sender));
+                notification_done_handler(id);
             }
         }
         return true;

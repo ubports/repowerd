@@ -34,28 +34,28 @@ public:
 
     void start_processing() override;
 
-    HandlerRegistration register_no_notification_handler(
-        NoNotificationHandler const& handler) override;
     HandlerRegistration register_notification_handler(
         NotificationHandler const& handler) override;
+    HandlerRegistration register_notification_done_handler(
+        NotificationDoneHandler const& handler) override;
 
-    void emit_no_notification();
-    void emit_notification();
+    void emit_notification(std::string const& id);
+    void emit_notification_done(std::string const& id);
 
     struct Mock
     {
         MOCK_METHOD0(start_processing, void());
-        MOCK_METHOD1(register_no_notification_handler,
-                     void(NoNotificationHandler const&));
-        MOCK_METHOD0(unregister_no_notification_handler, void());
         MOCK_METHOD1(register_notification_handler, void(NotificationHandler const&));
         MOCK_METHOD0(unregister_notification_handler, void());
+        MOCK_METHOD1(register_notification_done_handler,
+                     void(NotificationDoneHandler const&));
+        MOCK_METHOD0(unregister_notification_done_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
-    NoNotificationHandler no_notification_handler;
     NotificationHandler notification_handler;
+    NotificationDoneHandler notification_done_handler;
 };
 
 }

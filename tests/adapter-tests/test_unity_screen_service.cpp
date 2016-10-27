@@ -76,10 +76,10 @@ struct AUnityScreenService : testing::Test
 
         registrations.push_back(
             service.register_notification_handler(
-                [this] { mock_handlers.notification(); }));
+                [this](auto id) { mock_handlers.notification(id); }));
         registrations.push_back(
-            service.register_no_notification_handler(
-                [this] { mock_handlers.no_notification(); }));
+            service.register_notification_done_handler(
+                [this](auto id) { mock_handlers.notification_done(id); }));
 
         service.start_processing();
     }
@@ -94,8 +94,8 @@ struct AUnityScreenService : testing::Test
         MOCK_METHOD0(enable_autobrightness, void());
         MOCK_METHOD1(set_normal_brightness_value, void(double));
 
-        MOCK_METHOD0(notification, void());
-        MOCK_METHOD0(no_notification, void());
+        MOCK_METHOD1(notification, void(std::string const&));
+        MOCK_METHOD1(notification_done, void(std::string const&));
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
@@ -342,7 +342,7 @@ TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
 
 TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_request)
 {
-    EXPECT_CALL(mock_handlers, notification());
+    EXPECT_CALL(mock_handlers, notification(_));
 
     auto reply = client.request_set_screen_power_mode("on", notification_reason);
     EXPECT_THAT(reply.get(), Eq(true));
@@ -351,38 +351,48 @@ TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_reque
 TEST_F(AUnityScreenService,
        forwards_set_screen_power_mode_snap_decision_on_request_as_notification)
 {
-    EXPECT_CALL(mock_handlers, notification());
+    EXPECT_CALL(mock_handlers, notification(_));
 
     auto reply = client.request_set_screen_power_mode("on", snap_decision_reason);
     EXPECT_THAT(reply.get(), Eq(true));
 }
 
 TEST_F(AUnityScreenService,
-       notifies_of_no_notification_if_all_notifications_and_snap_decisions_are_done)
+       notifies_of_notification_done_for_all_notifications_and_snap_decisions)
 {
-    EXPECT_CALL(mock_handlers, notification()).Times(3);
+    std::vector<std::string> notification_ids;
+    std::vector<std::string> notification_done_ids;
+
+    EXPECT_CALL(mock_handlers, notification(_))
+        .Times(3).WillRepeatedly(AppendArg0To(&notification_ids));
     client.request_set_screen_power_mode("on", notification_reason);
     client.request_set_screen_power_mode("on", snap_decision_reason);
     client.request_set_screen_power_mode("on", notification_reason);
     Mock::VerifyAndClearExpectations(&mock_handlers);
 
-    EXPECT_CALL(mock_handlers, notification()).Times(0);
-    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    EXPECT_CALL(mock_handlers, notification(_)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_))
+        .Times(3).WillRepeatedly(AppendArg0To(&notification_done_ids));
     client.request_set_screen_power_mode("off", notification_reason);
     client.request_set_screen_power_mode("off", notification_reason);
-    Mock::VerifyAndClearExpectations(&mock_handlers);
-
-    EXPECT_CALL(mock_handlers, no_notification());
     client.request_set_screen_power_mode("off", snap_decision_reason);
+
+    EXPECT_THAT(notification_done_ids, UnorderedElementsAreArray(notification_ids));
 }
 
-TEST_F(AUnityScreenService, notifies_of_no_notification_when_single_client_disconnects)
+TEST_F(AUnityScreenService, notifies_of_notification_done_when_single_client_disconnects)
 {
+    std::vector<std::string> notification_ids;
+    std::vector<std::string> notification_done_ids;
+
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, notification()).Times(3);
-    EXPECT_CALL(mock_handlers, no_notification())
-        .WillOnce(WakeUp(&request_processed));
+    EXPECT_CALL(mock_handlers, notification(_))
+        .Times(3).WillRepeatedly(AppendArg0To(&notification_ids));
+    EXPECT_CALL(mock_handlers, notification_done(_))
+        .WillOnce(AppendArg0To(&notification_done_ids))
+        .WillOnce(AppendArg0To(&notification_done_ids))
+        .WillOnce(DoAll(AppendArg0To(&notification_done_ids),WakeUp(&request_processed)));
 
     client.request_set_screen_power_mode("on", notification_reason);
     client.request_set_screen_power_mode("on", notification_reason);
@@ -392,29 +402,38 @@ TEST_F(AUnityScreenService, notifies_of_no_notification_when_single_client_disco
 
     request_processed.wait_for(default_timeout);
     EXPECT_TRUE(request_processed.woken());
+
+    EXPECT_THAT(notification_done_ids, UnorderedElementsAreArray(notification_ids));
 }
 
 TEST_F(AUnityScreenService,
-       notifies_of_no_notification_when_all_clients_disconnect_or_remove_requests)
+       notifies_of_notification_done_for_all_clients_that_disconnect_or_remove_requests)
 {
+    std::vector<std::string> notification_ids;
+    std::vector<std::string> notification_done_ids;
+
     rt::UnityScreenDBusClient other_client{bus.address()};
 
-    EXPECT_CALL(mock_handlers, notification()).Times(4);
+    EXPECT_CALL(mock_handlers, notification(_))
+        .Times(4).WillRepeatedly(AppendArg0To(&notification_ids));
 
     client.request_set_screen_power_mode("on", notification_reason);
     client.request_set_screen_power_mode("on", snap_decision_reason);
     other_client.request_set_screen_power_mode("on", notification_reason);
     other_client.request_set_screen_power_mode("on", snap_decision_reason);
 
-    other_client.disconnect();
-    client.request_set_screen_power_mode("off", notification_reason);
-
     Mock::VerifyAndClearExpectations(&mock_handlers);
 
     rt::WaitCondition request_processed;
-    EXPECT_CALL(mock_handlers, no_notification())
-        .WillOnce(WakeUp(&request_processed));
 
+    EXPECT_CALL(mock_handlers, notification_done(_))
+        .WillOnce(AppendArg0To(&notification_done_ids))
+        .WillOnce(AppendArg0To(&notification_done_ids))
+        .WillOnce(AppendArg0To(&notification_done_ids))
+        .WillOnce(DoAll(AppendArg0To(&notification_done_ids), WakeUp(&request_processed)));
+
+    other_client.disconnect();
+    client.request_set_screen_power_mode("off", notification_reason);
     client.request_set_screen_power_mode("off", snap_decision_reason);
 
     request_processed.wait_for(default_timeout);
@@ -423,13 +442,13 @@ TEST_F(AUnityScreenService,
 
 TEST_F(AUnityScreenService, ignores_notification_done_request_from_client_without_notifications)
 {
-    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
     client.request_set_screen_power_mode("off", notification_reason);
 }
 
 TEST_F(AUnityScreenService, ignores_disconnects_from_clients_without_notifications)
 {
-    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
 
     client.disconnect();
 
@@ -490,8 +509,8 @@ TEST_F(AUnityScreenService, does_not_call_unregistered_handlers)
     EXPECT_CALL(mock_handlers, enable_autobrightness()).Times(0);
     EXPECT_CALL(mock_handlers, set_normal_brightness_value(_)).Times(0);
 
-    EXPECT_CALL(mock_handlers, notification()).Times(0);
-    EXPECT_CALL(mock_handlers, no_notification()).Times(0);
+    EXPECT_CALL(mock_handlers, notification(_)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
 
     registrations.clear();
 
@@ -682,7 +701,7 @@ TEST_F(AUnityScreenService, logs_name_owner_changed_for_tracked_notification_cli
 {
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, no_notification())
+    EXPECT_CALL(mock_handlers, notification_done(_))
         .WillOnce(WakeUp(&request_processed));
 
     client.request_set_screen_power_mode("on", notification_reason).get();

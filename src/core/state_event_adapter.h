@@ -32,9 +32,13 @@ public:
     void handle_enable_inactivity_timeout(std::string const& id);
     void handle_disable_inactivity_timeout(std::string const& id);
 
+    void handle_notification(std::string const& id);
+    void handle_notification_done(std::string const& id);
+
 private:
     StateMachine& state_machine;
     std::set<std::string> inactivity_timeout_disallowances;
+    std::set<std::string> active_notifications;
 };
 
 }

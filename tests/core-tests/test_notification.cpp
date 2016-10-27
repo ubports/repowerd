@@ -35,14 +35,11 @@ struct ANotification : rt::AcceptanceTest
 
 }
 
-TEST_F(ANotification, turns_on_display_and_keeps_it_on)
+TEST_F(ANotification, turns_on_display)
 {
     expect_display_turns_on();
     emit_notification();
     verify_expectations();
-
-    expect_no_display_power_change();
-    advance_time_by(10h);
 }
 
 TEST_F(ANotification, turns_off_display_after_post_notification_timeout_when_done)
@@ -52,7 +49,7 @@ TEST_F(ANotification, turns_off_display_after_post_notification_timeout_when_don
     verify_expectations();
 
     expect_no_display_power_change();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -83,7 +80,7 @@ TEST_F(ANotification, does_not_dim_display_after_timeout)
     verify_expectations();
 
     expect_no_display_brightness_change();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout - 1ms);
 }
 
@@ -93,7 +90,7 @@ TEST_F(ANotification, extends_existing_shorter_timeout)
     advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
 
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
 
     expect_no_display_power_change();
     advance_time_by(1ms);
@@ -112,7 +109,7 @@ TEST_F(ANotification, does_not_reduce_existing_longer_timeout)
         1ms);
 
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
 
     expect_no_display_power_change();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
@@ -133,7 +130,7 @@ TEST_F(ANotification, does_not_schedule_inactivity_timeout_when_proximity_is_nea
 
     expect_no_display_power_change();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
@@ -141,7 +138,7 @@ TEST_F(ANotification, timeout_is_extended_by_user_activity)
 {
     expect_display_turns_on();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_no_display_power_change();
@@ -186,7 +183,7 @@ TEST_F(ANotification,
 
     expect_no_display_power_change();
     client_request_disable_inactivity_timeout();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -199,7 +196,7 @@ TEST_F(ANotification,
     expect_display_turns_on();
     emit_notification();
     client_request_set_inactivity_timeout(infinite_timeout);
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -217,7 +214,7 @@ TEST_F(ANotification,
 
     expect_display_turns_on();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -231,7 +228,7 @@ TEST_F(ANotification,
 
     expect_display_turns_on();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_display_turns_off();
@@ -247,7 +244,7 @@ TEST_F(ANotification,
 
     expect_no_display_power_change();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
@@ -259,7 +256,7 @@ TEST_F(ANotification,
 
     expect_no_display_power_change();
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
@@ -270,7 +267,7 @@ TEST_F(ANotification, event_notifies_of_display_power_change)
     emit_notification();
     verify_expectations();
 
-    emit_no_notification();
+    emit_notification_done();
 
     expect_display_power_off_notification(
         repowerd::DisplayPowerChangeReason::activity);
@@ -285,7 +282,7 @@ TEST_F(ANotification, turns_display_on_for_reduced_timeout_if_proximity_uncovere
 
     expect_display_turns_on();
     emit_proximity_state_far_if_enabled();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_no_display_power_change();
@@ -340,13 +337,13 @@ TEST_F(ANotification,
     emit_notification();
     expect_display_brightens();
     perform_user_activity_extending_power_state();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_no_display_power_change();
     advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
     verify_expectations();
 }
@@ -364,13 +361,13 @@ TEST_F(ANotification,
     emit_notification();
     expect_display_brightens();
     perform_user_activity_extending_power_state();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 
     expect_no_display_power_change();
     advance_time_by(user_inactivity_normal_display_off_timeout);
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
     advance_time_by(user_inactivity_post_notification_display_off_timeout);
     verify_expectations();
 }
@@ -393,7 +390,7 @@ TEST_F(ANotification,
     verify_expectations();
 
     expect_no_display_power_change();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 }
 
@@ -421,7 +418,7 @@ TEST_F(ANotification,
     verify_expectations();
 
     expect_no_display_power_change();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
 }
 
@@ -445,8 +442,37 @@ TEST_F(ANotification,
     verify_expectations();
 
     expect_no_display_power_change();
-    emit_no_notification();
+    emit_notification_done();
     verify_expectations();
+}
+
+TEST_F(ANotification, keeps_display_on_until_all_done)
+{
+    std::string const id1{"id1"};
+    std::string const id2{"id2"};
+    std::string const id3{"id3"};
+
+    expect_display_turns_on();
+    emit_notification(id1);
+    verify_expectations();
+
+    expect_display_brightens();
+    emit_notification(id2);
+    verify_expectations();
+
+    expect_display_brightens();
+    emit_notification(id3);
+    verify_expectations();
+
+    expect_no_display_power_change();
+    emit_notification_done(id3);
+    emit_notification_done(id1);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
+    verify_expectations();
+
+    expect_display_turns_off();
+    emit_notification_done(id2);
+    advance_time_by(user_inactivity_post_notification_display_off_timeout);
 }
 
 TEST_F(ANotification, is_logged)
@@ -456,9 +482,10 @@ TEST_F(ANotification, is_logged)
     EXPECT_TRUE(log_contains_line({"notification"}));
 }
 
-TEST_F(ANotification, done_is_logged)
+TEST_F(ANotification, all_done_is_logged)
 {
-    emit_no_notification();
+    emit_notification();
+    emit_notification_done();
 
     EXPECT_TRUE(log_contains_line({"no_notification"}));
 }

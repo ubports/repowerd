@@ -159,18 +159,18 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         notification_service->register_notification_handler(
-            [this]
+            [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this] { state_machine->handle_notification(); });
+                    [this,id] { state_event_adapter.handle_notification(id); });
             }));
 
     registrations.push_back(
-        notification_service->register_no_notification_handler(
-            [this]
+        notification_service->register_notification_done_handler(
+            [this] (std::string const& id)
             {
                 enqueue_action(
-                    [this] { state_machine->handle_no_notification(); });
+                    [this,id] { state_event_adapter.handle_notification_done(id); });
             }));
 
     registrations.push_back(

@@ -415,7 +415,7 @@ TEST_F(ADaemon, notifies_state_machine_of_notification)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_notification());
 
-    config.the_fake_notification_service()->emit_notification();
+    config.the_fake_notification_service()->emit_notification("id");
 }
 
 TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
@@ -423,12 +423,12 @@ TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
     using namespace testing;
 
     InSequence s;
-    EXPECT_CALL(config.the_fake_notification_service()->mock, register_no_notification_handler(_));
+    EXPECT_CALL(config.the_fake_notification_service()->mock, register_notification_done_handler(_));
     EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing());
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 
-    EXPECT_CALL(config.the_fake_notification_service()->mock, unregister_no_notification_handler());
+    EXPECT_CALL(config.the_fake_notification_service()->mock, unregister_notification_done_handler());
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_notification_service().get());
 }
@@ -439,7 +439,8 @@ TEST_F(ADaemon, notifies_state_machine_of_no_notification)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_no_notification());
 
-    config.the_fake_notification_service()->emit_no_notification();
+    config.the_fake_notification_service()->emit_notification("id");
+    config.the_fake_notification_service()->emit_notification_done("id");
 }
 
 TEST_F(ADaemon, registers_and_unregisters_active_call_handler)

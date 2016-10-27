@@ -172,7 +172,7 @@ TEST_F(AUserActivity,
     client_request_set_inactivity_timeout(infinite_timeout);
 
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
 
     perform_user_activity_changing_power_state();
 
@@ -187,7 +187,7 @@ TEST_F(AUserActivity,
     client_request_set_inactivity_timeout(infinite_timeout);
 
     emit_notification();
-    emit_no_notification();
+    emit_notification_done();
 
     perform_user_activity_extending_power_state();
 
