@@ -28,6 +28,7 @@
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
 #include "adapters/libsuspend_suspend_control.h"
+#include "adapters/logind_session_tracker.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/real_chrono.h"
@@ -248,6 +249,18 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
     }
 
     return proximity_sensor;
+}
+
+std::shared_ptr<repowerd::SessionTracker>
+repowerd::DefaultDaemonConfig::the_session_tracker()
+{
+    if (!session_tracker)
+    {
+        session_tracker = std::make_shared<LogindSessionTracker>(
+            the_log(), the_dbus_bus_address());
+    }
+
+    return session_tracker;
 }
 
 std::shared_ptr<repowerd::ShutdownControl>

@@ -101,6 +101,11 @@ std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_senso
     return the_fake_proximity_sensor();
 }
 
+std::shared_ptr<repowerd::SessionTracker> rt::DaemonConfig::the_session_tracker()
+{
+    return nullptr;
+}
+
 std::shared_ptr<repowerd::ShutdownControl> rt::DaemonConfig::the_shutdown_control()
 {
     return the_mock_shutdown_control();

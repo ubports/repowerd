@@ -60,6 +60,7 @@ public:
     std::shared_ptr<PowerButtonEventSink> the_power_button_event_sink() override;
     std::shared_ptr<PowerSource> the_power_source() override;
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
+    std::shared_ptr<SessionTracker> the_session_tracker() override;
     std::shared_ptr<ShutdownControl> the_shutdown_control() override;
     std::shared_ptr<StateMachine> the_state_machine() override;
     std::shared_ptr<SuspendControl> the_suspend_control() override;
