@@ -26,6 +26,7 @@ add_executable(
     fake_device_quirks.cpp
     fake_filesystem.cpp
     fake_libhardware.cpp
+    fake_logind.cpp
     fake_ofono.cpp
     fake_upower.cpp
     fake_wakeup_service.cpp
@@ -41,6 +42,7 @@ add_executable(
     test_brightness_params.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp
+    test_logind_session_tracker.cpp
     test_monotone_spline.cpp
     test_ofono_voice_call_service.cpp
     test_path.cpp
