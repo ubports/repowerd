@@ -85,6 +85,20 @@ target_link_libraries(
 )
 
 add_executable(
+    repowerd-session-tool
+
+    session_tool.cpp
+)
+
+target_link_libraries(
+    repowerd-session-tool
+
+    repowerd-core
+    repowerd-adapters
+    repowerd-default-daemon-config
+)
+
+add_executable(
     repowerd-wakeup-tool
 
     wakeup_tool.cpp
