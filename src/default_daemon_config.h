@@ -53,7 +53,7 @@ public:
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
     std::shared_ptr<SessionTracker> the_session_tracker() override;
     std::shared_ptr<ShutdownControl> the_shutdown_control() override;
-    std::shared_ptr<StateMachine> the_state_machine() override;
+    std::shared_ptr<StateMachineFactory> the_state_machine_factory() override;
     std::shared_ptr<SuspendControl> the_suspend_control() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
@@ -101,7 +101,7 @@ private:
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<SessionTracker> session_tracker;
     std::shared_ptr<ShutdownControl> shutdown_control;
-    std::shared_ptr<StateMachine> state_machine;
+    std::shared_ptr<StateMachineFactory> state_machine_factory;
     std::shared_ptr<SuspendControl> suspend_control;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UnityPowerButton> unity_power_button;

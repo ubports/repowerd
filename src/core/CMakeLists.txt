@@ -18,6 +18,7 @@ set(
     REPOWERD_CORE_SRCS
     daemon.cpp
     default_state_machine.cpp
+    default_state_machine_factory.cpp
     handler_registration.cpp
     state_event_adapter.cpp
 )

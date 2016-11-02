@@ -38,7 +38,7 @@ class PowerSource;
 class ProximitySensor;
 class SessionTracker;
 class ShutdownControl;
-class StateMachine;
+class StateMachineFactory;
 class SuspendControl;
 class Timer;
 class UserActivity;
@@ -63,7 +63,7 @@ public:
     virtual std::shared_ptr<ProximitySensor> the_proximity_sensor() = 0;
     virtual std::shared_ptr<SessionTracker> the_session_tracker() = 0;
     virtual std::shared_ptr<ShutdownControl> the_shutdown_control() = 0;
-    virtual std::shared_ptr<StateMachine> the_state_machine() = 0;
+    virtual std::shared_ptr<StateMachineFactory> the_state_machine_factory() = 0;
     virtual std::shared_ptr<SuspendControl> the_suspend_control() = 0;
     virtual std::shared_ptr<Timer> the_timer() = 0;
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;

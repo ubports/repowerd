@@ -26,6 +26,7 @@
 #include "power_source.h"
 #include "proximity_sensor.h"
 #include "state_machine.h"
+#include "state_machine_factory.h"
 #include "timer.h"
 #include "user_activity.h"
 #include "voice_call_service.h"
@@ -39,7 +40,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       power_button{config.the_power_button()},
       power_source{config.the_power_source()},
       proximity_sensor{config.the_proximity_sensor()},
-      state_machine{config.the_state_machine()},
+      state_machine{config.the_state_machine_factory()->create_state_machine()},
       timer{config.the_timer()},
       user_activity{config.the_user_activity()},
       voice_call_service{config.the_voice_call_service()},

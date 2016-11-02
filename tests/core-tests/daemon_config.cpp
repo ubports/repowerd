@@ -17,7 +17,7 @@
  */
 
 #include "daemon_config.h"
-#include "src/core/default_state_machine.h"
+#include "src/core/default_state_machine_factory.h"
 
 #include "mock_brightness_control.h"
 #include "fake_client_requests.h"
@@ -111,11 +111,11 @@ std::shared_ptr<repowerd::ShutdownControl> rt::DaemonConfig::the_shutdown_contro
     return the_mock_shutdown_control();
 }
 
-std::shared_ptr<repowerd::StateMachine> rt::DaemonConfig::the_state_machine()
+std::shared_ptr<repowerd::StateMachineFactory> rt::DaemonConfig::the_state_machine_factory()
 {
-    if (!state_machine)
-        state_machine = std::make_shared<DefaultStateMachine>(*this);
-    return state_machine;
+    if (!state_machine_factory)
+        state_machine_factory = std::make_shared<DefaultStateMachineFactory>(*this);
+    return state_machine_factory;
 }
 
 std::shared_ptr<repowerd::SuspendControl> rt::DaemonConfig::the_suspend_control()

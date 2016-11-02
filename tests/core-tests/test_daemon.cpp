@@ -29,6 +29,7 @@
 
 #include "src/core/daemon.h"
 #include "src/core/state_machine.h"
+#include "src/core/state_machine_factory.h"
 
 #include <thread>
 
@@ -70,14 +71,9 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
 };
 
-struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
+struct MockStateMachineFactory : public repowerd::StateMachineFactory
 {
-    std::shared_ptr<repowerd::StateMachine> the_state_machine() override
-    {
-        return the_mock_state_machine();
-    }
-
-    std::shared_ptr<MockStateMachine> the_mock_state_machine()
+    std::shared_ptr<repowerd::StateMachine> create_state_machine()
     {
         if (!mock_state_machine)
             mock_state_machine = std::make_shared<MockStateMachine>();
@@ -85,6 +81,24 @@ struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
     }
 
     std::shared_ptr<MockStateMachine> mock_state_machine;
+};
+
+struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
+{
+    std::shared_ptr<repowerd::StateMachineFactory> the_state_machine_factory() override
+    {
+        if (!mock_state_machine_factory)
+            mock_state_machine_factory = std::make_shared<MockStateMachineFactory>();
+        return mock_state_machine_factory;
+    }
+
+    std::shared_ptr<MockStateMachine> the_mock_state_machine()
+    {
+        the_state_machine_factory()->create_state_machine();
+        return mock_state_machine_factory->mock_state_machine;
+    }
+
+    std::shared_ptr<MockStateMachineFactory> mock_state_machine_factory;
 };
 
 struct ADaemon : testing::Test

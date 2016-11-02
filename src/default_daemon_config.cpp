@@ -17,7 +17,7 @@
  */
 
 #include "default_daemon_config.h"
-#include "core/default_state_machine.h"
+#include "core/default_state_machine_factory.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -271,12 +271,12 @@ repowerd::DefaultDaemonConfig::the_shutdown_control()
     return shutdown_control;
 }
 
-std::shared_ptr<repowerd::StateMachine>
-repowerd::DefaultDaemonConfig::the_state_machine()
+std::shared_ptr<repowerd::StateMachineFactory>
+repowerd::DefaultDaemonConfig::the_state_machine_factory()
 {
-    if (!state_machine)
-        state_machine = std::make_shared<DefaultStateMachine>(*this);
-    return state_machine;
+    if (!state_machine_factory)
+        state_machine_factory = std::make_shared<DefaultStateMachineFactory>(*this);
+    return state_machine_factory;
 }
 
 std::shared_ptr<repowerd::SuspendControl>
