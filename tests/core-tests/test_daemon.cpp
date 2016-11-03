@@ -17,11 +17,13 @@
  */
 
 #include "daemon_config.h"
+#include "run_daemon.h"
 #include "fake_client_requests.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
+#include "fake_session_tracker.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
@@ -121,8 +123,7 @@ struct ADaemon : testing::Test
     void start_daemon_with_config(repowerd::DaemonConfig& config)
     {
         daemon = std::make_unique<repowerd::Daemon>(config);
-        daemon_thread = std::thread{ [this] { daemon->run(); }};
-        daemon->flush();
+        daemon_thread = rt::run_daemon(*daemon);
     }
 
     void stop_daemon()
@@ -572,4 +573,36 @@ TEST_F(ADaemon, notifies_state_machine_of_power_source_critical)
     EXPECT_CALL(*config.the_mock_state_machine(), handle_power_source_critical());
 
     config.the_fake_power_source()->emit_power_source_critical();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_active_session_changed_handler)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(config.the_fake_session_tracker()->mock,
+                register_active_session_changed_handler(_));
+    EXPECT_CALL(config.the_fake_session_tracker()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_session_tracker().get());
+
+    EXPECT_CALL(config.the_fake_session_tracker()->mock,
+                unregister_active_session_changed_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_session_tracker().get());
+}
+
+TEST_F(ADaemon, registers_and_unregisters_session_removed_handler)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(config.the_fake_session_tracker()->mock, register_session_removed_handler(_));
+    EXPECT_CALL(config.the_fake_session_tracker()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_session_tracker().get());
+
+    EXPECT_CALL(config.the_fake_session_tracker()->mock, unregister_session_removed_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_session_tracker().get());
 }

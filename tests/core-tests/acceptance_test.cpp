@@ -17,6 +17,7 @@
  */
 
 #include "acceptance_test.h"
+#include "run_daemon.h"
 
 #include "daemon_config.h"
 #include "mock_brightness_control.h"
@@ -60,8 +61,7 @@ rt::AcceptanceTest::AcceptanceTest()
           config.user_inactivity_reduced_display_off_timeout()},
       infinite_timeout{repowerd::infinite_timeout}
 {
-    daemon_thread = std::thread{ [this] { daemon.run(); }};
-    daemon.flush();
+    daemon_thread = run_daemon(daemon);
 }
 
 rt::AcceptanceTest::~AcceptanceTest()

@@ -21,6 +21,7 @@
 #include "daemon_config.h"
 #include "handler_registration.h"
 #include "state_event_adapter.h"
+#include "session_tracker.h"
 
 #include <memory>
 #include <vector>
@@ -28,6 +29,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+#include <unordered_map>
+#include <string>
 
 namespace repowerd
 {
@@ -50,19 +53,33 @@ private:
     void enqueue_priority_action(Action const& event);
     Action dequeue_action();
 
+    void handle_session_activated(std::string const&, repowerd::SessionType);
+    void handle_session_removed(std::string const&);
+
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<ClientRequests> const client_requests;
     std::shared_ptr<NotificationService> const notification_service;
     std::shared_ptr<PowerButton> const power_button;
     std::shared_ptr<PowerSource> const power_source;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
-    std::shared_ptr<StateMachine> const state_machine;
+    std::shared_ptr<SessionTracker> const session_tracker;
+    std::shared_ptr<StateMachineFactory> const state_machine_factory;
     std::shared_ptr<Timer> const timer;
     std::shared_ptr<UserActivity> const user_activity;
     std::shared_ptr<VoiceCallService> const voice_call_service;
 
-    StateEventAdapter state_event_adapter;
+    bool const turn_on_display_at_startup;
     bool running;
+
+    struct Session
+    {
+        Session(std::shared_ptr<StateMachine> const& state_machine);
+        std::shared_ptr<StateMachine> const state_machine;
+        StateEventAdapter state_event_adapter;
+    };
+
+    std::unordered_map<std::string,Session> sessions;
+    Session* active_session;
 
     std::mutex action_queue_mutex;
     std::condition_variable action_queue_cv;

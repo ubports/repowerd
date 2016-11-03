@@ -30,8 +30,9 @@
 #include "fake_power_button.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_power_source.h"
-#include "mock_shutdown_control.h"
 #include "fake_proximity_sensor.h"
+#include "fake_session_tracker.h"
+#include "mock_shutdown_control.h"
 #include "fake_suspend_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
@@ -103,7 +104,7 @@ std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_senso
 
 std::shared_ptr<repowerd::SessionTracker> rt::DaemonConfig::the_session_tracker()
 {
-    return nullptr;
+    return the_fake_session_tracker();
 }
 
 std::shared_ptr<repowerd::ShutdownControl> rt::DaemonConfig::the_shutdown_control()
@@ -279,6 +280,14 @@ std::shared_ptr<rt::FakeProximitySensor> rt::DaemonConfig::the_fake_proximity_se
         fake_proximity_sensor = std::make_shared<rt::FakeProximitySensor>();
 
     return fake_proximity_sensor;
+}
+
+std::shared_ptr<rt::FakeSessionTracker> rt::DaemonConfig::the_fake_session_tracker()
+{
+    if (!fake_session_tracker)
+        fake_session_tracker = std::make_shared<rt::FakeSessionTracker>();
+
+    return fake_session_tracker;
 }
 
 std::shared_ptr<NiceMock<rt::MockShutdownControl>>

@@ -17,6 +17,7 @@
  */
 
 #include "daemon_config.h"
+#include "run_daemon.h"
 #include "mock_display_power_control.h"
 #include "mock_brightness_control.h"
 #include "fake_log.h"
@@ -45,9 +46,8 @@ TEST(ATurnOnDisplayAtStartupOption, turns_on_display_at_startup)
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
 
-    std::thread daemon_thread{[&] { daemon.run(); }};
+    auto daemon_thread = rt::run_daemon(daemon);
 
-    daemon.flush();
     daemon.stop();
     daemon_thread.join();
 
