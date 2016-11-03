@@ -234,7 +234,9 @@ void repowerd::LogindSessionTracker::activate_session(std::string const& session
 void repowerd::LogindSessionTracker::deactivate_session()
 {
     log->log(log_tag, "deactivate_session()");
-    active_session_changed_handler("", repowerd::SessionType::RepowerdIncompatible);
+    active_session_changed_handler(
+        repowerd::invalid_session_id,
+        repowerd::SessionType::RepowerdIncompatible);
 }
 
 std::string repowerd::LogindSessionTracker::dbus_get_active_session()

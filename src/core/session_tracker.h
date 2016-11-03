@@ -28,6 +28,8 @@ enum class SessionType { RepowerdCompatible, RepowerdIncompatible };
 using ActiveSessionChangedHandler = std::function<void(std::string const&, SessionType)>;
 using SessionRemovedHandler = std::function<void(std::string const&)>;
 
+std::string const invalid_session_id;
+
 class SessionTracker
 {
 public:

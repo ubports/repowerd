@@ -35,10 +35,6 @@
 
 #include <future>
 
-namespace
-{
-std::string const null_session_id;
-}
 repowerd::Daemon::Session::Session(
     std::shared_ptr<StateMachine> const& state_machine)
     : state_machine{state_machine},
@@ -61,8 +57,8 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       turn_on_display_at_startup{config.turn_on_display_at_startup()},
       running{false}
 {
-    sessions.emplace(null_session_id, Session{std::make_shared<NullStateMachine>()});
-    active_session = &sessions.at(null_session_id);
+    sessions.emplace(repowerd::invalid_session_id, Session{std::make_shared<NullStateMachine>()});
+    active_session = &sessions.at(repowerd::invalid_session_id);
 }
 
 void repowerd::Daemon::run()
@@ -308,7 +304,7 @@ void repowerd::Daemon::handle_session_activated(
 {
     if (session_type == SessionType::RepowerdIncompatible)
     {
-        active_session = &sessions.at(null_session_id);
+        active_session = &sessions.at(repowerd::invalid_session_id);
     }
     else
     {

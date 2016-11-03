@@ -188,7 +188,8 @@ TEST_F(ALogindSessionTracker, notifies_of_session_deactivation)
 {
     fake_logind.deactivate_session();
 
-    wait_until_active_session_is("", repowerd::SessionType::RepowerdIncompatible);
+    wait_until_active_session_is(
+        repowerd::invalid_session_id, repowerd::SessionType::RepowerdIncompatible);
 }
 
 TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
@@ -227,7 +228,7 @@ TEST_F(ALogindSessionTracker, logs_change_in_active_session)
 TEST_F(ALogindSessionTracker, logs_session_deactivation)
 {
     fake_logind.deactivate_session();
-    wait_until_active_session_is("");
+    wait_until_active_session_is(repowerd::invalid_session_id);
 
     EXPECT_TRUE(fake_log.contains_line({"deactivate_session"}));
 }
