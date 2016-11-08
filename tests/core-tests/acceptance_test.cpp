@@ -71,6 +71,21 @@ rt::AcceptanceTest::~AcceptanceTest()
     daemon_thread.join();
 }
 
+void rt::AcceptanceTest::expect_autobrightness_disabled()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), disable_autobrightness());
+}
+
+void rt::AcceptanceTest::expect_autobrightness_enabled()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), enable_autobrightness());
+}
+
+void rt::AcceptanceTest::expect_normal_brightness_value_set_to(double value)
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
+}
+
 void rt::AcceptanceTest::expect_display_turns_off()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
@@ -177,6 +192,24 @@ void rt::AcceptanceTest::client_request_set_inactivity_timeout(
     std::chrono::milliseconds timeout)
 {
     config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::client_request_disable_autobrightness()
+{
+    config.the_fake_client_requests()->emit_disable_autobrightness();
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::client_request_enable_autobrightness()
+{
+    config.the_fake_client_requests()->emit_enable_autobrightness();
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::client_request_set_normal_brightness_value(double value)
+{
+    config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
     daemon.flush();
 }
 

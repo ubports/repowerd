@@ -71,6 +71,10 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
+
+    MOCK_METHOD1(handle_set_normal_brightness_value, void(double));
+    MOCK_METHOD0(handle_enable_autobrightness, void());
+    MOCK_METHOD0(handle_disable_autobrightness, void());
 };
 
 struct MockStateMachineFactory : public repowerd::StateMachineFactory
@@ -351,11 +355,11 @@ TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 }
 
-TEST_F(ADaemon, notifies_brightness_control_of_disable_autobrightness)
+TEST_F(ADaemon, notifies_state_machine_of_disable_autobrightness)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_brightness_control(), disable_autobrightness());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_autobrightness());
 
     config.the_fake_client_requests()->emit_disable_autobrightness();
 }
@@ -375,11 +379,11 @@ TEST_F(ADaemon, registers_and_unregisters_enable_autobrightness)
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 }
 
-TEST_F(ADaemon, notifies_brightness_control_of_enable_autobrightness)
+TEST_F(ADaemon, notifies_state_machine_of_enable_autobrightness)
 {
     start_daemon();
 
-    EXPECT_CALL(*config.the_mock_brightness_control(), enable_autobrightness());
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_autobrightness());
 
     config.the_fake_client_requests()->emit_enable_autobrightness();
 }
@@ -399,12 +403,12 @@ TEST_F(ADaemon, registers_and_unregisters_set_normal_brightness_value)
     testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
 }
 
-TEST_F(ADaemon, notifies_brightness_control_of_set_normal_brightness_value)
+TEST_F(ADaemon, notifies_state_machine_of_set_normal_brightness_value)
 {
     start_daemon();
 
     auto const value = 0.7;
-    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_set_normal_brightness_value(value));
 
     config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
 }

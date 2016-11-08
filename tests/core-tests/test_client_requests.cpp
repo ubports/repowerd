@@ -233,6 +233,27 @@ TEST_F(AClientRequest, to_disable_inactivity_timeout_works_until_all_requests_ar
     verify_expectations();
 }
 
+TEST_F(AClientRequest, to_enable_autobrightness_works)
+{
+    expect_autobrightness_enabled();
+
+    client_request_enable_autobrightness();
+}
+
+TEST_F(AClientRequest, to_disable_autobrightness_works)
+{
+    expect_autobrightness_disabled();
+
+    client_request_disable_autobrightness();
+}
+
+TEST_F(AClientRequest, to_set_brightness_value_works)
+{
+    expect_normal_brightness_value_set_to(0.56);
+
+    client_request_set_normal_brightness_value(0.56);
+}
+
 TEST_F(AClientRequest, to_disable_inactivity_timeout_is_logged)
 {
     client_request_disable_inactivity_timeout();
@@ -252,4 +273,25 @@ TEST_F(AClientRequest, to_set_inactivity_timeout_is_logged)
     client_request_set_inactivity_timeout(15000ms);
 
     EXPECT_TRUE(log_contains_line({"set_inactivity_timeout", "15000"}));
+}
+
+TEST_F(AClientRequest, to_disable_autobrightness_is_logged)
+{
+    client_request_disable_autobrightness();
+
+    EXPECT_TRUE(log_contains_line({"disable_autobrightness"}));
+}
+
+TEST_F(AClientRequest, to_enable_autobrightness_is_logged)
+{
+    client_request_enable_autobrightness();
+
+    EXPECT_TRUE(log_contains_line({"enable_autobrightness"}));
+}
+
+TEST_F(AClientRequest, to_set_normal_brightness_value_is_logged)
+{
+    client_request_set_normal_brightness_value(0.67);
+
+    EXPECT_TRUE(log_contains_line({"set_normal_brightness_value", "0.67"}));
 }

@@ -51,6 +51,10 @@ public:
 
     void handle_user_activity_changing_power_state() {}
     void handle_user_activity_extending_power_state() {}
+
+    void handle_set_normal_brightness_value(double) {}
+    void handle_enable_autobrightness() {}
+    void handle_disable_autobrightness() {}
 };
 
 }

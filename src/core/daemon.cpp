@@ -211,24 +211,27 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_set_normal_brightness_value_handler(
             [this] (double value)
             {
-                enqueue_action(
-                    [this,value] { brightness_control->set_normal_brightness_value(value); });
+                enqueue_action_to_active_session(
+                    [this,value] (Session* s)
+                    {
+                        s->state_machine->handle_set_normal_brightness_value(value);
+                    });
             }));
 
     registrations.push_back(
         client_requests->register_disable_autobrightness_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { brightness_control->disable_autobrightness(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_disable_autobrightness(); });
             }));
 
     registrations.push_back(
         client_requests->register_enable_autobrightness_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { brightness_control->enable_autobrightness(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_enable_autobrightness(); });
             }));
 
     registrations.push_back(

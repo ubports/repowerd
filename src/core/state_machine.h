@@ -56,6 +56,9 @@ public:
     virtual void handle_user_activity_changing_power_state() = 0;
     virtual void handle_user_activity_extending_power_state() = 0;
 
+    virtual void handle_set_normal_brightness_value(double) = 0;
+    virtual void handle_enable_autobrightness() = 0;
+    virtual void handle_disable_autobrightness() = 0;
 
 protected:
     StateMachine() = default;

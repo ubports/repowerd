@@ -58,6 +58,10 @@ public:
     void handle_user_activity_changing_power_state() override;
     void handle_user_activity_extending_power_state() override;
 
+    void handle_set_normal_brightness_value(double value) override;
+    void handle_enable_autobrightness() override;
+    void handle_disable_autobrightness() override;
+
 private:
     enum class DisplayPowerMode {unknown, on, off};
     struct InactivityTimeoutAllowanceEnum {

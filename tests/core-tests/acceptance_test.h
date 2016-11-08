@@ -38,6 +38,9 @@ struct AcceptanceTest : testing::Test
     AcceptanceTest();
     ~AcceptanceTest();
 
+    void expect_autobrightness_disabled();
+    void expect_autobrightness_enabled();
+    void expect_normal_brightness_value_set_to(double);
     void expect_display_turns_off();
     void expect_display_turns_on();
     void expect_display_dims();
@@ -56,6 +59,9 @@ struct AcceptanceTest : testing::Test
     void client_request_disable_inactivity_timeout();
     void client_request_enable_inactivity_timeout();
     void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
+    void client_request_disable_autobrightness();
+    void client_request_enable_autobrightness();
+    void client_request_set_normal_brightness_value(double value);
     void emit_notification(std::string const& id);
     void emit_notification_done(std::string const& id);
     void emit_notification();

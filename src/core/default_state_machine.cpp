@@ -352,6 +352,27 @@ void repowerd::DefaultStateMachine::handle_user_activity_extending_power_state()
     }
 }
 
+void repowerd::DefaultStateMachine::handle_set_normal_brightness_value(double value)
+{
+    log->log(log_tag, "handle_set_normal_brightness_value(%.2f)", value);
+
+    brightness_control->set_normal_brightness_value(value);
+}
+
+void repowerd::DefaultStateMachine::handle_enable_autobrightness()
+{
+    log->log(log_tag, "enable_autobrightness");
+
+    brightness_control->enable_autobrightness();
+}
+
+void repowerd::DefaultStateMachine::handle_disable_autobrightness()
+{
+    log->log(log_tag, "disable_autobrightness");
+
+    brightness_control->disable_autobrightness();
+}
+
 void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
 {
     if (user_inactivity_display_dim_alarm_id != AlarmId::invalid)
