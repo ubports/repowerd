@@ -32,6 +32,7 @@
 #include <unordered_set>
 
 #include <gio/gio.h>
+#include <sys/types.h>
 
 namespace repowerd
 {
@@ -95,11 +96,11 @@ private:
         gchar const* signal_name,
         GVariant* parameters);
 
-    int32_t dbus_keepDisplayOn(std::string const& sender);
-    void dbus_removeDisplayOnRequest(std::string const& sender, int32_t id);
-    void dbus_setUserBrightness(int32_t brightness);
-    void dbus_setInactivityTimeouts(int32_t poweroff_timeout, int32_t dimmer_timeout);
-    void dbus_userAutobrightnessEnable(bool enable);
+    int32_t dbus_keepDisplayOn(std::string const& sender, pid_t pid);
+    void dbus_removeDisplayOnRequest(std::string const& sender, int32_t id, pid_t pid);
+    void dbus_setUserBrightness(int32_t brightness, pid_t pid);
+    void dbus_setInactivityTimeouts(int32_t poweroff_timeout, int32_t dimmer_timeout, pid_t pid);
+    void dbus_userAutobrightnessEnable(bool enable, pid_t pid);
     void dbus_NameOwnerChanged(
         std::string const& name,
         std::string const& old_owner,
@@ -107,7 +108,8 @@ private:
     bool dbus_setScreenPowerMode(
         std::string const& sender,
         std::string const& mode,
-        int32_t reason);
+        int32_t reason,
+        pid_t pid);
     void dbus_emit_DisplayPowerStateChange(int32_t power_state, int32_t reason);
 
     std::string dbus_requestSysState(
@@ -127,6 +129,7 @@ private:
     void dbus_emit_brightness(double brightness);
 
     void dbus_unknown_method(std::string const& sender, std::string const& name);
+    pid_t dbus_get_invocation_sender_pid(GDBusMethodInvocation* invocation);
 
     std::shared_ptr<WakeupService> const wakeup_service;
     std::shared_ptr<BrightnessNotification> const brightness_notification;

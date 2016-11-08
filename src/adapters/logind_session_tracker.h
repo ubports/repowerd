@@ -44,6 +44,8 @@ public:
     HandlerRegistration register_session_removed_handler(
         SessionRemovedHandler const& handler) override;
 
+    std::string session_for_pid(pid_t pid) override;
+
 private:
     void handle_dbus_signal(
         GDBusConnection* connection,
@@ -62,6 +64,7 @@ private:
     void deactivate_session();
     std::string dbus_get_active_session();
     std::string dbus_get_session_type(std::string const& session_path);
+    std::string dbus_get_session_by_pid(pid_t pid);
 
     std::shared_ptr<Log> const log;
 

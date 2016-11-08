@@ -20,6 +20,8 @@
 
 #include "src/core/session_tracker.h"
 
+#include <unordered_map>
+
 #include <gmock/gmock.h>
 
 namespace repowerd
@@ -39,6 +41,15 @@ public:
     HandlerRegistration register_session_removed_handler(
         SessionRemovedHandler const& handler) override;
 
+    std::string session_for_pid(pid_t) override;
+
+    void add_session(std::string const& session, SessionType type, pid_t pid);
+    void remove_session(std::string const& session);
+
+    void switch_to_session(std::string const& session_id);
+
+    std::string default_session();
+
     struct Mock
     {
         MOCK_METHOD0(start_processing, void());
@@ -54,6 +65,13 @@ public:
 private:
     ActiveSessionChangedHandler active_session_changed_handler;
     SessionRemovedHandler session_removed_handler;
+
+    struct SessionInfo
+    {
+        SessionType type;
+        pid_t pid;
+    };
+    std::unordered_map<std::string,SessionInfo> sessions;
 };
 
 }

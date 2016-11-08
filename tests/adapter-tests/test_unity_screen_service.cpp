@@ -50,52 +50,52 @@ struct AUnityScreenService : testing::Test
     {
         registrations.push_back(
             service.register_disable_inactivity_timeout_handler(
-                [this](auto id){ mock_handlers.disable_inactivity_timeout(id); }));
+                [this](auto id, auto pid){ mock_handlers.disable_inactivity_timeout(id, pid); }));
         registrations.push_back(
             service.register_enable_inactivity_timeout_handler(
-                [this](auto id) { mock_handlers.enable_inactivity_timeout(id); }));
+                [this](auto id, auto pid) { mock_handlers.enable_inactivity_timeout(id, pid); }));
         registrations.push_back(
             service.register_set_inactivity_timeout_handler(
-                [this] (std::chrono::milliseconds ms)
+                [this] (std::chrono::milliseconds ms, auto pid)
                 {
-                    mock_handlers.set_inactivity_timeout(ms);
+                    mock_handlers.set_inactivity_timeout(ms, pid);
                 }));
 
         registrations.push_back(
             service.register_disable_autobrightness_handler(
-                [this] { mock_handlers.disable_autobrightness(); }));
+                [this] (auto pid) { mock_handlers.disable_autobrightness(pid); }));
         registrations.push_back(
             service.register_enable_autobrightness_handler(
-                [this] { mock_handlers.enable_autobrightness(); }));
+                [this] (auto pid) { mock_handlers.enable_autobrightness(pid); }));
         registrations.push_back(
             service.register_set_normal_brightness_value_handler(
-                [this] (double v)
+                [this] (double v, auto pid)
                 {
-                    mock_handlers.set_normal_brightness_value(v);
+                    mock_handlers.set_normal_brightness_value(v, pid);
                 }));
 
         registrations.push_back(
             service.register_notification_handler(
-                [this](auto id) { mock_handlers.notification(id); }));
+                [this](auto id, auto pid) { mock_handlers.notification(id, pid); }));
         registrations.push_back(
             service.register_notification_done_handler(
-                [this](auto id) { mock_handlers.notification_done(id); }));
+                [this](auto id, auto pid) { mock_handlers.notification_done(id, pid); }));
 
         service.start_processing();
     }
 
     struct MockHandlers
     {
-        MOCK_METHOD1(disable_inactivity_timeout, void(std::string const&));
-        MOCK_METHOD1(enable_inactivity_timeout, void(std::string const&));
-        MOCK_METHOD1(set_inactivity_timeout, void(std::chrono::milliseconds));
+        MOCK_METHOD2(disable_inactivity_timeout, void(std::string const&, pid_t));
+        MOCK_METHOD2(enable_inactivity_timeout, void(std::string const&, pid_t));
+        MOCK_METHOD2(set_inactivity_timeout, void(std::chrono::milliseconds, pid_t));
 
-        MOCK_METHOD0(disable_autobrightness, void());
-        MOCK_METHOD0(enable_autobrightness, void());
-        MOCK_METHOD1(set_normal_brightness_value, void(double));
+        MOCK_METHOD1(disable_autobrightness, void(pid_t));
+        MOCK_METHOD1(enable_autobrightness, void(pid_t));
+        MOCK_METHOD2(set_normal_brightness_value, void(double, pid_t));
 
-        MOCK_METHOD1(notification, void(std::string const&));
-        MOCK_METHOD1(notification_done, void(std::string const&));
+        MOCK_METHOD2(notification, void(std::string const&, pid_t));
+        MOCK_METHOD2(notification_done, void(std::string const&, pid_t));
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
@@ -132,7 +132,7 @@ TEST_F(AUnityScreenService, replies_to_introspection_request)
 
 TEST_F(AUnityScreenService, forwards_keep_display_on_request)
 {
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_));
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _));
 
     client.request_keep_display_on();
 }
@@ -154,9 +154,9 @@ TEST_F(AUnityScreenService, disables_and_enables_inactivity_timeout_for_keep_dis
     std::string id_enable;
 
     InSequence s;
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _))
         .WillOnce(SaveArg<0>(&id_disable));
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(SaveArg<0>(&id_enable));
 
     auto reply1 = client.request_keep_display_on();
@@ -170,9 +170,9 @@ TEST_F(AUnityScreenService, disables_and_enables_inactivity_timeout_for_multiple
     std::vector<std::string> id_disable;
     std::vector<std::string> id_enable;
 
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _))
         .Times(3).WillRepeatedly(AppendArg0To(&id_disable));
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .Times(2).WillRepeatedly(AppendArg0To(&id_enable));
 
     auto reply1 = client.request_keep_display_on();
@@ -185,7 +185,7 @@ TEST_F(AUnityScreenService, disables_and_enables_inactivity_timeout_for_multiple
 
     Mock::VerifyAndClearExpectations(&mock_handlers);
 
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(AppendArg0To(&id_enable));
 
     client.request_remove_display_on_request(id3);
@@ -200,9 +200,9 @@ TEST_F(AUnityScreenService, removes_all_client_inactivity_disablements_when_clie
 
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _))
         .Times(3).WillRepeatedly(AppendArg0To(&id_disable));
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(AppendArg0To(&id_enable))
         .WillOnce(AppendArg0To(&id_enable))
         .WillOnce(DoAll(AppendArg0To(&id_enable), WakeUp(&request_processed)));
@@ -228,9 +228,9 @@ TEST_F(AUnityScreenService, removes_client_inactivity_disablements_when_all_clie
 
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _))
         .Times(4).WillRepeatedly(AppendArg0To(&id_disable));
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(AppendArg0To(&id_enable))
         .WillOnce(AppendArg0To(&id_enable))
         .WillOnce(DoAll(AppendArg0To(&id_enable), WakeUp(&request_processed)));
@@ -249,7 +249,7 @@ TEST_F(AUnityScreenService, removes_client_inactivity_disablements_when_all_clie
 
     Mock::VerifyAndClearExpectations(&mock_handlers);
 
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(AppendArg0To(&id_enable));
 
     client.request_remove_display_on_request(id2);
@@ -260,7 +260,7 @@ TEST_F(AUnityScreenService, removes_client_inactivity_disablements_when_all_clie
 TEST_F(AUnityScreenService, ignores_invalid_display_on_removal_request)
 {
     int32_t const invalid_id{-1};
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_)).Times(0);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _)).Times(0);
 
     client.request_remove_display_on_request(invalid_id);
     client.disconnect();
@@ -271,7 +271,7 @@ TEST_F(AUnityScreenService, ignores_invalid_display_on_removal_request)
 
 TEST_F(AUnityScreenService, ignores_disconnects_from_clients_without_display_on_request)
 {
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_)).Times(0);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _)).Times(0);
 
     client.disconnect();
 
@@ -284,7 +284,7 @@ TEST_F(AUnityScreenService, forwards_set_inactivity_timeouts_request)
     int32_t const poweroff_timeout = 10;
     int32_t const dimmer_timeout = 5;
 
-    EXPECT_CALL(mock_handlers, set_inactivity_timeout(std::chrono::milliseconds{1000 * poweroff_timeout}));
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(std::chrono::milliseconds{1000 * poweroff_timeout}, _));
 
     client.request_set_inactivity_timeouts(poweroff_timeout, dimmer_timeout);
 }
@@ -294,7 +294,7 @@ TEST_F(AUnityScreenService, forwards_infinite_inactivity_timeouts_request)
     int32_t const infinite_poweroff_timeout = 0;
     int32_t const dimmer_timeout = 5;
 
-    EXPECT_CALL(mock_handlers, set_inactivity_timeout(repowerd::infinite_timeout));
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(repowerd::infinite_timeout, _));
 
     client.request_set_inactivity_timeouts(infinite_poweroff_timeout, dimmer_timeout);
 }
@@ -304,7 +304,7 @@ TEST_F(AUnityScreenService, ignores_negative_inactivity_timeouts_request)
     int32_t const negative_poweroff_timeout = -1;
     int32_t const dimmer_timeout = 5;
 
-    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_)).Times(0);
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_, _)).Times(0);
 
     client.request_set_inactivity_timeouts(negative_poweroff_timeout, dimmer_timeout);
 
@@ -316,7 +316,7 @@ TEST_F(AUnityScreenService, forwards_user_auto_brightness_disable_request)
 {
     bool const disable = false;
 
-    EXPECT_CALL(mock_handlers, disable_autobrightness());
+    EXPECT_CALL(mock_handlers, disable_autobrightness(_));
 
     client.request_user_auto_brightness_enable(disable);
 }
@@ -325,7 +325,7 @@ TEST_F(AUnityScreenService, forwards_user_auto_brightness_enable_request)
 {
     bool const enable = true;
 
-    EXPECT_CALL(mock_handlers, enable_autobrightness());
+    EXPECT_CALL(mock_handlers, enable_autobrightness(_));
 
     client.request_user_auto_brightness_enable(enable);
 }
@@ -336,13 +336,13 @@ TEST_F(AUnityScreenService, forwards_set_user_brightness_request)
     double const brightness_normalized =
         brightness / static_cast<double>(fake_device_config.brightness_max_value);
 
-    EXPECT_CALL(mock_handlers, set_normal_brightness_value(brightness_normalized));
+    EXPECT_CALL(mock_handlers, set_normal_brightness_value(brightness_normalized, _));
     client.request_set_user_brightness(brightness);
 }
 
 TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_request)
 {
-    EXPECT_CALL(mock_handlers, notification(_));
+    EXPECT_CALL(mock_handlers, notification(_, _));
 
     auto reply = client.request_set_screen_power_mode("on", notification_reason);
     EXPECT_THAT(reply.get(), Eq(true));
@@ -351,7 +351,7 @@ TEST_F(AUnityScreenService, forwards_set_screen_power_mode_notification_on_reque
 TEST_F(AUnityScreenService,
        forwards_set_screen_power_mode_snap_decision_on_request_as_notification)
 {
-    EXPECT_CALL(mock_handlers, notification(_));
+    EXPECT_CALL(mock_handlers, notification(_, _));
 
     auto reply = client.request_set_screen_power_mode("on", snap_decision_reason);
     EXPECT_THAT(reply.get(), Eq(true));
@@ -363,15 +363,15 @@ TEST_F(AUnityScreenService,
     std::vector<std::string> notification_ids;
     std::vector<std::string> notification_done_ids;
 
-    EXPECT_CALL(mock_handlers, notification(_))
+    EXPECT_CALL(mock_handlers, notification(_, _))
         .Times(3).WillRepeatedly(AppendArg0To(&notification_ids));
     client.request_set_screen_power_mode("on", notification_reason);
     client.request_set_screen_power_mode("on", snap_decision_reason);
     client.request_set_screen_power_mode("on", notification_reason);
     Mock::VerifyAndClearExpectations(&mock_handlers);
 
-    EXPECT_CALL(mock_handlers, notification(_)).Times(0);
-    EXPECT_CALL(mock_handlers, notification_done(_))
+    EXPECT_CALL(mock_handlers, notification(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_, _))
         .Times(3).WillRepeatedly(AppendArg0To(&notification_done_ids));
     client.request_set_screen_power_mode("off", notification_reason);
     client.request_set_screen_power_mode("off", notification_reason);
@@ -387,9 +387,9 @@ TEST_F(AUnityScreenService, notifies_of_notification_done_when_single_client_dis
 
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, notification(_))
+    EXPECT_CALL(mock_handlers, notification(_, _))
         .Times(3).WillRepeatedly(AppendArg0To(&notification_ids));
-    EXPECT_CALL(mock_handlers, notification_done(_))
+    EXPECT_CALL(mock_handlers, notification_done(_, _))
         .WillOnce(AppendArg0To(&notification_done_ids))
         .WillOnce(AppendArg0To(&notification_done_ids))
         .WillOnce(DoAll(AppendArg0To(&notification_done_ids),WakeUp(&request_processed)));
@@ -414,7 +414,7 @@ TEST_F(AUnityScreenService,
 
     rt::UnityScreenDBusClient other_client{bus.address()};
 
-    EXPECT_CALL(mock_handlers, notification(_))
+    EXPECT_CALL(mock_handlers, notification(_, _))
         .Times(4).WillRepeatedly(AppendArg0To(&notification_ids));
 
     client.request_set_screen_power_mode("on", notification_reason);
@@ -426,7 +426,7 @@ TEST_F(AUnityScreenService,
 
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, notification_done(_))
+    EXPECT_CALL(mock_handlers, notification_done(_, _))
         .WillOnce(AppendArg0To(&notification_done_ids))
         .WillOnce(AppendArg0To(&notification_done_ids))
         .WillOnce(AppendArg0To(&notification_done_ids))
@@ -442,13 +442,13 @@ TEST_F(AUnityScreenService,
 
 TEST_F(AUnityScreenService, ignores_notification_done_request_from_client_without_notifications)
 {
-    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_, _)).Times(0);
     client.request_set_screen_power_mode("off", notification_reason);
 }
 
 TEST_F(AUnityScreenService, ignores_disconnects_from_clients_without_notifications)
 {
-    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_, _)).Times(0);
 
     client.disconnect();
 
@@ -501,16 +501,16 @@ TEST_F(AUnityScreenService, returns_error_reply_for_set_touch_visualization_enab
 
 TEST_F(AUnityScreenService, does_not_call_unregistered_handlers)
 {
-    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_)).Times(0);
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_)).Times(0);
-    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_)).Times(0);
+    EXPECT_CALL(mock_handlers, disable_inactivity_timeout(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, set_inactivity_timeout(_, _)).Times(0);
 
-    EXPECT_CALL(mock_handlers, disable_autobrightness()).Times(0);
-    EXPECT_CALL(mock_handlers, enable_autobrightness()).Times(0);
-    EXPECT_CALL(mock_handlers, set_normal_brightness_value(_)).Times(0);
+    EXPECT_CALL(mock_handlers, disable_autobrightness(_)).Times(0);
+    EXPECT_CALL(mock_handlers, enable_autobrightness(_)).Times(0);
+    EXPECT_CALL(mock_handlers, set_normal_brightness_value(_, _)).Times(0);
 
-    EXPECT_CALL(mock_handlers, notification(_)).Times(0);
-    EXPECT_CALL(mock_handlers, notification_done(_)).Times(0);
+    EXPECT_CALL(mock_handlers, notification(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, notification_done(_, _)).Times(0);
 
     registrations.clear();
 
@@ -685,7 +685,7 @@ TEST_F(AUnityScreenService, logs_name_owner_changed_for_tracked_keep_display_on_
 {
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_))
+    EXPECT_CALL(mock_handlers, enable_inactivity_timeout(_, _))
         .WillOnce(WakeUp(&request_processed));
 
     client.request_keep_display_on().get();
@@ -701,7 +701,7 @@ TEST_F(AUnityScreenService, logs_name_owner_changed_for_tracked_notification_cli
 {
     rt::WaitCondition request_processed;
 
-    EXPECT_CALL(mock_handlers, notification_done(_))
+    EXPECT_CALL(mock_handlers, notification_done(_, _))
         .WillOnce(WakeUp(&request_processed));
 
     client.request_set_screen_power_mode("on", notification_reason).get();

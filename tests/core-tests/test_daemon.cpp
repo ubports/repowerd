@@ -81,12 +81,30 @@ struct MockStateMachineFactory : public repowerd::StateMachineFactory
 {
     std::shared_ptr<repowerd::StateMachine> create_state_machine()
     {
-        if (!mock_state_machine)
-            mock_state_machine = std::make_shared<MockStateMachine>();
-        return mock_state_machine;
+        if (mock_state_machine)
+            mock_state_machines.push_back(std::move(mock_state_machine));
+        else
+            mock_state_machines.push_back(std::make_shared<MockStateMachine>());
+        return mock_state_machines.back();
+    }
+
+    std::shared_ptr<MockStateMachine> the_mock_state_machine()
+    {
+        if (!mock_state_machines.empty())
+            return mock_state_machines.back();
+        else if (mock_state_machine)
+            return mock_state_machine;
+        else
+            return mock_state_machine = std::make_shared<MockStateMachine>();
+    }
+
+    std::shared_ptr<MockStateMachine> the_mock_state_machine(int index)
+    {
+        return mock_state_machines.at(index);
     }
 
     std::shared_ptr<MockStateMachine> mock_state_machine;
+    std::vector<std::shared_ptr<MockStateMachine>> mock_state_machines;
 };
 
 struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
@@ -100,8 +118,13 @@ struct DaemonConfigWithMockStateMachine : rt::DaemonConfig
 
     std::shared_ptr<MockStateMachine> the_mock_state_machine()
     {
-        the_state_machine_factory()->create_state_machine();
-        return mock_state_machine_factory->mock_state_machine;
+        the_state_machine_factory();
+        return mock_state_machine_factory->the_mock_state_machine();
+    }
+
+    std::shared_ptr<MockStateMachine> the_mock_state_machine(int index)
+    {
+        return mock_state_machine_factory->the_mock_state_machine(index);
     }
 
     std::shared_ptr<MockStateMachineFactory> mock_state_machine_factory;
@@ -135,6 +158,30 @@ struct ADaemon : testing::Test
         daemon->flush();
         daemon->stop();
         daemon_thread.join();
+    }
+
+    void flush_daemon()
+    {
+        daemon->flush();
+    }
+
+    void start_daemon_with_second_session_active()
+    {
+        start_daemon();
+        add_session("s1", repowerd::SessionType::RepowerdCompatible, 42);
+        switch_to_session("s1");
+    }
+
+    void add_session(std::string const& session_id, repowerd::SessionType type, pid_t pid)
+    {
+        config.the_fake_session_tracker()->add_session(session_id, type, pid);
+        daemon->flush();
+    }
+
+    void switch_to_session(std::string const& session_id)
+    {
+        config.the_fake_session_tracker()->switch_to_session(session_id);
+        daemon->flush();
     }
 };
 
@@ -289,6 +336,15 @@ TEST_F(ADaemon, notifies_state_machine_of_enable_inactivity_timeout)
     config.the_fake_client_requests()->emit_enable_inactivity_timeout("id");
 }
 
+TEST_F(ADaemon, notifies_inactive_state_machine_of_enable_inactivity_timeout)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_enable_inactivity_timeout());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_enable_inactivity_timeout()).Times(0);
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout("id");
+}
+
 TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
 {
     using namespace testing;
@@ -312,6 +368,15 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
 
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout("id");
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_disable_inactivity_timeout)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_disable_inactivity_timeout());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_disable_inactivity_timeout()).Times(0);
     config.the_fake_client_requests()->emit_disable_inactivity_timeout("id");
 }
 
@@ -340,6 +405,18 @@ TEST_F(ADaemon, notifies_state_machine_of_set_inactivity_timeout)
     config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
 }
 
+TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_timeout)
+{
+    using namespace testing;
+
+    start_daemon_with_second_session_active();
+
+    auto const timeout = 10000ms;
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_set_inactivity_timeout(timeout));
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_set_inactivity_timeout(_)).Times(0);
+    config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
+}
+
 TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)
 {
     using namespace testing;
@@ -364,6 +441,15 @@ TEST_F(ADaemon, notifies_state_machine_of_disable_autobrightness)
     config.the_fake_client_requests()->emit_disable_autobrightness();
 }
 
+TEST_F(ADaemon, notifies_inactive_state_machine_of_disable_autobrightness)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_disable_autobrightness());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_disable_autobrightness()).Times(0);
+    config.the_fake_client_requests()->emit_disable_autobrightness();
+}
+
 TEST_F(ADaemon, registers_and_unregisters_enable_autobrightness)
 {
     using namespace testing;
@@ -385,6 +471,15 @@ TEST_F(ADaemon, notifies_state_machine_of_enable_autobrightness)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_autobrightness());
 
+    config.the_fake_client_requests()->emit_enable_autobrightness();
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_enable_autobrightness)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_enable_autobrightness());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_enable_autobrightness()).Times(0);
     config.the_fake_client_requests()->emit_enable_autobrightness();
 }
 
@@ -413,6 +508,19 @@ TEST_F(ADaemon, notifies_state_machine_of_set_normal_brightness_value)
     config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
 }
 
+TEST_F(ADaemon, notifies_inactive_state_machine_of_set_normal_brightness_value)
+{
+    using namespace testing;
+
+    start_daemon_with_second_session_active();
+
+    auto const value = 0.7;
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_set_normal_brightness_value(value));
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_set_normal_brightness_value(_)).Times(0);
+
+    config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
+}
+
 TEST_F(ADaemon, registers_and_unregisters_notification_handler)
 {
     using namespace testing;
@@ -437,6 +545,16 @@ TEST_F(ADaemon, notifies_state_machine_of_notification)
     config.the_fake_notification_service()->emit_notification("id");
 }
 
+TEST_F(ADaemon, notifies_inactive_state_machine_of_notification)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_notification());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_notification()).Times(0);
+
+    config.the_fake_notification_service()->emit_notification("id");
+}
+
 TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 {
     using namespace testing;
@@ -454,11 +572,51 @@ TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 
 TEST_F(ADaemon, notifies_state_machine_of_no_notification)
 {
+    using namespace testing;
+
     start_daemon();
 
+    InSequence s;
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_notification());
     EXPECT_CALL(*config.the_mock_state_machine(), handle_no_notification());
 
     config.the_fake_notification_service()->emit_notification("id");
+    config.the_fake_notification_service()->emit_notification_done("id");
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification)
+{
+    using namespace testing;
+
+    start_daemon_with_second_session_active();
+
+    InSequence s;
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_notification());
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_no_notification());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_no_notification()).Times(0);
+
+    config.the_fake_notification_service()->emit_notification("id");
+    config.the_fake_notification_service()->emit_notification_done("id");
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification_if_notification_was_sent_while_active)
+{
+    using namespace testing;
+
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_notification());
+    config.the_fake_notification_service()->emit_notification("id");
+    flush_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_voice_call_service().get());
+
+    add_session("s1", repowerd::SessionType::RepowerdCompatible, 42);
+    switch_to_session("s1");
+
+    InSequence s;
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_no_notification());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_no_notification()).Times(0);
+
     config.the_fake_notification_service()->emit_notification_done("id");
 }
 

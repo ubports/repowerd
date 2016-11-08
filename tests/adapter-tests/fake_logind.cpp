@@ -17,6 +17,7 @@
  */
 
 #include "fake_logind.h"
+#include <algorithm>
 
 namespace rt = repowerd::test;
 using namespace std::literals::string_literals;
@@ -27,6 +28,10 @@ namespace
 char const* const logind_introspection = R"(<!DOCTYPE node PUBLIC '-//freedesktop//DTD D-BUS Object Introspection 1.0//EN' 'http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd'>
 <node>
     <interface name='org.freedesktop.login1.Manager'>
+        <method name='GetSessionByPID'>
+            <arg name='pid' type='u'/>
+            <arg name='session' type='o' direction='out'/>
+        </method>
         <signal name='SessionAdded'>
             <arg name='name' type='s'/>
             <arg name='path' type='o'/>
@@ -99,11 +104,11 @@ rt::FakeLogind::FakeLogind(
 }
 
 void rt::FakeLogind::add_session(
-    std::string const& session_path, std::string const& session_type)
+    std::string const& session_path, std::string const& session_type, pid_t pid)
 {
     {
         std::lock_guard<std::mutex> lock{sessions_mutex};
-        sessions[session_path] = session_type;
+        sessions[session_path] = {session_type, pid};
     }
 
     session_handler_registrations[session_path] = event_loop.register_object_handler(
@@ -206,7 +211,7 @@ void rt::FakeLogind::dbus_method_call(
     gchar const* object_path_cstr,
     gchar const* interface_name_cstr,
     gchar const* method_name_cstr,
-    GVariant* /*parameters*/,
+    GVariant* parameters,
     GDBusMethodInvocation* invocation)
 {
     std::string const object_path{object_path_cstr ? object_path_cstr : ""};
@@ -239,13 +244,43 @@ void rt::FakeLogind::dbus_method_call(
             std::lock_guard<std::mutex> lock{sessions_mutex};
             auto const iter = sessions.find(object_path);
             if (iter != sessions.end())
-                session_type = iter->second;
+                session_type = iter->second.type;
         }
 
         auto const properties =
             g_variant_new_parsed("(<%s>,)", session_type.c_str());
 
         g_dbus_method_invocation_return_value(invocation, properties);
+    }
+    else if (interface_name == "org.freedesktop.login1.Manager" &&
+             method_name == "GetSessionByPID")
+    {
+        guint gpid = -1;
+        g_variant_get(parameters, "(u)", &gpid);
+        pid_t const pid = gpid;
+
+        std::string session_path;
+        {
+            std::lock_guard<std::mutex> lock{sessions_mutex};
+            auto const iter = std::find_if(
+                sessions.begin(), sessions.end(),
+                [pid] (auto const& kv) { return kv.second.pid == pid; });
+            if (iter != sessions.end())
+                session_path = iter->first;
+        }
+
+        if (session_path.empty())
+        {
+            g_dbus_method_invocation_return_error_literal(
+                invocation, G_DBUS_ERROR, G_DBUS_ERROR_UNIX_PROCESS_ID_UNKNOWN, "");
+        }
+        else
+        {
+            auto const session_variant =
+                g_variant_new_parsed("(%o,)", session_path.c_str());
+
+            g_dbus_method_invocation_return_value(invocation, session_variant);
+        }
     }
     else
     {

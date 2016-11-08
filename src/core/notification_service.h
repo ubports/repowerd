@@ -23,11 +23,13 @@
 #include <functional>
 #include <string>
 
+#include <sys/types.h>
+
 namespace repowerd
 {
 
-using NotificationHandler = std::function<void(std::string const&)>;
-using NotificationDoneHandler = std::function<void(std::string const&)>;
+using NotificationHandler = std::function<void(std::string const&, pid_t pid)>;
+using NotificationDoneHandler = std::function<void(std::string const&, pid_t pid)>;
 
 class NotificationService
 {

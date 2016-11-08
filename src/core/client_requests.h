@@ -24,15 +24,17 @@
 #include <chrono>
 #include <string>
 
+#include <sys/types.h>
+
 namespace repowerd
 {
 
-using EnableInactivityTimeoutHandler = std::function<void(std::string const&)>;
-using DisableInactivityTimeoutHandler = std::function<void(std::string const&)>;
-using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds)>;
-using SetNormalBrightnessValueHandler = std::function<void(double)>;
-using EnableAutobrightnessHandler = std::function<void()>;
-using DisableAutobrightnessHandler = std::function<void()>;
+using EnableInactivityTimeoutHandler = std::function<void(std::string const&, pid_t)>;
+using DisableInactivityTimeoutHandler = std::function<void(std::string const&, pid_t)>;
+using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds, pid_t)>;
+using SetNormalBrightnessValueHandler = std::function<void(double, pid_t)>;
+using EnableAutobrightnessHandler = std::function<void(pid_t)>;
+using DisableAutobrightnessHandler = std::function<void(pid_t)>;
 
 class ClientRequests
 {

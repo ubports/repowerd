@@ -19,6 +19,7 @@
 #pragma once
 
 #include "src/core/client_requests.h"
+#include "default_pid.h"
 
 #include <gmock/gmock.h>
 
@@ -48,12 +49,12 @@ public:
     HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) override;
 
-    void emit_disable_inactivity_timeout(std::string const& id);
-    void emit_enable_inactivity_timeout(std::string const& id);
-    void emit_set_inactivity_timeout(std::chrono::milliseconds timeout);
-    void emit_disable_autobrightness();
-    void emit_enable_autobrightness();
-    void emit_set_normal_brightness_value(double f);
+    void emit_disable_inactivity_timeout(std::string const& id, pid_t pid = default_pid);
+    void emit_enable_inactivity_timeout(std::string const& id, pid_t pid = default_pid);
+    void emit_set_inactivity_timeout(std::chrono::milliseconds timeout, pid_t pid = default_pid);
+    void emit_disable_autobrightness(pid_t pid = default_pid);
+    void emit_enable_autobrightness(pid_t pid = default_pid);
+    void emit_set_normal_brightness_value(double f, pid_t pid = default_pid);
 
     struct Mock
     {

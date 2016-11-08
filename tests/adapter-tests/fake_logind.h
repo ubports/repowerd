@@ -25,6 +25,8 @@
 #include <mutex>
 #include <functional>
 
+#include <sys/types.h>
+
 namespace repowerd
 {
 namespace test
@@ -35,7 +37,7 @@ class FakeLogind : private DBusClient
 public:
     FakeLogind(std::string const& dbus_address);
 
-    void add_session(std::string const& session_path, std::string const& session_type);
+    void add_session(std::string const& session_path, std::string const& session_type, pid_t pid);
     void remove_session(std::string const& session_path);
     void activate_session(std::string const& session_path);
     void deactivate_session();
@@ -53,8 +55,14 @@ private:
     repowerd::HandlerRegistration logind_handler_registration;
     repowerd::HandlerRegistration logind_seat_handler_registration;
 
+    struct SessionInfo
+    {
+        std::string type;
+        pid_t pid;
+    };
+
     std::mutex sessions_mutex;
-    std::unordered_map<std::string,std::string> sessions;
+    std::unordered_map<std::string,SessionInfo> sessions;
     std::unordered_map<std::string,HandlerRegistration> session_handler_registrations;
     std::string active_session_path;
 };

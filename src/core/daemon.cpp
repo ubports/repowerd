@@ -153,42 +153,47 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         client_requests->register_enable_inactivity_timeout_handler(
-            [this] (std::string const& id)
+            [this] (std::string const& id, pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this, id] (Session* s) { s->state_event_adapter.handle_enable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
         client_requests->register_disable_inactivity_timeout_handler(
-            [this] (std::string const& id)
+            [this] (std::string const& id, pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this, id] (Session* s) { s->state_event_adapter.handle_disable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
         client_requests->register_set_inactivity_timeout_handler(
-            [this] (std::chrono::milliseconds timeout)
+            [this] (std::chrono::milliseconds timeout, pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this,timeout] (Session* s) { s->state_machine->handle_set_inactivity_timeout(timeout); });
             }));
 
     registrations.push_back(
         notification_service->register_notification_handler(
-            [this] (std::string const& id)
+            [this] (std::string const& id, pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this,id] (Session* s) { s->state_event_adapter.handle_notification(id); });
             }));
 
     registrations.push_back(
         notification_service->register_notification_done_handler(
-            [this] (std::string const& id)
+            [this] (std::string const& id, pid_t pid)
             {
-                enqueue_action_to_active_session(
-                    [this,id] (Session* s) { s->state_event_adapter.handle_notification_done(id); });
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this,id] (Session* s){ s->state_event_adapter.handle_notification_done(id); });
             }));
 
     registrations.push_back(
@@ -209,9 +214,10 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         client_requests->register_set_normal_brightness_value_handler(
-            [this] (double value)
+            [this] (double value, pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this,value] (Session* s)
                     {
                         s->state_machine->handle_set_normal_brightness_value(value);
@@ -220,17 +226,19 @@ repowerd::Daemon::register_event_handlers()
 
     registrations.push_back(
         client_requests->register_disable_autobrightness_handler(
-            [this]
+            [this] (pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this] (Session* s) { s->state_machine->handle_disable_autobrightness(); });
             }));
 
     registrations.push_back(
         client_requests->register_enable_autobrightness_handler(
-            [this]
+            [this] (pid_t pid)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
                     [this] (Session* s) { s->state_machine->handle_enable_autobrightness(); });
             }));
 
@@ -299,6 +307,29 @@ void repowerd::Daemon::enqueue_priority_action(Action const& action)
     action_queue_cv.notify_one();
 }
 
+void repowerd::Daemon::enqueue_action_to_active_session(
+    SessionAction const& session_action)
+{
+    enqueue_action(
+        [this, session_action] { session_action(active_session); });
+}
+
+void repowerd::Daemon::enqueue_action_to_sessions(
+    std::vector<std::string> const& target_sessions,
+    SessionAction const& session_action)
+{
+    enqueue_action(
+        [this, target_sessions, session_action]
+        {
+            for (auto const& session_id : target_sessions)
+            {
+                auto const iter = sessions.find(session_id);
+                if (iter != sessions.end())
+                    session_action(&iter->second);
+            }
+        });
+}
+
 repowerd::Daemon::Action repowerd::Daemon::dequeue_action()
 {
     std::unique_lock<std::mutex> lock{action_queue_mutex};
@@ -307,13 +338,6 @@ repowerd::Daemon::Action repowerd::Daemon::dequeue_action()
     auto ev = action_queue.front();
     action_queue.pop_front();
     return ev;
-}
-
-void repowerd::Daemon::enqueue_action_to_active_session(
-    SessionAction const& session_action)
-{
-    enqueue_action(
-        [this, session_action] { session_action(active_session); });
 }
 
 void repowerd::Daemon::handle_session_activated(
@@ -344,4 +368,21 @@ void repowerd::Daemon::handle_session_removed(
     std::string const& session_id)
 {
     sessions.erase(session_id);
+}
+
+std::vector<std::string> repowerd::Daemon::sessions_for_pid(pid_t pid)
+{
+    std::vector<std::string> ret;
+
+    if (pid == 0)
+    {
+        for (auto const& kv : sessions)
+            ret.push_back(kv.first);
+    }
+    else
+    {
+        ret.push_back(session_tracker->session_for_pid(pid));
+    }
+
+    return ret;
 }

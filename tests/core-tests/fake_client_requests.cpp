@@ -23,15 +23,16 @@ namespace rt = repowerd::test;
 namespace
 {
 auto null_arg_handler = [](auto){};
+auto null_arg2_handler = [](auto,auto){};
 }
 
 rt::FakeClientRequests::FakeClientRequests()
-    : disable_inactivity_timeout_handler{null_arg_handler},
-      enable_inactivity_timeout_handler{null_arg_handler},
-      set_inactivity_timeout_handler{[](std::chrono::milliseconds){}},
-      disable_autobrightness_handler{[]{}},
-      enable_autobrightness_handler{[]{}},
-      set_normal_brightness_value_handler{[](double){}}
+    : disable_inactivity_timeout_handler{null_arg2_handler},
+      enable_inactivity_timeout_handler{null_arg2_handler},
+      set_inactivity_timeout_handler{null_arg2_handler},
+      disable_autobrightness_handler{null_arg_handler},
+      enable_autobrightness_handler{null_arg_handler},
+      set_normal_brightness_value_handler{null_arg2_handler}
 {
 }
 
@@ -49,7 +50,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_inactivit
         [this]
         {
             mock.unregister_disable_inactivity_timeout_handler();
-            disable_inactivity_timeout_handler = null_arg_handler;
+            disable_inactivity_timeout_handler = null_arg2_handler;
         }};
 }
 
@@ -62,7 +63,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_inactivity
         [this]
         {
             mock.unregister_enable_inactivity_timeout_handler();
-            enable_inactivity_timeout_handler = null_arg_handler;
+            enable_inactivity_timeout_handler = null_arg2_handler;
         }};
 }
 
@@ -75,7 +76,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_inactivity_ti
         [this]
         {
             mock.unregister_set_inactivity_timeout_handler();
-            set_inactivity_timeout_handler = [](std::chrono::milliseconds){};
+            set_inactivity_timeout_handler = null_arg2_handler;
         }};
 }
 
@@ -88,7 +89,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_disable_autobrigh
         [this]
         {
             mock.unregister_disable_autobrightness_handler();
-            disable_autobrightness_handler = []{};
+            disable_autobrightness_handler = null_arg_handler;
         }};
 }
 
@@ -101,7 +102,7 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_enable_autobright
         [this]
         {
             mock.unregister_enable_autobrightness_handler();
-            enable_autobrightness_handler = []{};
+            enable_autobrightness_handler = null_arg_handler;
         }};
 }
 
@@ -114,36 +115,39 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_bright
         [this]
         {
             mock.unregister_set_normal_brightness_value_handler();
-            set_normal_brightness_value_handler = [](double){};
+            set_normal_brightness_value_handler = null_arg2_handler;
         }};
 }
 
-void rt::FakeClientRequests::emit_disable_inactivity_timeout(std::string const& id)
+void rt::FakeClientRequests::emit_disable_inactivity_timeout(
+    std::string const& id, pid_t pid)
 {
-    disable_inactivity_timeout_handler(id);
+    disable_inactivity_timeout_handler(id, pid);
 }
 
-void rt::FakeClientRequests::emit_enable_inactivity_timeout(std::string const& id)
+void rt::FakeClientRequests::emit_enable_inactivity_timeout(
+    std::string const& id, pid_t pid)
 {
-    enable_inactivity_timeout_handler(id);
+    enable_inactivity_timeout_handler(id, pid);
 }
 
-void rt::FakeClientRequests::emit_set_inactivity_timeout(std::chrono::milliseconds timeout)
+void rt::FakeClientRequests::emit_set_inactivity_timeout(
+    std::chrono::milliseconds timeout, pid_t pid)
 {
-    set_inactivity_timeout_handler(timeout);
+    set_inactivity_timeout_handler(timeout, pid);
 }
 
-void rt::FakeClientRequests::emit_disable_autobrightness()
+void rt::FakeClientRequests::emit_disable_autobrightness(pid_t pid)
 {
-    disable_autobrightness_handler();
+    disable_autobrightness_handler(pid);
 }
 
-void rt::FakeClientRequests::emit_enable_autobrightness()
+void rt::FakeClientRequests::emit_enable_autobrightness(pid_t pid)
 {
-    enable_autobrightness_handler();
+    enable_autobrightness_handler(pid);
 }
 
-void rt::FakeClientRequests::emit_set_normal_brightness_value(double f)
+void rt::FakeClientRequests::emit_set_normal_brightness_value(double f, pid_t pid)
 {
-    set_normal_brightness_value_handler(f);
+    set_normal_brightness_value_handler(f, pid);
 }

@@ -20,6 +20,7 @@
 #include "unity_screen_power_state_change_reason.h"
 #include "brightness_notification.h"
 #include "event_loop_handler_registration.h"
+#include "scoped_g_error.h"
 #include "wakeup_service.h"
 
 #include "src/core/infinite_timeout.h"
@@ -34,8 +35,8 @@ namespace
 char const* const log_tag = "UnityScreenService";
 char const* const suspend_id = "UnityScreenService";
 
-auto const null_handler = []{};
 auto const null_arg_handler = [](auto){};
+auto const null_arg2_handler = [](auto,auto){};
 
 int32_t reason_to_dbus_param(repowerd::DisplayPowerChangeReason reason)
 {
@@ -161,14 +162,14 @@ repowerd::UnityScreenService::UnityScreenService(
       suspend_control{suspend_control},
       log{log},
       dbus_connection{dbus_bus_address},
-      disable_inactivity_timeout_handler{null_arg_handler},
-      enable_inactivity_timeout_handler{null_arg_handler},
-      set_inactivity_timeout_handler{null_arg_handler},
-      disable_autobrightness_handler{null_handler},
-      enable_autobrightness_handler{null_handler},
-      set_normal_brightness_value_handler{null_arg_handler},
-      notification_handler{null_arg_handler},
-      notification_done_handler{null_arg_handler},
+      disable_inactivity_timeout_handler{null_arg2_handler},
+      enable_inactivity_timeout_handler{null_arg2_handler},
+      set_inactivity_timeout_handler{null_arg2_handler},
+      disable_autobrightness_handler{null_arg_handler},
+      enable_autobrightness_handler{null_arg_handler},
+      set_normal_brightness_value_handler{null_arg2_handler},
+      notification_handler{null_arg2_handler},
+      notification_done_handler{null_arg2_handler},
       started{false},
       next_keep_display_on_id{1},
       next_request_sys_state_id{1},
@@ -260,7 +261,7 @@ repowerd::UnityScreenService::register_enable_inactivity_timeout_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { enable_inactivity_timeout_handler = handler; },
-        [this] { enable_inactivity_timeout_handler = null_arg_handler; }};
+        [this] { enable_inactivity_timeout_handler = null_arg2_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -270,7 +271,7 @@ repowerd::UnityScreenService::register_disable_inactivity_timeout_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { disable_inactivity_timeout_handler = handler; },
-        [this] { disable_inactivity_timeout_handler = null_arg_handler; }};
+        [this] { disable_inactivity_timeout_handler = null_arg2_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -280,7 +281,7 @@ repowerd::UnityScreenService::register_set_inactivity_timeout_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { set_inactivity_timeout_handler = handler; },
-        [this] { set_inactivity_timeout_handler = null_arg_handler; }};
+        [this] { set_inactivity_timeout_handler = null_arg2_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -290,7 +291,7 @@ repowerd::UnityScreenService::register_disable_autobrightness_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { disable_autobrightness_handler = handler; },
-        [this] { disable_autobrightness_handler = null_handler; }};
+        [this] { disable_autobrightness_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -300,7 +301,7 @@ repowerd::UnityScreenService::register_enable_autobrightness_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { enable_autobrightness_handler = handler; },
-        [this] { enable_autobrightness_handler = null_handler; }};
+        [this] { enable_autobrightness_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -310,7 +311,7 @@ repowerd::UnityScreenService::register_set_normal_brightness_value_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { set_normal_brightness_value_handler = handler; },
-        [this] { set_normal_brightness_value_handler = null_arg_handler; }};
+        [this] { set_normal_brightness_value_handler = null_arg2_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -320,7 +321,7 @@ repowerd::UnityScreenService::register_notification_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { notification_handler = handler; },
-        [this] { notification_handler = null_arg_handler; }};
+        [this] { notification_handler = null_arg2_handler; }};
 }
 
 repowerd::HandlerRegistration
@@ -330,7 +331,7 @@ repowerd::UnityScreenService::register_notification_done_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { notification_done_handler = handler; },
-        [this] { notification_done_handler = null_arg_handler; }};
+        [this] { notification_done_handler = null_arg2_handler; }};
 }
 
 void repowerd::UnityScreenService::notify_display_power_on(
@@ -362,10 +363,11 @@ void repowerd::UnityScreenService::dbus_method_call(
 {
     std::string const sender{sender_cstr ? sender_cstr : ""};
     std::string const method_name{method_name_cstr ? method_name_cstr : ""};
+    auto const pid = dbus_get_invocation_sender_pid(invocation);
 
     if (method_name == "keepDisplayOn")
     {
-        auto const id = dbus_keepDisplayOn(sender);
+        auto const id = dbus_keepDisplayOn(sender, pid);
 
         g_dbus_method_invocation_return_value(invocation, g_variant_new("(i)", id));
     }
@@ -374,7 +376,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         int32_t id{-1};
         g_variant_get(parameters, "(i)", &id);
 
-        dbus_removeDisplayOnRequest(sender, id);
+        dbus_removeDisplayOnRequest(sender, id, pid);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
@@ -383,7 +385,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         int32_t brightness{0};
         g_variant_get(parameters, "(i)", &brightness);
 
-        dbus_setUserBrightness(brightness);
+        dbus_setUserBrightness(brightness, pid);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
@@ -393,7 +395,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         int32_t dimmer_timeout{-1};
         g_variant_get(parameters, "(ii)", &poweroff_timeout, &dimmer_timeout);
 
-        dbus_setInactivityTimeouts(poweroff_timeout, dimmer_timeout);
+        dbus_setInactivityTimeouts(poweroff_timeout, dimmer_timeout, pid);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
@@ -402,7 +404,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         gboolean enable{FALSE};
         g_variant_get(parameters, "(b)", &enable);
 
-        dbus_userAutobrightnessEnable(enable == TRUE);
+        dbus_userAutobrightnessEnable(enable == TRUE, pid);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
@@ -412,7 +414,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         int32_t reason{-1};
         g_variant_get(parameters, "(&si)", &mode, &reason);
 
-        auto const result = dbus_setScreenPowerMode(sender, mode, reason);
+        auto const result = dbus_setScreenPowerMode(sender, mode, reason, pid);
 
         g_dbus_method_invocation_return_value(
             invocation,
@@ -514,13 +516,14 @@ void repowerd::UnityScreenService::dbus_signal(
     }
 }
 
-int32_t repowerd::UnityScreenService::dbus_keepDisplayOn(std::string const& sender)
+int32_t repowerd::UnityScreenService::dbus_keepDisplayOn(
+    std::string const& sender, pid_t pid)
 {
     log->log(log_tag, "dbus_keepDisplayOn(%s)", sender.c_str());
 
     auto const id = next_keep_display_on_id++;
     keep_display_on_ids.emplace(sender, id);
-    disable_inactivity_timeout_handler(std::to_string(id));
+    disable_inactivity_timeout_handler(std::to_string(id), pid);
 
     log->log(log_tag, "dbus_keepDisplayOn(%s) => %d", sender.c_str(), id);
 
@@ -528,7 +531,7 @@ int32_t repowerd::UnityScreenService::dbus_keepDisplayOn(std::string const& send
 }
 
 void repowerd::UnityScreenService::dbus_removeDisplayOnRequest(
-    std::string const& sender, int32_t id)
+    std::string const& sender, int32_t id, pid_t pid)
 {
     log->log(log_tag, "dbus_removeDisplayOnRequest(%s,%d)", sender.c_str(), id);
 
@@ -548,7 +551,7 @@ void repowerd::UnityScreenService::dbus_removeDisplayOnRequest(
     }
 
     if (id_removed)
-        enable_inactivity_timeout_handler(std::to_string(id));
+        enable_inactivity_timeout_handler(std::to_string(id), pid);
 }
 
 void repowerd::UnityScreenService::dbus_NameOwnerChanged(
@@ -568,7 +571,7 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
     {
         auto range = keep_display_on_ids.equal_range(name);
         for (auto iter = range.first; iter != range.second; ++iter)
-            enable_inactivity_timeout_handler(std::to_string(iter->second));
+            enable_inactivity_timeout_handler(std::to_string(iter->second), 0);
         keep_display_on_ids.erase(name);
 
         if (request_sys_state_ids.erase(name) > 0 &&
@@ -579,31 +582,34 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
 
         auto const num_notifications_removed = active_notifications.erase(name);
         for (auto i = 0u; i < num_notifications_removed; ++i)
-            notification_done_handler(notification_id(name, i));
+            notification_done_handler(notification_id(name, i), 0);
     }
 }
 
-void repowerd::UnityScreenService::dbus_userAutobrightnessEnable(bool enable)
+void repowerd::UnityScreenService::dbus_userAutobrightnessEnable(
+    bool enable, pid_t pid)
 {
     log->log(log_tag, "dbus_userAutobrightnessEnable(%s)",
              enable ? "enable" : "disable");
 
     if (enable)
-        enable_autobrightness_handler();
+        enable_autobrightness_handler(pid);
     else
-        disable_autobrightness_handler();
+        disable_autobrightness_handler(pid);
 }
 
-void repowerd::UnityScreenService::dbus_setUserBrightness(int32_t brightness)
+void repowerd::UnityScreenService::dbus_setUserBrightness(
+    int32_t brightness, pid_t pid)
 {
     log->log(log_tag, "dbus_setUserBrightness(%d)", brightness);
 
     set_normal_brightness_value_handler(
-        brightness/static_cast<double>(brightness_params.max_value));
+        brightness/static_cast<double>(brightness_params.max_value),
+        pid);
 }
 
 void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
-    int32_t poweroff_timeout, int32_t dimmer_timeout)
+    int32_t poweroff_timeout, int32_t dimmer_timeout, pid_t pid)
 {
     log->log(log_tag, "dbus_setInactivityTimeouts(%d,%d)",
              poweroff_timeout, dimmer_timeout);
@@ -612,11 +618,11 @@ void repowerd::UnityScreenService::dbus_setInactivityTimeouts(
 
     auto const timeout = poweroff_timeout == 0 ? repowerd::infinite_timeout : 
                                                  std::chrono::seconds{poweroff_timeout};
-    set_inactivity_timeout_handler(timeout);
+    set_inactivity_timeout_handler(timeout, pid);
 }
 
 bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
-    std::string const& sender, std::string const& mode, int32_t reason)
+    std::string const& sender, std::string const& mode, int32_t reason, pid_t pid)
 {
     log->log(log_tag, "dbus_setScreenPowerMode(%s,%s,%d)",
              sender.c_str(), mode.c_str(), reason);
@@ -628,7 +634,7 @@ bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
         {
             auto const id = notification_id(sender, active_notifications.count(sender));
             active_notifications.emplace(sender);
-            notification_handler(id);
+            notification_handler(id, pid);
         }
         else if (mode == "off")
         {
@@ -637,7 +643,7 @@ bool repowerd::UnityScreenService::dbus_setScreenPowerMode(
             {
                 active_notifications.erase(iter);
                 auto const id = notification_id(sender, active_notifications.count(sender));
-                notification_done_handler(id);
+                notification_done_handler(id, pid);
             }
         }
         return true;
@@ -791,4 +797,39 @@ void repowerd::UnityScreenService::dbus_unknown_method(
     std::string const& sender, std::string const& name)
 {
     log->log(log_tag, "dbus_unknown_method(%s,%s)", sender.c_str(), name.c_str());
+}
+
+pid_t repowerd::UnityScreenService::dbus_get_invocation_sender_pid(
+    GDBusMethodInvocation* invocation)
+{
+    int constexpr timeout = 1000;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+    auto const sender = g_dbus_method_invocation_get_sender(invocation);
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        "org.freedesktop.DBus",
+        "/",
+        "org.freedesktop.DBus",
+        "GetConnectionUnixProcessID",
+        g_variant_new("(s)", sender),
+        G_VARIANT_TYPE("(u)"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout,
+        null_cancellable,
+        error);
+
+    if (!result)
+    {
+        log->log(log_tag, "failed to get pid of '%s': %s",
+                 sender, error.message_str().c_str());
+        return -1;
+    }
+
+    guint pid;
+    g_variant_get(result, "(u)", &pid);
+    g_variant_unref(result);
+
+    return pid;
 }

@@ -42,6 +42,8 @@ public:
     virtual HandlerRegistration register_session_removed_handler(
         SessionRemovedHandler const& handler) = 0;
 
+    virtual std::string session_for_pid(pid_t pid) = 0;
+
 protected:
     SessionTracker() = default;
     SessionTracker (SessionTracker const&) = default;

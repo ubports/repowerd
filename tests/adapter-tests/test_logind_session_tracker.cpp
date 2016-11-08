@@ -67,8 +67,8 @@ struct ALogindSessionTracker : testing::Test
                     mock_handlers.session_removed(session_id);
                 }));
 
-        fake_logind.add_session(session_path(0), "mir");
-        fake_logind.add_session(session_path(1), "mir");
+        fake_logind.add_session(session_path(0), "mir", session_pid(0));
+        fake_logind.add_session(session_path(1), "mir", session_pid(1));
         fake_logind.activate_session(session_path(0));
 
         logind_session_tracker.start_processing();
@@ -77,6 +77,11 @@ struct ALogindSessionTracker : testing::Test
     std::string session_path(int i)
     {
         return "/org/freedesktop/login1/session/s" + std::to_string(i);
+    }
+
+    pid_t session_pid(int i)
+    {
+        return 1000 + i;
     }
 
     void wait_until_active_session_is(std::string const& session_id)
@@ -194,7 +199,7 @@ TEST_F(ALogindSessionTracker, notifies_of_session_deactivation)
 
 TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
 {
-    fake_logind.add_session(session_path(2), "mir");
+    fake_logind.add_session(session_path(2), "mir", session_pid(2));
     fake_logind.activate_session(session_path(2));
 
     wait_until_active_session_is(session_path(2), repowerd::SessionType::RepowerdCompatible);
@@ -202,10 +207,19 @@ TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
 
 TEST_F(ALogindSessionTracker, marks_non_mir_sessions_as_repowerd_incompatible)
 {
-    fake_logind.add_session(session_path(2), "x11");
+    fake_logind.add_session(session_path(2), "x11", session_pid(2));
     fake_logind.activate_session(session_path(2));
 
     wait_until_active_session_is(session_path(2), repowerd::SessionType::RepowerdIncompatible);
+}
+
+TEST_F(ALogindSessionTracker, gets_session_for_pid)
+{
+    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(0)),
+                StrEq(session_path(0)));
+
+    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(1)),
+                StrEq(session_path(1)));
 }
 
 TEST_F(ALogindSessionTracker, logs_active_session_at_startup)
@@ -216,7 +230,7 @@ TEST_F(ALogindSessionTracker, logs_active_session_at_startup)
 
 TEST_F(ALogindSessionTracker, logs_change_in_active_session)
 {
-    fake_logind.add_session(session_path(2), "x11");
+    fake_logind.add_session(session_path(2), "x11", session_pid(2));
     fake_logind.activate_session(session_path(2));
 
     wait_until_active_session_is(session_path(2));

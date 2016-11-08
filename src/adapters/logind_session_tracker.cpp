@@ -120,6 +120,11 @@ repowerd::LogindSessionTracker::register_session_removed_handler(
         [this] { this->session_removed_handler = null_arg1_handler; }};
 }
 
+std::string repowerd::LogindSessionTracker::session_for_pid(pid_t pid)
+{
+    return dbus_get_session_by_pid(pid);
+}
+
 void repowerd::LogindSessionTracker::handle_dbus_signal(
     GDBusConnection* /*connection*/,
     gchar const* /*sender*/,
@@ -319,4 +324,40 @@ std::string repowerd::LogindSessionTracker::dbus_get_session_type(std::string co
     g_variant_unref(result);
 
     return session_type;
+}
+
+std::string repowerd::LogindSessionTracker::dbus_get_session_by_pid(pid_t pid)
+{
+    int constexpr timeout_default = 1000;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        dbus_logind_name,
+        dbus_manager_path,
+        dbus_manager_interface,
+        "GetSessionByPID",
+        g_variant_new("(u)", pid),
+        G_VARIANT_TYPE("(o)"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_default,
+        null_cancellable,
+        error);
+
+    if (!result)
+    {
+        log->log(log_tag, "dbus_get_session_by_pid() failed: %s",
+                 error.message_str().c_str());
+        return invalid_session_id;
+    }
+
+    char const* session_path_cstr{""};
+    g_variant_get(result, "(&o)", &session_path_cstr);
+
+    std::string const session_path{session_path_cstr};
+
+    g_variant_unref(result);
+
+    return session_path;
 }
