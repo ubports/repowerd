@@ -45,12 +45,21 @@ public:
     void flush();
 
 private:
+    struct Session
+    {
+        Session(std::shared_ptr<StateMachine> const& state_machine);
+        std::shared_ptr<StateMachine> const state_machine;
+        StateEventAdapter state_event_adapter;
+    };
+
     using Action = std::function<void()>;
+    using SessionAction = std::function<void(Session*)>;
 
     std::vector<HandlerRegistration> register_event_handlers();
     void start_event_processing();
-    void enqueue_action(Action const& event);
-    void enqueue_priority_action(Action const& event);
+    void enqueue_action(Action const& action);
+    void enqueue_priority_action(Action const& action);
+    void enqueue_action_to_active_session(SessionAction const& action);
     Action dequeue_action();
 
     void handle_session_activated(std::string const&, repowerd::SessionType);
@@ -70,13 +79,6 @@ private:
 
     bool const turn_on_display_at_startup;
     bool running;
-
-    struct Session
-    {
-        Session(std::shared_ptr<StateMachine> const& state_machine);
-        std::shared_ptr<StateMachine> const state_machine;
-        StateEventAdapter state_event_adapter;
-    };
 
     std::unordered_map<std::string,Session> sessions;
     Session* active_session;

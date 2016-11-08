@@ -100,16 +100,23 @@ repowerd::Daemon::register_event_handlers()
             [this] (PowerButtonState state)
             {
                 if (state == PowerButtonState::pressed)
-                    enqueue_action([this] { active_session->state_machine->handle_power_button_press(); });
+                {
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_power_button_press(); });
+                }
                 else if (state == PowerButtonState::released)
-                    enqueue_action([this] { active_session->state_machine->handle_power_button_release(); } );
+                {
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_power_button_release(); } );
+                }
             }));
 
     registrations.push_back(
         timer->register_alarm_handler(
             [this] (AlarmId id)
             {
-                enqueue_action([this, id] { active_session->state_machine->handle_alarm(id); });
+                enqueue_action_to_active_session(
+                    [this, id] (Session* s) { s->state_machine->handle_alarm(id); });
             }));
 
     registrations.push_back(
@@ -118,13 +125,13 @@ repowerd::Daemon::register_event_handlers()
             {
                 if (type == UserActivityType::change_power_state)
                 {
-                    enqueue_action(
-                        [this] { active_session->state_machine->handle_user_activity_changing_power_state(); });
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_user_activity_changing_power_state(); });
                 }
                 else if (type == UserActivityType::extend_power_state)
                 {
-                    enqueue_action(
-                        [this] { active_session->state_machine->handle_user_activity_extending_power_state(); });
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_user_activity_extending_power_state(); });
                 }
             }));
 
@@ -134,13 +141,13 @@ repowerd::Daemon::register_event_handlers()
             {
                 if (state == ProximityState::far)
                 {
-                    enqueue_action(
-                        [this] { active_session->state_machine->handle_proximity_far(); });
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_proximity_far(); });
                 }
                 else if (state == ProximityState::near)
                 {
-                    enqueue_action(
-                        [this] { active_session->state_machine->handle_proximity_near(); });
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_proximity_near(); });
                 }
             }));
 
@@ -148,56 +155,56 @@ repowerd::Daemon::register_event_handlers()
         client_requests->register_enable_inactivity_timeout_handler(
             [this] (std::string const& id)
             {
-                enqueue_action(
-                    [this, id] { active_session->state_event_adapter.handle_enable_inactivity_timeout(id); });
+                enqueue_action_to_active_session(
+                    [this, id] (Session* s) { s->state_event_adapter.handle_enable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
         client_requests->register_disable_inactivity_timeout_handler(
             [this] (std::string const& id)
             {
-                enqueue_action(
-                    [this, id] { active_session->state_event_adapter.handle_disable_inactivity_timeout(id); });
+                enqueue_action_to_active_session(
+                    [this, id] (Session* s) { s->state_event_adapter.handle_disable_inactivity_timeout(id); });
             }));
 
     registrations.push_back(
         client_requests->register_set_inactivity_timeout_handler(
             [this] (std::chrono::milliseconds timeout)
             {
-                enqueue_action(
-                    [this,timeout] { active_session->state_machine->handle_set_inactivity_timeout(timeout); });
+                enqueue_action_to_active_session(
+                    [this,timeout] (Session* s) { s->state_machine->handle_set_inactivity_timeout(timeout); });
             }));
 
     registrations.push_back(
         notification_service->register_notification_handler(
             [this] (std::string const& id)
             {
-                enqueue_action(
-                    [this,id] { active_session->state_event_adapter.handle_notification(id); });
+                enqueue_action_to_active_session(
+                    [this,id] (Session* s) { s->state_event_adapter.handle_notification(id); });
             }));
 
     registrations.push_back(
         notification_service->register_notification_done_handler(
             [this] (std::string const& id)
             {
-                enqueue_action(
-                    [this,id] { active_session->state_event_adapter.handle_notification_done(id); });
+                enqueue_action_to_active_session(
+                    [this,id] (Session* s) { s->state_event_adapter.handle_notification_done(id); });
             }));
 
     registrations.push_back(
         voice_call_service->register_active_call_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { active_session->state_machine->handle_active_call(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_active_call(); });
             }));
 
     registrations.push_back(
         voice_call_service->register_no_active_call_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { active_session->state_machine->handle_no_active_call(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_no_active_call(); });
             }));
 
     registrations.push_back(
@@ -228,16 +235,16 @@ repowerd::Daemon::register_event_handlers()
         power_source->register_power_source_change_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { active_session->state_machine->handle_power_source_change(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_power_source_change(); });
             }));
 
     registrations.push_back(
         power_source->register_power_source_critical_handler(
             [this]
             {
-                enqueue_action(
-                    [this] { active_session->state_machine->handle_power_source_critical(); });
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_power_source_critical(); });
             }));
 
     registrations.push_back(
@@ -297,6 +304,13 @@ repowerd::Daemon::Action repowerd::Daemon::dequeue_action()
     auto ev = action_queue.front();
     action_queue.pop_front();
     return ev;
+}
+
+void repowerd::Daemon::enqueue_action_to_active_session(
+    SessionAction const& session_action)
+{
+    enqueue_action(
+        [this, session_action] { session_action(active_session); });
 }
 
 void repowerd::Daemon::handle_session_activated(
