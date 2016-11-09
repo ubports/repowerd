@@ -58,6 +58,17 @@ char const* const logind_session_introspection = R"(<!DOCTYPE node PUBLIC '-//fr
 </node>)";
 
 char const* const seat_path = "/org/freedesktop/login1/seat/seat0";
+
+std::string session_path_for_id(std::string const& session_id)
+{
+    return "/org/freedesktop/login1/session/" + session_id;
+}
+
+std::string session_id_for_path(std::string const& session_path)
+{
+    return session_path.substr(session_path.rfind("/") + 1);
+}
+
 }
 
 rt::FakeLogind::FakeLogind(
@@ -104,14 +115,16 @@ rt::FakeLogind::FakeLogind(
 }
 
 void rt::FakeLogind::add_session(
-    std::string const& session_path, std::string const& session_type, pid_t pid)
+    std::string const& session_id, std::string const& session_type, pid_t pid)
 {
     {
         std::lock_guard<std::mutex> lock{sessions_mutex};
-        sessions[session_path] = {session_type, pid};
+        sessions[session_id] = {session_type, pid};
     }
 
-    session_handler_registrations[session_path] = event_loop.register_object_handler(
+    auto const session_path = session_path_for_id(session_id);
+
+    session_handler_registrations[session_id] = event_loop.register_object_handler(
         connection,
         session_path.c_str(),
         logind_session_introspection,
@@ -129,10 +142,9 @@ void rt::FakeLogind::add_session(
                 method_name, parameters, invocation);
         });
 
-    auto const session_name = session_path.substr(session_path.rfind("/") + 1);
     auto const params =
         g_variant_new_parsed("(@s %s, @o %o)",
-            session_name.c_str(),session_path.c_str());
+            session_id.c_str(),session_path.c_str());
 
     emit_signal_full(
         "/org/freedesktop/login1",
@@ -140,20 +152,20 @@ void rt::FakeLogind::add_session(
         "SessionAdded", params);
 }
 
-void rt::FakeLogind::remove_session(std::string const& session_path)
+void rt::FakeLogind::remove_session(std::string const& session_id)
 {
     {
         std::lock_guard<std::mutex> lock{sessions_mutex};
-        sessions.erase(session_path);
+        sessions.erase(session_id);
     }
 
-    session_handler_registrations.erase(session_path);
+    session_handler_registrations.erase(session_id);
 
-    auto const session_name = session_path.substr(session_path.rfind("/") + 1);
+    auto const session_path = session_path_for_id(session_id);
 
     auto const params =
         g_variant_new_parsed("(@s %s, @o %o)",
-            session_name.c_str(),session_path.c_str());
+            session_id.c_str(), session_path.c_str());
 
     emit_signal_full(
         "/org/freedesktop/login1",
@@ -161,20 +173,21 @@ void rt::FakeLogind::remove_session(std::string const& session_path)
         "SessionRemoved", params);
 }
 
-void rt::FakeLogind::activate_session(std::string const& session_path)
+void rt::FakeLogind::activate_session(std::string const& session_id)
 {
     {
         std::lock_guard<std::mutex> lock{sessions_mutex};
 
-        if (sessions.find(session_path) == sessions.end())
-            throw std::runtime_error("Cannot activate non-existent session " + session_path);
-        active_session_path = session_path;
+        if (sessions.find(session_id) == sessions.end())
+            throw std::runtime_error("Cannot activate non-existent session " + session_id);
+
+        active_session_id = session_id;
     }
 
-    auto const session_name = session_path.substr(session_path.rfind("/") + 1);
+    auto const session_path = session_path_for_id(session_id);
 
     auto const changed_properties_str =
-        "'ActiveSession': <(@s '"s + session_name + "', @o '" + session_path + "')>";
+        "'ActiveSession': <(@s '"s + session_id + "', @o '" + session_path + "')>";
     auto const params_str =
         "(@s 'org.freedesktop.login1.Seat',"s +
         " @a{sv} {" + changed_properties_str + "}," +
@@ -222,17 +235,17 @@ void rt::FakeLogind::dbus_method_call(
         method_name == "Get" &&
         object_path == seat_path)
     {
-        std::string local_active_session_path;
+        std::string local_active_session_id;
         {
             std::lock_guard<std::mutex> lock{sessions_mutex};
-            local_active_session_path = active_session_path;
+            local_active_session_id = active_session_id;
         }
 
-        auto const active_session_name =
-            local_active_session_path.substr(local_active_session_path.rfind("/") + 1);
+        auto const local_active_session_path = session_path_for_id(local_active_session_id);
+
         auto const properties =
             g_variant_new_parsed("(<(@s %s, @o %o)>,)",
-                active_session_name.c_str(), local_active_session_path.c_str());
+                local_active_session_id.c_str(), local_active_session_path.c_str());
 
         g_dbus_method_invocation_return_value(invocation, properties);
     }
@@ -242,7 +255,7 @@ void rt::FakeLogind::dbus_method_call(
         std::string session_type;
         {
             std::lock_guard<std::mutex> lock{sessions_mutex};
-            auto const iter = sessions.find(object_path);
+            auto const iter = sessions.find(session_id_for_path(object_path));
             if (iter != sessions.end())
                 session_type = iter->second.type;
         }
@@ -266,7 +279,7 @@ void rt::FakeLogind::dbus_method_call(
                 sessions.begin(), sessions.end(),
                 [pid] (auto const& kv) { return kv.second.pid == pid; });
             if (iter != sessions.end())
-                session_path = iter->first;
+                session_path = session_path_for_id(iter->first);
         }
 
         if (session_path.empty())

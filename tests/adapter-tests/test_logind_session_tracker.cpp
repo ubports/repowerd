@@ -67,16 +67,16 @@ struct ALogindSessionTracker : testing::Test
                     mock_handlers.session_removed(session_id);
                 }));
 
-        fake_logind.add_session(session_path(0), "mir", session_pid(0));
-        fake_logind.add_session(session_path(1), "mir", session_pid(1));
-        fake_logind.activate_session(session_path(0));
+        fake_logind.add_session(session_id(0), "mir", session_pid(0));
+        fake_logind.add_session(session_id(1), "mir", session_pid(1));
+        fake_logind.activate_session(session_id(0));
 
         logind_session_tracker.start_processing();
     }
 
-    std::string session_path(int i)
+    std::string session_id(int i)
     {
-        return "/org/freedesktop/login1/session/s" + std::to_string(i);
+        return "session" + std::to_string(i);
     }
 
     pid_t session_pid(int i)
@@ -157,36 +157,36 @@ struct ALogindSessionTracker : testing::Test
 
 TEST_F(ALogindSessionTracker, notifies_of_active_session_at_startup)
 {
-    wait_until_active_session_is(session_path(0));
+    wait_until_active_session_is(session_id(0));
 }
 
 TEST_F(ALogindSessionTracker, notifies_of_change_in_active_session)
 {
-    fake_logind.activate_session(session_path(1));
+    fake_logind.activate_session(session_id(1));
 
-    wait_until_active_session_is(session_path(1));
+    wait_until_active_session_is(session_id(1));
 }
 
 TEST_F(ALogindSessionTracker, notifies_of_removal_of_tracked_session)
 {
-    fake_logind.activate_session(session_path(1));
+    fake_logind.activate_session(session_id(1));
 
-    wait_until_active_session_is(session_path(1));
+    wait_until_active_session_is(session_id(1));
 
-    fake_logind.remove_session(session_path(0));
-    fake_logind.remove_session(session_path(1));
+    fake_logind.remove_session(session_id(0));
+    fake_logind.remove_session(session_id(1));
 
-    wait_until_removed_sessions_are({session_path(0), session_path(1)});
+    wait_until_removed_sessions_are({session_id(0), session_id(1)});
 }
 
 TEST_F(ALogindSessionTracker, does_not_notify_of_removal_of_untracked_session)
 {
-    wait_until_active_session_is(session_path(0));
+    wait_until_active_session_is(session_id(0));
 
-    fake_logind.remove_session(session_path(1));
-    fake_logind.remove_session(session_path(0));
+    fake_logind.remove_session(session_id(1));
+    fake_logind.remove_session(session_id(0));
 
-    wait_until_removed_sessions_are({session_path(0)});
+    wait_until_removed_sessions_are({session_id(0)});
 }
 
 TEST_F(ALogindSessionTracker, notifies_of_session_deactivation)
@@ -199,44 +199,51 @@ TEST_F(ALogindSessionTracker, notifies_of_session_deactivation)
 
 TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
 {
-    fake_logind.add_session(session_path(2), "mir", session_pid(2));
-    fake_logind.activate_session(session_path(2));
+    fake_logind.add_session(session_id(2), "mir", session_pid(2));
+    fake_logind.activate_session(session_id(2));
 
-    wait_until_active_session_is(session_path(2), repowerd::SessionType::RepowerdCompatible);
+    wait_until_active_session_is(session_id(2), repowerd::SessionType::RepowerdCompatible);
 }
 
 TEST_F(ALogindSessionTracker, marks_non_mir_sessions_as_repowerd_incompatible)
 {
-    fake_logind.add_session(session_path(2), "x11", session_pid(2));
-    fake_logind.activate_session(session_path(2));
+    fake_logind.add_session(session_id(2), "x11", session_pid(2));
+    fake_logind.activate_session(session_id(2));
 
-    wait_until_active_session_is(session_path(2), repowerd::SessionType::RepowerdIncompatible);
+    wait_until_active_session_is(session_id(2), repowerd::SessionType::RepowerdIncompatible);
 }
 
-TEST_F(ALogindSessionTracker, gets_session_for_pid)
+TEST_F(ALogindSessionTracker, returns_session_id_for_pid_of_tracked_session)
 {
-    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(0)),
-                StrEq(session_path(0)));
+    fake_logind.activate_session(session_id(1));
 
+    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(0)),
+                StrEq(session_id(0)));
     EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(1)),
-                StrEq(session_path(1)));
+                StrEq(session_id(1)));
+}
+
+TEST_F(ALogindSessionTracker, returns_invalid_session_id_for_pid_of_untracked_session)
+{
+    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(1)),
+                StrEq(repowerd::invalid_session_id));
 }
 
 TEST_F(ALogindSessionTracker, logs_active_session_at_startup)
 {
-    EXPECT_TRUE(fake_log.contains_line({"track_session", session_path(0), "mir"}));
-    EXPECT_TRUE(fake_log.contains_line({"activate_session", session_path(0)}));
+    EXPECT_TRUE(fake_log.contains_line({"track_session", session_id(0), "mir"}));
+    EXPECT_TRUE(fake_log.contains_line({"activate_session", session_id(0)}));
 }
 
 TEST_F(ALogindSessionTracker, logs_change_in_active_session)
 {
-    fake_logind.add_session(session_path(2), "x11", session_pid(2));
-    fake_logind.activate_session(session_path(2));
+    fake_logind.add_session(session_id(2), "x11", session_pid(2));
+    fake_logind.activate_session(session_id(2));
 
-    wait_until_active_session_is(session_path(2));
+    wait_until_active_session_is(session_id(2));
 
-    EXPECT_TRUE(fake_log.contains_line({"track_session", session_path(2), "x11"}));
-    EXPECT_TRUE(fake_log.contains_line({"activate_session", session_path(2)}));
+    EXPECT_TRUE(fake_log.contains_line({"track_session", session_id(2), "x11"}));
+    EXPECT_TRUE(fake_log.contains_line({"activate_session", session_id(2)}));
 }
 
 TEST_F(ALogindSessionTracker, logs_session_deactivation)
@@ -249,13 +256,13 @@ TEST_F(ALogindSessionTracker, logs_session_deactivation)
 
 TEST_F(ALogindSessionTracker, logs_tracked_session_removal)
 {
-    wait_until_active_session_is(session_path(0));
+    wait_until_active_session_is(session_id(0));
 
-    fake_logind.remove_session(session_path(1));
-    fake_logind.remove_session(session_path(0));
+    fake_logind.remove_session(session_id(1));
+    fake_logind.remove_session(session_id(0));
 
-    wait_until_removed_sessions_are({session_path(0)});
+    wait_until_removed_sessions_are({session_id(0)});
 
-    EXPECT_TRUE(fake_log.contains_line({"remove_session", session_path(0)}));
-    EXPECT_FALSE(fake_log.contains_line({"remove_session", session_path(1)}));
+    EXPECT_TRUE(fake_log.contains_line({"remove_session", session_id(0)}));
+    EXPECT_FALSE(fake_log.contains_line({"remove_session", session_id(1)}));
 }

@@ -58,13 +58,14 @@ private:
         std::string const& seat,
         GVariantIter* properties_iter);
     void set_initial_active_session();
-    void track_session(std::string const& session_path);
+    void track_session(std::string const& session_id, std::string const& session_path);
     void remove_session(std::string const& session_path);
-    void activate_session(std::string const& session_path);
+    void activate_session(std::string const& session_id, std::string const& session_path);
     void deactivate_session();
-    std::string dbus_get_active_session();
+    std::pair<std::string,std::string> dbus_get_active_session();
     std::string dbus_get_session_type(std::string const& session_path);
-    std::string dbus_get_session_by_pid(pid_t pid);
+    std::string dbus_get_session_path_by_pid(pid_t pid);
+    std::string session_id_for_path(std::string const& session_path);
 
     std::shared_ptr<Log> const log;
 
@@ -76,7 +77,12 @@ private:
     ActiveSessionChangedHandler active_session_changed_handler;
     SessionRemovedHandler session_removed_handler;
 
-    std::unordered_map<std::string,SessionType> tracked_sessions;
+    struct SessionInfo
+    {
+        std::string path;
+        SessionType type;
+    };
+    std::unordered_map<std::string,SessionInfo> tracked_sessions;
 };
 
 }

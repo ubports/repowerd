@@ -64,7 +64,7 @@ private:
     std::mutex sessions_mutex;
     std::unordered_map<std::string,SessionInfo> sessions;
     std::unordered_map<std::string,HandlerRegistration> session_handler_registrations;
-    std::string active_session_path;
+    std::string active_session_id;
 };
 
 }

@@ -22,6 +22,8 @@
 
 #include "src/core/log.h"
 
+#include <algorithm>
+
 namespace
 {
 
@@ -122,7 +124,9 @@ repowerd::LogindSessionTracker::register_session_removed_handler(
 
 std::string repowerd::LogindSessionTracker::session_for_pid(pid_t pid)
 {
-    return dbus_get_session_by_pid(pid);
+    auto const session_path = dbus_get_session_path_by_pid(pid);
+    return session_id_for_path(session_path);
+
 }
 
 void repowerd::LogindSessionTracker::handle_dbus_signal(
@@ -153,11 +157,10 @@ void repowerd::LogindSessionTracker::handle_dbus_signal(
     else if (signal_name == "SessionRemoved")
     {
         char const* session_id_cstr{""};
-        char const* session_path_cstr{""};
 
-        g_variant_get(parameters, "(&s&o)", &session_id_cstr, &session_path_cstr);
+        g_variant_get(parameters, "(&s&o)", &session_id_cstr, nullptr);
 
-        remove_session(session_path_cstr);
+        remove_session(session_id_cstr);
     }
 }
 
@@ -184,7 +187,7 @@ void repowerd::LogindSessionTracker::handle_dbus_change_seat_properties(
             if (std::string{session_id_cstr}.empty())
                 deactivate_session();
             else
-                activate_session(session_path_cstr);
+                activate_session(session_id_cstr, session_path_cstr);
         }
 
         g_variant_unref(value);
@@ -194,45 +197,48 @@ void repowerd::LogindSessionTracker::handle_dbus_change_seat_properties(
 void repowerd::LogindSessionTracker::set_initial_active_session()
 {
     auto const active_session = dbus_get_active_session();
-    if (!active_session.empty())
-        activate_session(active_session);
+    if (!active_session.first.empty())
+        activate_session(active_session.first, active_session.second);
 }
 
-void repowerd::LogindSessionTracker::track_session(std::string const& session_path)
+void repowerd::LogindSessionTracker::track_session(
+    std::string const& session_id,
+    std::string const& session_path)
 {
     auto const session_type = dbus_get_session_type(session_path);
 
-    log->log(log_tag, "track_session(%s), type=%s", session_path.c_str(), session_type.c_str());
+    log->log(log_tag, "track_session(%s), type=%s", session_id.c_str(), session_type.c_str());
 
-    tracked_sessions[session_path] =
-        logind_session_type_to_repowerd_type(session_type);
+    tracked_sessions[session_id] =
+        { session_path, logind_session_type_to_repowerd_type(session_type) };
 }
 
-void repowerd::LogindSessionTracker::remove_session(std::string const& session_path)
+void repowerd::LogindSessionTracker::remove_session(std::string const& session_id)
 {
-    auto const iter = tracked_sessions.find(session_path);
+    auto const iter = tracked_sessions.find(session_id);
     if (iter != tracked_sessions.end())
     {
-        log->log(log_tag, "remove_session(%s)", session_path.c_str());
+        log->log(log_tag, "remove_session(%s)", session_id.c_str());
 
         tracked_sessions.erase(iter);
-        session_removed_handler(session_path);
+        session_removed_handler(session_id);
     }
 }
 
-void repowerd::LogindSessionTracker::activate_session(std::string const& session_path)
+void repowerd::LogindSessionTracker::activate_session(
+    std::string const& session_id, std::string const& session_path)
 {
-    auto iter = tracked_sessions.find(session_path);
+    auto iter = tracked_sessions.find(session_id);
     if (iter == tracked_sessions.end())
     {
-        track_session(session_path);
-        iter = tracked_sessions.find(session_path);
+        track_session(session_id, session_path);
+        iter = tracked_sessions.find(session_id);
     }
 
     if (iter != tracked_sessions.end())
     {
-        log->log(log_tag, "activate_session(%s)", session_path.c_str());
-        active_session_changed_handler(iter->first, iter->second);
+        log->log(log_tag, "activate_session(%s)", session_id.c_str());
+        active_session_changed_handler(iter->first, iter->second.type);
     }
 }
 
@@ -244,7 +250,7 @@ void repowerd::LogindSessionTracker::deactivate_session()
         repowerd::SessionType::RepowerdIncompatible);
 }
 
-std::string repowerd::LogindSessionTracker::dbus_get_active_session()
+std::pair<std::string,std::string> repowerd::LogindSessionTracker::dbus_get_active_session()
 {
     int constexpr timeout_default = -1;
     auto constexpr null_cancellable = nullptr;
@@ -267,23 +273,23 @@ std::string repowerd::LogindSessionTracker::dbus_get_active_session()
     {
         log->log(log_tag, "dbus_get_active_session() failed to get ActiveSession: %s",
                  error.message_str().c_str());
-        return "";
+        return {"",""};
     }
 
     GVariant* active_session_variant{nullptr};
     g_variant_get(result, "(v)", &active_session_variant);
 
-    char const* session_name_cstr{""};
+    char const* session_id_cstr{""};
     char const* session_path_cstr{""};
-    g_variant_get(active_session_variant, "(&s&o)", &session_name_cstr, &session_path_cstr);
+    g_variant_get(active_session_variant, "(&s&o)", &session_id_cstr, &session_path_cstr);
 
-    std::string const session_name{session_name_cstr};
+    std::string const session_id{session_id_cstr};
     std::string const session_path{session_path_cstr};
 
     g_variant_unref(active_session_variant);
     g_variant_unref(result);
 
-    return session_name.empty() ? "" : session_path;
+    return {session_id, session_path};
 }
 
 std::string repowerd::LogindSessionTracker::dbus_get_session_type(std::string const& session_path)
@@ -326,7 +332,7 @@ std::string repowerd::LogindSessionTracker::dbus_get_session_type(std::string co
     return session_type;
 }
 
-std::string repowerd::LogindSessionTracker::dbus_get_session_by_pid(pid_t pid)
+std::string repowerd::LogindSessionTracker::dbus_get_session_path_by_pid(pid_t pid)
 {
     int constexpr timeout_default = 1000;
     auto constexpr null_cancellable = nullptr;
@@ -360,4 +366,20 @@ std::string repowerd::LogindSessionTracker::dbus_get_session_by_pid(pid_t pid)
     g_variant_unref(result);
 
     return session_path;
+}
+
+std::string repowerd::LogindSessionTracker::session_id_for_path(
+    std::string const& session_path)
+{
+    if (session_path.empty())
+        return invalid_session_id;
+
+    auto const iter = std::find_if(
+        tracked_sessions.begin(), tracked_sessions.end(),
+        [&session_path] (auto const& kv)
+        {
+            return kv.second.path == session_path;
+        });
+
+    return iter != tracked_sessions.end() ? iter->first : invalid_session_id;
 }
