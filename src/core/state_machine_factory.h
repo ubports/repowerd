@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 namespace repowerd
 {
@@ -29,7 +30,7 @@ class StateMachineFactory
 public:
     virtual ~StateMachineFactory() = default;
 
-    virtual std::shared_ptr<StateMachine> create_state_machine() = 0;
+    virtual std::shared_ptr<StateMachine> create_state_machine(std::string const& name) = 0;
 
 protected:
     StateMachineFactory() = default;

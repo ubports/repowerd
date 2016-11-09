@@ -26,7 +26,7 @@ repowerd::DefaultStateMachineFactory::DefaultStateMachineFactory(
 }
 
 std::shared_ptr<repowerd::StateMachine>
-repowerd::DefaultStateMachineFactory::create_state_machine()
+repowerd::DefaultStateMachineFactory::create_state_machine(std::string const& name)
 {
-    return std::make_shared<DefaultStateMachine>(daemon_config);
+    return std::make_shared<DefaultStateMachine>(daemon_config, name);
 }

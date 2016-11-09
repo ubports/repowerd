@@ -354,7 +354,7 @@ void repowerd::Daemon::handle_session_activated(
         {
             iter = sessions.emplace(
                 session_id,
-                Session{state_machine_factory->create_state_machine()}).first;
+                Session{state_machine_factory->create_state_machine(session_id)}).first;
 
             if (turn_on_display_at_startup)
                 iter->second.state_machine->handle_turn_on_display();

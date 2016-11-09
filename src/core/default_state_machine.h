@@ -23,6 +23,7 @@
 #include "display_power_change_reason.h"
 
 #include <array>
+#include <string>
 
 namespace repowerd
 {
@@ -30,7 +31,7 @@ namespace repowerd
 class DefaultStateMachine : public StateMachine
 {
 public:
-    DefaultStateMachine(DaemonConfig& config);
+    DefaultStateMachine(DaemonConfig& config, std::string const& name);
 
     void handle_alarm(AlarmId id) override;
 
@@ -101,6 +102,8 @@ private:
     bool is_proximity_enabled();
     bool is_proximity_enabled_only_until_far_event_or_notification_expiration();
 
+    std::string const log_tag_str;
+    char const* const log_tag;
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<DisplayPowerEventSink> const display_power_event_sink;

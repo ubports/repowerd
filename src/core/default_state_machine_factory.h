@@ -28,7 +28,7 @@ class DefaultStateMachineFactory : public StateMachineFactory
 {
 public:
     DefaultStateMachineFactory(DaemonConfig&);
-    std::shared_ptr<StateMachine> create_state_machine() override;
+    std::shared_ptr<StateMachine> create_state_machine(std::string const& name) override;
 
 private:
     DaemonConfig& daemon_config;

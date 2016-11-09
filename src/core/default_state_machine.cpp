@@ -33,12 +33,15 @@
 
 namespace
 {
-char const* const log_tag = "DefaultStateMachine";
 char const* const suspend_id = "DefaultStateMachine";
 }
 
-repowerd::DefaultStateMachine::DefaultStateMachine(DaemonConfig& config)
-    : brightness_control{config.the_brightness_control()},
+repowerd::DefaultStateMachine::DefaultStateMachine(
+    DaemonConfig& config,
+    std::string const& name)
+    : log_tag_str{std::string{"DefaultStateMachine["} + name + "]"},
+      log_tag{log_tag_str.c_str()},
+      brightness_control{config.the_brightness_control()},
       display_power_control{config.the_display_power_control()},
       display_power_event_sink{config.the_display_power_event_sink()},
       log{config.the_log()},

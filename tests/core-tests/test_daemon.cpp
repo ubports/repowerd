@@ -79,7 +79,7 @@ struct MockStateMachine : public repowerd::StateMachine
 
 struct MockStateMachineFactory : public repowerd::StateMachineFactory
 {
-    std::shared_ptr<repowerd::StateMachine> create_state_machine()
+    std::shared_ptr<repowerd::StateMachine> create_state_machine(std::string const&)
     {
         if (mock_state_machine)
             mock_state_machines.push_back(std::move(mock_state_machine));
