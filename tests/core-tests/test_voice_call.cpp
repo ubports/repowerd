@@ -252,6 +252,7 @@ TEST_F(AVoiceCall, is_logged)
 
 TEST_F(AVoiceCall, done_is_logged)
 {
+    emit_active_call();
     emit_no_active_call();
 
     EXPECT_TRUE(log_contains_line({"no_active_call"}));

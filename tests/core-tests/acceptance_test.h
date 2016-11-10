@@ -21,6 +21,7 @@
 #include "src/core/daemon.h"
 #include "src/core/display_power_change_reason.h"
 #include "daemon_config.h"
+#include "default_pid.h"
 
 #include <chrono>
 #include <thread>
@@ -40,28 +41,31 @@ struct AcceptanceTest : testing::Test
 
     void expect_autobrightness_disabled();
     void expect_autobrightness_enabled();
-    void expect_normal_brightness_value_set_to(double);
     void expect_display_turns_off();
     void expect_display_turns_on();
     void expect_display_dims();
     void expect_display_brightens();
     void expect_long_press_notification();
+    void expect_no_autobrightness_change();
     void expect_no_display_power_change();
     void expect_no_display_brightness_change();
+    void expect_no_long_press_notification();
+    void expect_normal_brightness_value_set_to(double);
     void expect_display_power_off_notification(DisplayPowerChangeReason);
     void expect_display_power_on_notification(DisplayPowerChangeReason);
     void expect_system_powers_off();
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
-    void client_request_disable_inactivity_timeout(std::string const& id);
-    void client_request_enable_inactivity_timeout(std::string const& id);
-    void client_request_disable_inactivity_timeout();
-    void client_request_enable_inactivity_timeout();
-    void client_request_set_inactivity_timeout(std::chrono::milliseconds timeout);
-    void client_request_disable_autobrightness();
-    void client_request_enable_autobrightness();
-    void client_request_set_normal_brightness_value(double value);
+    void client_request_disable_inactivity_timeout(
+        std::string const& id = "AcceptanceTestId", pid_t pid = default_pid);
+    void client_request_enable_inactivity_timeout(
+            std::string const& id = "AcceptanceTestId", pid_t pid = default_pid);
+    void client_request_set_inactivity_timeout(
+        std::chrono::milliseconds timeout, pid_t pid = default_pid);
+    void client_request_disable_autobrightness(pid_t pid = default_pid);
+    void client_request_enable_autobrightness(pid_t pid = default_pid);
+    void client_request_set_normal_brightness_value(double value, pid_t pid = default_pid);
     void emit_notification(std::string const& id);
     void emit_notification_done(std::string const& id);
     void emit_notification();
@@ -80,6 +84,9 @@ struct AcceptanceTest : testing::Test
     void release_power_button();
     void set_proximity_state_far();
     void set_proximity_state_near();
+    void add_compatible_session(std::string const& session_id, pid_t pid);
+    void add_incompatible_session(std::string const& session_id, pid_t pid);
+    void switch_to_session(std::string const& session_id);
     void turn_off_display();
     void turn_on_display();
 
@@ -97,6 +104,8 @@ struct AcceptanceTest : testing::Test
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const infinite_timeout;
+
+    std::string const default_session_id;
 };
 
 }

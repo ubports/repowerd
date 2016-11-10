@@ -31,6 +31,7 @@
 #include "fake_power_button.h"
 #include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
+#include "fake_session_tracker.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
@@ -42,6 +43,7 @@
 #include <gmock/gmock.h>
 
 namespace rt = repowerd::test;
+using namespace testing;
 
 rt::AcceptanceTest::AcceptanceTest()
     : notification_expiration_timeout{
@@ -59,7 +61,9 @@ rt::AcceptanceTest::AcceptanceTest()
           config.user_inactivity_post_notification_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
           config.user_inactivity_reduced_display_off_timeout()},
-      infinite_timeout{repowerd::infinite_timeout}
+      infinite_timeout{repowerd::infinite_timeout},
+      default_session_id{
+          config.the_fake_session_tracker()->default_session()}
 {
     daemon_thread = run_daemon(daemon);
 }
@@ -79,11 +83,6 @@ void rt::AcceptanceTest::expect_autobrightness_disabled()
 void rt::AcceptanceTest::expect_autobrightness_enabled()
 {
     EXPECT_CALL(*config.the_mock_brightness_control(), enable_autobrightness());
-}
-
-void rt::AcceptanceTest::expect_normal_brightness_value_set_to(double value)
-{
-    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
 }
 
 void rt::AcceptanceTest::expect_display_turns_off()
@@ -113,17 +112,34 @@ void rt::AcceptanceTest::expect_long_press_notification()
     EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press());
 }
 
+void rt::AcceptanceTest::expect_no_autobrightness_change()
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), disable_autobrightness()).Times(0);
+    EXPECT_CALL(*config.the_mock_brightness_control(), enable_autobrightness()).Times(0);
+}
+
 void rt::AcceptanceTest::expect_no_display_brightness_change()
 {
     EXPECT_CALL(*config.the_mock_brightness_control(), set_dim_brightness()).Times(0);
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness()).Times(0);
     EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness()).Times(0);
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(_)).Times(0);
 }
 
 void rt::AcceptanceTest::expect_no_display_power_change()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off()).Times(0);
+}
+
+void rt::AcceptanceTest::expect_no_long_press_notification()
+{
+    EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press()).Times(0);
+}
+
+void rt::AcceptanceTest::expect_normal_brightness_value_set_to(double value)
+{
+    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
 }
 
 void rt::AcceptanceTest::expect_display_power_off_notification(
@@ -166,50 +182,42 @@ void rt::AcceptanceTest::advance_time_by(std::chrono::milliseconds advance)
     daemon.flush();
 }
 
-void rt::AcceptanceTest::client_request_disable_inactivity_timeout(std::string const& id)
+void rt::AcceptanceTest::client_request_disable_inactivity_timeout(
+    std::string const& id, pid_t pid)
 {
-    config.the_fake_client_requests()->emit_disable_inactivity_timeout(id);
+    config.the_fake_client_requests()->emit_disable_inactivity_timeout(id, pid);
     daemon.flush();
 }
 
-void rt::AcceptanceTest::client_request_enable_inactivity_timeout(std::string const& id)
+void rt::AcceptanceTest::client_request_enable_inactivity_timeout(
+    std::string const& id, pid_t pid)
 {
-    config.the_fake_client_requests()->emit_enable_inactivity_timeout(id);
+    config.the_fake_client_requests()->emit_enable_inactivity_timeout(id, pid);
     daemon.flush();
-}
-
-void rt::AcceptanceTest::client_request_disable_inactivity_timeout()
-{
-    client_request_disable_inactivity_timeout("AcceptanceTestId");
-}
-
-void rt::AcceptanceTest::client_request_enable_inactivity_timeout()
-{
-    client_request_enable_inactivity_timeout("AcceptanceTestId");
 }
 
 void rt::AcceptanceTest::client_request_set_inactivity_timeout(
-    std::chrono::milliseconds timeout)
+    std::chrono::milliseconds timeout, pid_t pid)
 {
-    config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
+    config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout, pid);
     daemon.flush();
 }
 
-void rt::AcceptanceTest::client_request_disable_autobrightness()
+void rt::AcceptanceTest::client_request_disable_autobrightness(pid_t pid)
 {
-    config.the_fake_client_requests()->emit_disable_autobrightness();
+    config.the_fake_client_requests()->emit_disable_autobrightness(pid);
     daemon.flush();
 }
 
-void rt::AcceptanceTest::client_request_enable_autobrightness()
+void rt::AcceptanceTest::client_request_enable_autobrightness(pid_t pid)
 {
-    config.the_fake_client_requests()->emit_enable_autobrightness();
+    config.the_fake_client_requests()->emit_enable_autobrightness(pid);
     daemon.flush();
 }
 
-void rt::AcceptanceTest::client_request_set_normal_brightness_value(double value)
+void rt::AcceptanceTest::client_request_set_normal_brightness_value(double value, pid_t pid)
 {
-    config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
+    config.the_fake_client_requests()->emit_set_normal_brightness_value(value, pid);
     daemon.flush();
 }
 
@@ -321,6 +329,26 @@ void rt::AcceptanceTest::set_proximity_state_near()
 {
     config.the_fake_proximity_sensor()->set_proximity_state(
         repowerd::ProximityState::near);
+}
+
+void rt::AcceptanceTest::add_compatible_session(std::string const& session_id, pid_t pid)
+{
+    config.the_fake_session_tracker()->add_session(
+        session_id, SessionType::RepowerdCompatible, pid);
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::add_incompatible_session(std::string const& session_id, pid_t pid)
+{
+    config.the_fake_session_tracker()->add_session(
+        session_id, SessionType::RepowerdIncompatible, pid);
+    daemon.flush();
+}
+
+void rt::AcceptanceTest::switch_to_session(std::string const& session_id)
+{
+    config.the_fake_session_tracker()->switch_to_session(session_id);
+    daemon.flush();
 }
 
 void rt::AcceptanceTest::turn_off_display()

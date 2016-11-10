@@ -34,6 +34,7 @@
 #include "voice_call_service.h"
 
 #include <future>
+#include <algorithm>
 
 repowerd::Daemon::Session::Session(
     std::shared_ptr<StateMachine> const& state_machine)
@@ -115,7 +116,7 @@ repowerd::Daemon::register_event_handlers()
         timer->register_alarm_handler(
             [this] (AlarmId id)
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_all_sessions(
                     [this, id] (Session* s) { s->state_machine->handle_alarm(id); });
             }));
 
@@ -201,14 +202,19 @@ repowerd::Daemon::register_event_handlers()
             [this]
             {
                 enqueue_action_to_active_session(
-                    [this] (Session* s) { s->state_machine->handle_active_call(); });
+                    [this] (Session* s)
+                    {
+                        add_session_with_active_call(s);
+                        s->state_machine->handle_active_call();
+                    });
             }));
 
     registrations.push_back(
         voice_call_service->register_no_active_call_handler(
             [this]
             {
-                enqueue_action_to_active_session(
+                enqueue_action_to_sessions(
+                    [this] { return sessions_with_active_calls; },
                     [this] (Session* s) { s->state_machine->handle_no_active_call(); });
             }));
 
@@ -318,6 +324,17 @@ void repowerd::Daemon::enqueue_action_to_active_session(
         [this, session_action] { session_action(active_session); });
 }
 
+void repowerd::Daemon::enqueue_action_to_all_sessions(
+    SessionAction const& session_action)
+{
+    enqueue_action(
+        [this, session_action]
+        {
+            for (auto& kv : sessions)
+                session_action(&kv.second);
+        });
+}
+
 void repowerd::Daemon::enqueue_action_to_sessions(
     std::vector<std::string> const& target_sessions,
     SessionAction const& session_action)
@@ -326,6 +343,22 @@ void repowerd::Daemon::enqueue_action_to_sessions(
         [this, target_sessions, session_action]
         {
             for (auto const& session_id : target_sessions)
+            {
+                auto const iter = sessions.find(session_id);
+                if (iter != sessions.end())
+                    session_action(&iter->second);
+            }
+        });
+}
+
+void repowerd::Daemon::enqueue_action_to_sessions(
+    std::function<std::vector<std::string>()> const& sessions_func,
+    SessionAction const& session_action)
+{
+    enqueue_action(
+        [this, sessions_func, session_action]
+        {
+            for (auto const& session_id : sessions_func())
             {
                 auto const iter = sessions.find(session_id);
                 if (iter != sessions.end())
@@ -347,6 +380,8 @@ repowerd::Daemon::Action repowerd::Daemon::dequeue_action()
 void repowerd::Daemon::handle_session_activated(
     std::string const& session_id, SessionType session_type)
 {
+    active_session->state_machine->pause();
+
     if (session_type == SessionType::RepowerdIncompatible)
     {
         active_session = &sessions.at(repowerd::invalid_session_id);
@@ -362,6 +397,10 @@ void repowerd::Daemon::handle_session_activated(
 
             if (turn_on_display_at_startup)
                 iter->second.state_machine->handle_turn_on_display();
+        }
+        else
+        {
+            iter->second.state_machine->resume();
         }
 
         active_session = &iter->second;
@@ -396,4 +435,23 @@ std::vector<std::string> repowerd::Daemon::sessions_for_pid(pid_t pid)
     }
 
     return ret;
+}
+
+void repowerd::Daemon::add_session_with_active_call(Session* session)
+{
+    auto const iter = std::find_if(sessions.begin(), sessions.end(),
+        [&] (auto const& kv)
+        {
+            return &kv.second == session;
+        });
+
+    if (iter != sessions.end())
+    {
+        if (std::find(sessions_with_active_calls.begin(),
+                      sessions_with_active_calls.end(),
+                      iter->first) == sessions_with_active_calls.end())
+        {
+            sessions_with_active_calls.push_back(iter->first);
+        }
+    }
 }

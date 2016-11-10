@@ -60,6 +60,9 @@ public:
     virtual void handle_enable_autobrightness() = 0;
     virtual void handle_disable_autobrightness() = 0;
 
+    virtual void pause() = 0;
+    virtual void resume() = 0;
+
 protected:
     StateMachine() = default;
     StateMachine(StateMachine const&) = delete;

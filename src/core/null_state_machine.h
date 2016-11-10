@@ -55,6 +55,9 @@ public:
     void handle_set_normal_brightness_value(double) override {}
     void handle_enable_autobrightness() override {}
     void handle_disable_autobrightness() override {}
+
+    void pause() override {}
+    void resume() override {}
 };
 
 }

@@ -63,6 +63,9 @@ public:
     void handle_enable_autobrightness() override;
     void handle_disable_autobrightness() override;
 
+    void pause() override;
+    void resume() override;
+
 private:
     enum class DisplayPowerMode {unknown, on, off};
     struct InactivityTimeoutAllowanceEnum {
@@ -135,6 +138,10 @@ private:
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const notification_expiration_timeout;
     ScheduledTimeoutType scheduled_timeout_type;
+
+    bool paused;
+    bool autobrightness_enabled;
+    double normal_brightness_value;
 };
 
 }

@@ -60,14 +60,20 @@ private:
     void enqueue_action(Action const& action);
     void enqueue_priority_action(Action const& action);
     void enqueue_action_to_active_session(SessionAction const& action);
+    void enqueue_action_to_all_sessions(SessionAction const& action);
     void enqueue_action_to_sessions(
         std::vector<std::string> const& sessions,
+        SessionAction const& action);
+    void enqueue_action_to_sessions(
+        std::function<std::vector<std::string>()> const& sessions_func,
         SessionAction const& action);
     Action dequeue_action();
 
     void handle_session_activated(std::string const&, repowerd::SessionType);
     void handle_session_removed(std::string const&);
     std::vector<std::string> sessions_for_pid(pid_t pid);
+    void add_session_with_active_call(Session* session);
+    std::vector<std::string> session_with_active_calls();
 
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<ClientRequests> const client_requests;
@@ -85,6 +91,7 @@ private:
     bool running;
 
     std::unordered_map<std::string,Session> sessions;
+    std::vector<std::string> sessions_with_active_calls;
     Session* active_session;
 
     std::mutex action_queue_mutex;

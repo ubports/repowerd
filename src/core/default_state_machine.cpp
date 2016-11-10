@@ -69,7 +69,10 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
           config.user_inactivity_post_notification_display_off_timeout()},
       notification_expiration_timeout{
           config.notification_expiration_timeout()},
-      scheduled_timeout_type{ScheduledTimeoutType::none}
+      scheduled_timeout_type{ScheduledTimeoutType::none},
+      paused{false},
+      autobrightness_enabled{false},
+      normal_brightness_value{0.5}
 {
       inactivity_timeout_allowances.fill(true);
       proximity_enablements.fill(false);
@@ -359,12 +362,20 @@ void repowerd::DefaultStateMachine::handle_set_normal_brightness_value(double va
 {
     log->log(log_tag, "handle_set_normal_brightness_value(%.2f)", value);
 
+    normal_brightness_value = value;
+
+    if (paused) return;
+
     brightness_control->set_normal_brightness_value(value);
 }
 
 void repowerd::DefaultStateMachine::handle_enable_autobrightness()
 {
     log->log(log_tag, "enable_autobrightness");
+
+    autobrightness_enabled = true;
+
+    if (paused) return;
 
     brightness_control->enable_autobrightness();
 }
@@ -373,7 +384,46 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
 {
     log->log(log_tag, "disable_autobrightness");
 
+    autobrightness_enabled = false;
+
+    if (paused) return;
+
     brightness_control->disable_autobrightness();
+}
+
+void repowerd::DefaultStateMachine::pause()
+{
+    log->log(log_tag, "pause");
+
+    if (power_button_long_press_alarm_id != AlarmId::invalid)
+    {
+        timer->cancel_alarm(power_button_long_press_alarm_id);
+        power_button_long_press_alarm_id = AlarmId::invalid;
+    }
+
+    proximity_sensor->disable_proximity_events();
+    brightness_control->disable_autobrightness();
+
+    paused = true;
+}
+
+void repowerd::DefaultStateMachine::resume()
+{
+    log->log(log_tag, "resume");
+
+    paused = false;
+
+    if (autobrightness_enabled)
+        brightness_control->enable_autobrightness();
+    else
+        brightness_control->disable_autobrightness();
+
+    brightness_control->set_normal_brightness_value(normal_brightness_value);
+
+    turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
+
+    if (is_proximity_enabled())
+        proximity_sensor->enable_proximity_events();
 }
 
 void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
@@ -492,6 +542,8 @@ void repowerd::DefaultStateMachine::schedule_immediate_user_inactivity_alarm()
 void repowerd::DefaultStateMachine::turn_off_display(
     DisplayPowerChangeReason reason)
 {
+    if (paused) return;
+
     brightness_control->set_off_brightness();
     display_power_control->turn_off();
     if (reason != DisplayPowerChangeReason::proximity)
@@ -508,6 +560,8 @@ void repowerd::DefaultStateMachine::turn_off_display(
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
     DisplayPowerChangeReason reason)
 {
+    if (paused) return;
+
     suspend_control->disallow_suspend(suspend_id);
     performance_booster->enable_interactive_mode();
     display_power_control->turn_on();
@@ -534,11 +588,15 @@ void repowerd::DefaultStateMachine::turn_on_display_with_reduced_timeout(
 
 void repowerd::DefaultStateMachine::brighten_display()
 {
+    if (paused) return;
+
     brightness_control->set_normal_brightness();
 }
 
 void repowerd::DefaultStateMachine::dim_display()
 {
+    if (paused) return;
+
     brightness_control->set_dim_brightness();
 }
 

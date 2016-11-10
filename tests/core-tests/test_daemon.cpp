@@ -76,6 +76,9 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD1(handle_set_normal_brightness_value, void(double));
     MOCK_METHOD0(handle_enable_autobrightness, void());
     MOCK_METHOD0(handle_disable_autobrightness, void());
+
+    MOCK_METHOD0(pause, void());
+    MOCK_METHOD0(resume, void());
 };
 
 struct MockStateMachineFactory : public repowerd::StateMachineFactory
@@ -624,8 +627,11 @@ TEST_F(ADaemon, notifies_state_machine_of_no_active_call)
 {
     start_daemon();
 
+    InSequence s;
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_active_call());
     EXPECT_CALL(*config.the_mock_state_machine(), handle_no_active_call());
 
+    config.the_fake_voice_call_service()->emit_active_call();
     config.the_fake_voice_call_service()->emit_no_active_call();
 }
 
