@@ -768,3 +768,15 @@ TEST_F(ADaemon, registers_and_unregisters_session_removed_handler)
     stop_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_session_tracker().get());
 }
+
+TEST_F(ADaemon, starts_session_tracker_processing_before_per_session_components)
+{
+    using namespace testing;
+    Expectation session = EXPECT_CALL(config.the_fake_session_tracker()->mock, start_processing());
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing())
+        .After(session);
+    EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing())
+        .After(session);
+
+    start_daemon();
+}

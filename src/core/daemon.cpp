@@ -282,12 +282,16 @@ repowerd::Daemon::register_event_handlers()
 
 void repowerd::Daemon::start_event_processing()
 {
+    // Start first so that the initial active session becomes known
+    // before per-session events (client requests and notifications)
+    // arrive
+    session_tracker->start_processing();
+
     client_requests->start_processing();
     notification_service->start_processing();
     power_button->start_processing();
     power_source->start_processing();
     user_activity->start_processing();
-    session_tracker->start_processing();
     voice_call_service->start_processing();
 }
 
