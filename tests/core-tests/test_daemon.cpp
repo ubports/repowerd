@@ -39,6 +39,7 @@
 
 namespace rt = repowerd::test;
 
+using namespace testing;
 using namespace std::chrono_literals;
 
 namespace
@@ -189,8 +190,6 @@ struct ADaemon : testing::Test
 
 TEST_F(ADaemon, registers_and_unregisters_timer_alarm_handler)
 {
-    using namespace testing;
-
     EXPECT_CALL(config.the_fake_timer()->mock, register_alarm_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_timer().get());
@@ -213,8 +212,6 @@ TEST_F(ADaemon, notifies_state_machine_of_timer_alarm)
 
 TEST_F(ADaemon, registers_starts_and_unregisters_power_button_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_power_button()->mock, register_power_button_handler(_));
     EXPECT_CALL(config.the_fake_power_button()->mock, start_processing());
@@ -244,8 +241,6 @@ TEST_F(ADaemon, notifies_state_machine_of_power_button_release)
 
 TEST_F(ADaemon, registers_starts_and_unregisters_user_activity_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_user_activity()->mock, register_user_activity_handler(_));
     EXPECT_CALL(config.the_fake_user_activity()->mock, start_processing());
@@ -259,8 +254,6 @@ TEST_F(ADaemon, registers_starts_and_unregisters_user_activity_handler)
 
 TEST_F(ADaemon, notifies_state_machine_of_user_activity_changing_power_state)
 {
-    using namespace testing;
-
     start_daemon();
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_user_activity_changing_power_state());
@@ -270,8 +263,6 @@ TEST_F(ADaemon, notifies_state_machine_of_user_activity_changing_power_state)
 
 TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
 {
-    using namespace testing;
-
     start_daemon();
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_user_activity_extending_power_state());
@@ -281,8 +272,6 @@ TEST_F(ADaemon, notifies_state_machine_of_user_activity_extending_power_state)
 
 TEST_F(ADaemon, registers_starts_and_unregisters_proximity_handler)
 {
-    using namespace testing;
-
     EXPECT_CALL(config.the_fake_proximity_sensor()->mock, register_proximity_handler(_));
     start_daemon();
     testing::Mock::VerifyAndClearExpectations(config.the_fake_proximity_sensor().get());
@@ -312,8 +301,6 @@ TEST_F(ADaemon, notifies_state_machine_of_proximity_near)
 
 TEST_F(ADaemon, registers_starts_and_unregisters_enable_inactivity_timeout_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_inactivity_timeout_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -327,8 +314,6 @@ TEST_F(ADaemon, registers_starts_and_unregisters_enable_inactivity_timeout_handl
 
 TEST_F(ADaemon, notifies_state_machine_of_enable_inactivity_timeout)
 {
-    using namespace testing;
-
     start_daemon();
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_enable_inactivity_timeout());
@@ -347,8 +332,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_enable_inactivity_timeout)
 
 TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_inactivity_timeout_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -362,8 +345,6 @@ TEST_F(ADaemon, registers_and_unregisters_disable_inactivity_timeout_handler)
 
 TEST_F(ADaemon, notifies_state_machine_of_disable_inactivity_timeout)
 {
-    using namespace testing;
-
     start_daemon();
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_disable_inactivity_timeout());
@@ -382,8 +363,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_disable_inactivity_timeout)
 
 TEST_F(ADaemon, registers_and_unregisters_set_inactivity_timeout_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_inactivity_timeout_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -407,8 +386,6 @@ TEST_F(ADaemon, notifies_state_machine_of_set_inactivity_timeout)
 
 TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_timeout)
 {
-    using namespace testing;
-
     start_daemon_with_second_session_active();
 
     auto const timeout = 10000ms;
@@ -419,8 +396,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_timeout)
 
 TEST_F(ADaemon, registers_and_unregisters_disable_autobrightness)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_disable_autobrightness_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -452,8 +427,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_disable_autobrightness)
 
 TEST_F(ADaemon, registers_and_unregisters_enable_autobrightness)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_enable_autobrightness_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -485,8 +458,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_enable_autobrightness)
 
 TEST_F(ADaemon, registers_and_unregisters_set_normal_brightness_value)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_client_requests()->mock, register_set_normal_brightness_value_handler(_));
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
@@ -510,8 +481,6 @@ TEST_F(ADaemon, notifies_state_machine_of_set_normal_brightness_value)
 
 TEST_F(ADaemon, notifies_inactive_state_machine_of_set_normal_brightness_value)
 {
-    using namespace testing;
-
     start_daemon_with_second_session_active();
 
     auto const value = 0.7;
@@ -523,8 +492,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_normal_brightness_value)
 
 TEST_F(ADaemon, registers_and_unregisters_notification_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_notification_service()->mock, register_notification_handler(_));
     EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing());
@@ -557,8 +524,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_notification)
 
 TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_notification_service()->mock, register_notification_done_handler(_));
     EXPECT_CALL(config.the_fake_notification_service()->mock, start_processing());
@@ -572,8 +537,6 @@ TEST_F(ADaemon, registers_and_unregisters_no_notification_handler)
 
 TEST_F(ADaemon, notifies_state_machine_of_no_notification)
 {
-    using namespace testing;
-
     start_daemon();
 
     InSequence s;
@@ -586,8 +549,6 @@ TEST_F(ADaemon, notifies_state_machine_of_no_notification)
 
 TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification)
 {
-    using namespace testing;
-
     start_daemon_with_second_session_active();
 
     InSequence s;
@@ -601,8 +562,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification)
 
 TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification_if_notification_was_sent_while_active)
 {
-    using namespace testing;
-
     start_daemon();
 
     EXPECT_CALL(*config.the_mock_state_machine(0), handle_notification());
@@ -622,8 +581,6 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_no_notification_if_notificati
 
 TEST_F(ADaemon, registers_and_unregisters_active_call_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_active_call_handler(_));
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, start_processing());
@@ -646,8 +603,6 @@ TEST_F(ADaemon, notifies_state_machine_of_active_call)
 
 TEST_F(ADaemon, registers_and_unregisters_no_active_call_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, register_no_active_call_handler(_));
     EXPECT_CALL(config.the_fake_voice_call_service()->mock, start_processing());
@@ -691,8 +646,6 @@ TEST_F(ADaemon, turns_on_display_at_startup_if_configured)
 
 TEST_F(ADaemon, registers_and_unregisters_power_source_change_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_power_source()->mock, register_power_source_change_handler(_));
     EXPECT_CALL(config.the_fake_power_source()->mock, start_processing());
@@ -715,8 +668,6 @@ TEST_F(ADaemon, notifies_state_machine_of_power_source_change)
 
 TEST_F(ADaemon, registers_and_unregisters_power_source_critical_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_power_source()->mock, register_power_source_critical_handler(_));
     EXPECT_CALL(config.the_fake_power_source()->mock, start_processing());
@@ -739,8 +690,6 @@ TEST_F(ADaemon, notifies_state_machine_of_power_source_critical)
 
 TEST_F(ADaemon, registers_and_unregisters_active_session_changed_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_session_tracker()->mock,
                 register_active_session_changed_handler(_));
@@ -756,8 +705,6 @@ TEST_F(ADaemon, registers_and_unregisters_active_session_changed_handler)
 
 TEST_F(ADaemon, registers_and_unregisters_session_removed_handler)
 {
-    using namespace testing;
-
     InSequence s;
     EXPECT_CALL(config.the_fake_session_tracker()->mock, register_session_removed_handler(_));
     EXPECT_CALL(config.the_fake_session_tracker()->mock, start_processing());
@@ -771,7 +718,6 @@ TEST_F(ADaemon, registers_and_unregisters_session_removed_handler)
 
 TEST_F(ADaemon, starts_session_tracker_processing_before_per_session_components)
 {
-    using namespace testing;
     Expectation session = EXPECT_CALL(config.the_fake_session_tracker()->mock, start_processing());
     EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing())
         .After(session);
