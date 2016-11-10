@@ -26,35 +26,35 @@ namespace repowerd
 class NullStateMachine : public StateMachine
 {
 public:
-    void handle_alarm(AlarmId) {}
+    void handle_alarm(AlarmId) override {}
 
-    void handle_active_call() {}
-    void handle_no_active_call() {}
+    void handle_active_call() override {}
+    void handle_no_active_call() override {}
 
-    void handle_enable_inactivity_timeout() {}
-    void handle_disable_inactivity_timeout() {}
-    void handle_set_inactivity_timeout(std::chrono::milliseconds) {}
+    void handle_enable_inactivity_timeout() override {}
+    void handle_disable_inactivity_timeout() override {}
+    void handle_set_inactivity_timeout(std::chrono::milliseconds) override {}
 
-    void handle_no_notification() {}
-    void handle_notification() {}
+    void handle_no_notification() override {}
+    void handle_notification() override {}
 
-    void handle_power_button_press() {}
-    void handle_power_button_release() {}
+    void handle_power_button_press() override {}
+    void handle_power_button_release() override {}
 
-    void handle_power_source_change() {}
-    void handle_power_source_critical() {}
+    void handle_power_source_change() override {}
+    void handle_power_source_critical() override {}
 
-    void handle_proximity_far() {}
-    void handle_proximity_near() {}
+    void handle_proximity_far() override {}
+    void handle_proximity_near() override {}
 
-    void handle_turn_on_display() {}
+    void handle_turn_on_display() override {}
 
-    void handle_user_activity_changing_power_state() {}
-    void handle_user_activity_extending_power_state() {}
+    void handle_user_activity_changing_power_state() override {}
+    void handle_user_activity_extending_power_state() override {}
 
-    void handle_set_normal_brightness_value(double) {}
-    void handle_enable_autobrightness() {}
-    void handle_disable_autobrightness() {}
+    void handle_set_normal_brightness_value(double) override {}
+    void handle_enable_autobrightness() override {}
+    void handle_disable_autobrightness() override {}
 };
 
 }
