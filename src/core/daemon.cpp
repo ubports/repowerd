@@ -371,7 +371,14 @@ void repowerd::Daemon::handle_session_activated(
 void repowerd::Daemon::handle_session_removed(
     std::string const& session_id)
 {
-    sessions.erase(session_id);
+    auto const iter = sessions.find(session_id);
+    if (iter != sessions.end())
+    {
+        if (active_session == &iter->second)
+            active_session = &sessions.at(repowerd::invalid_session_id);
+
+        sessions.erase(session_id);
+    }
 }
 
 std::vector<std::string> repowerd::Daemon::sessions_for_pid(pid_t pid)

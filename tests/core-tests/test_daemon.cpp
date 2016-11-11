@@ -184,6 +184,12 @@ struct ADaemon : testing::Test
         config.the_fake_session_tracker()->switch_to_session(session_id);
         daemon->flush();
     }
+
+    void remove_session(std::string const& session_id)
+    {
+        config.the_fake_session_tracker()->remove_session(session_id);
+        daemon->flush();
+    }
 };
 
 }
@@ -725,4 +731,15 @@ TEST_F(ADaemon, starts_session_tracker_processing_before_per_session_components)
         .After(session);
 
     start_daemon();
+}
+
+TEST_F(ADaemon, makes_null_session_active_if_active_is_removed)
+{
+    start_daemon();
+
+    remove_session(
+        config.the_fake_session_tracker()->default_session());
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_power_button_press()).Times(0);
+    config.the_fake_power_button()->press();
 }
