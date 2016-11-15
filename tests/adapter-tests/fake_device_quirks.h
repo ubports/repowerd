@@ -32,13 +32,16 @@ struct FakeDeviceQuirks : repowerd::DeviceQuirks
     std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override;
     DeviceQuirks::ProximityEventType synthetic_initial_proximity_event_type() const override;
     bool normal_before_display_on_autobrightness() const override;
+    bool ignore_session_deactivation() const override;
 
     void set_synthetic_initial_event_type_near();
     void set_normal_before_display_on_autobrightness(bool value);
+    void set_ignore_session_deactivation(bool value);
 
 private:
     repowerd::DeviceQuirks::ProximityEventType synthetic_initial_event_type_;
     bool normal_before_display_on_autobrightness_;
+    bool ignore_session_deactivation_;
 };
 
 }

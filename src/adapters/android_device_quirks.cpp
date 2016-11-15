@@ -78,6 +78,12 @@ std::string proximity_event_type_to_str(
     return "unknown";
 }
 
+bool ignore_session_deactivation_for(std::string const& device_name)
+{
+    // ignore session deactivation for all android devices
+    return !device_name.empty();
+}
+
 }
 
 repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks(
@@ -88,7 +94,9 @@ repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks(
       synthetic_initial_proximity_event_type_{
           synthetic_initial_proximity_event_type_for(device_name_)},
       normal_before_display_on_autobrightness_{
-        normal_before_display_on_autobrightness_for(device_name_)}
+        normal_before_display_on_autobrightness_for(device_name_)},
+      ignore_session_deactivation_{
+        ignore_session_deactivation_for(device_name_)}
 {
     log.log(log_tag, "DeviceName: %s", device_name_.c_str());
     log.log(log_tag, "Quirk: synthetic_initial_proximit_event_delay=%d",
@@ -97,6 +105,8 @@ repowerd::AndroidDeviceQuirks::AndroidDeviceQuirks(
             proximity_event_type_to_str(synthetic_initial_proximity_event_type_).c_str());
     log.log(log_tag, "Quirk: normal_before_display_on_autobrightness=%s",
             normal_before_display_on_autobrightness_ ? "true" : "false");
+    log.log(log_tag, "Quirk: ignore_session_deactivation=%s",
+            ignore_session_deactivation_ ? "true" : "false");
 }
 
 std::chrono::milliseconds
@@ -114,4 +124,9 @@ repowerd::AndroidDeviceQuirks::synthetic_initial_proximity_event_type() const
 bool repowerd::AndroidDeviceQuirks::normal_before_display_on_autobrightness() const
 {
     return normal_before_display_on_autobrightness_;
+}
+
+bool repowerd::AndroidDeviceQuirks::ignore_session_deactivation() const
+{
+    return ignore_session_deactivation_;
 }

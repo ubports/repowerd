@@ -18,6 +18,7 @@
 
 #include "dbus_bus.h"
 #include "dbus_client.h"
+#include "fake_device_quirks.h"
 #include "fake_log.h"
 #include "fake_shared.h"
 #include "fake_logind.h"
@@ -39,10 +40,35 @@ namespace
 
 struct ALogindSessionTracker : testing::Test
 {
+    enum class WithQuirk { none, ignore_session_deactivation };
+
     ALogindSessionTracker()
     {
+        fake_logind.add_session(session_id(0), "mir", session_pid(0));
+        fake_logind.add_session(session_id(1), "mir", session_pid(1));
+        fake_logind.activate_session(session_id(0));
+
+        use_logind_session_tracker(WithQuirk::none);
+    }
+
+    void use_logind_session_tracker(WithQuirk quirk)
+    {
+        registrations.clear();
+        active_session_history.clear();
+        removed_session_history.clear();
+
+        rt::FakeDeviceQuirks fake_device_quirks;
+        if (quirk == WithQuirk::ignore_session_deactivation)
+            fake_device_quirks.set_ignore_session_deactivation(true);
+
+        logind_session_tracker =
+            std::make_unique<repowerd::LogindSessionTracker>(
+                rt::fake_shared(fake_log),
+                fake_device_quirks,
+                bus.address());
+
         registrations.push_back(
-            logind_session_tracker.register_active_session_changed_handler(
+            logind_session_tracker->register_active_session_changed_handler(
                 [this] (std::string const& session_id, repowerd::SessionType type)
                 {
                     {
@@ -55,7 +81,7 @@ struct ALogindSessionTracker : testing::Test
                 }));
 
         registrations.push_back(
-            logind_session_tracker.register_session_removed_handler(
+            logind_session_tracker->register_session_removed_handler(
                 [this] (std::string const& session_id)
                 {
                     {
@@ -67,11 +93,8 @@ struct ALogindSessionTracker : testing::Test
                     mock_handlers.session_removed(session_id);
                 }));
 
-        fake_logind.add_session(session_id(0), "mir", session_pid(0));
-        fake_logind.add_session(session_id(1), "mir", session_pid(1));
-        fake_logind.activate_session(session_id(0));
 
-        logind_session_tracker.start_processing();
+        logind_session_tracker->start_processing();
     }
 
     std::string session_id(int i)
@@ -116,6 +139,25 @@ struct ALogindSessionTracker : testing::Test
                 "Timeout while waiting for " + session_id + " to become the active session"};
     }
 
+    void wait_until_activated_sessions_are(std::vector<std::string> const& activated)
+    {
+        std::unique_lock<std::mutex> lock{session_mutex};
+        auto const success = session_cv.wait_for(
+            lock, default_timeout,
+            [&]
+            {
+                std::vector<std::string> active_session_id_history;
+                
+                for (auto const& s : active_session_history)
+                    active_session_id_history.push_back(s.first);
+
+                return activated == active_session_id_history;
+            });
+        if (!success)
+            throw std::runtime_error{
+                "Timeout while waiting for activated sessions"};
+    }
+
     void wait_until_removed_sessions_are(std::vector<std::string> const& removed)
     {
         std::unique_lock<std::mutex> lock{session_mutex};
@@ -139,9 +181,7 @@ struct ALogindSessionTracker : testing::Test
 
     rt::DBusBus bus;
     rt::FakeLog fake_log;
-    repowerd::LogindSessionTracker logind_session_tracker{
-        rt::fake_shared(fake_log),
-        bus.address()};
+    std::unique_ptr<repowerd::LogindSessionTracker> logind_session_tracker;
     rt::FakeLogind fake_logind{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 
@@ -217,16 +257,57 @@ TEST_F(ALogindSessionTracker, returns_session_id_for_pid_of_tracked_session)
 {
     fake_logind.activate_session(session_id(1));
 
-    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(0)),
+    EXPECT_THAT(logind_session_tracker->session_for_pid(session_pid(0)),
                 StrEq(session_id(0)));
-    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(1)),
+    EXPECT_THAT(logind_session_tracker->session_for_pid(session_pid(1)),
                 StrEq(session_id(1)));
 }
 
 TEST_F(ALogindSessionTracker, returns_invalid_session_id_for_pid_of_untracked_session)
 {
-    EXPECT_THAT(logind_session_tracker.session_for_pid(session_pid(1)),
+    EXPECT_THAT(logind_session_tracker->session_for_pid(session_pid(1)),
                 StrEq(repowerd::invalid_session_id));
+}
+
+TEST_F(ALogindSessionTracker, notifies_of_same_session_activation_after_deactivation)
+{
+    fake_logind.deactivate_session();
+    fake_logind.activate_session(session_id(0));
+
+    wait_until_activated_sessions_are(
+        {session_id(0), repowerd::invalid_session_id, session_id(0)});
+}
+
+TEST_F(ALogindSessionTracker, does_not_notify_of_same_session_activation)
+{
+    fake_logind.activate_session(session_id(0));
+    fake_logind.activate_session(session_id(0));
+    fake_logind.activate_session(session_id(1));
+    fake_logind.activate_session(session_id(1));
+
+    wait_until_activated_sessions_are({session_id(0), session_id(1)});
+}
+
+TEST_F(ALogindSessionTracker, with_quirk_does_not_notify_of_session_deactivation)
+{
+    use_logind_session_tracker(WithQuirk::ignore_session_deactivation);
+
+    fake_logind.deactivate_session();
+    fake_logind.activate_session(session_id(1));
+
+    wait_until_activated_sessions_are({session_id(0), session_id(1)});
+}
+
+TEST_F(ALogindSessionTracker,
+       with_quirk_does_not_notify_of_same_session_activation_after_deactivation)
+{
+    use_logind_session_tracker(WithQuirk::ignore_session_deactivation);
+
+    fake_logind.deactivate_session();
+    fake_logind.activate_session(session_id(0));
+    fake_logind.activate_session(session_id(1));
+
+    wait_until_activated_sessions_are({session_id(0), session_id(1)});
 }
 
 TEST_F(ALogindSessionTracker, logs_active_session_at_startup)

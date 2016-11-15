@@ -22,7 +22,8 @@ namespace rt = repowerd::test;
 
 rt::FakeDeviceQuirks::FakeDeviceQuirks()
     : synthetic_initial_event_type_{DeviceQuirks::ProximityEventType::far},
-      normal_before_display_on_autobrightness_{false}
+      normal_before_display_on_autobrightness_{false},
+      ignore_session_deactivation_{false}
 {
 }
 
@@ -44,6 +45,11 @@ bool rt::FakeDeviceQuirks::normal_before_display_on_autobrightness() const
     return normal_before_display_on_autobrightness_;
 }
 
+bool rt::FakeDeviceQuirks::ignore_session_deactivation() const
+{
+    return ignore_session_deactivation_;
+}
+
 void rt::FakeDeviceQuirks::set_synthetic_initial_event_type_near()
 {
     synthetic_initial_event_type_ = repowerd::DeviceQuirks::ProximityEventType::near;
@@ -52,4 +58,9 @@ void rt::FakeDeviceQuirks::set_synthetic_initial_event_type_near()
 void rt::FakeDeviceQuirks::set_normal_before_display_on_autobrightness(bool value)
 {
     normal_before_display_on_autobrightness_ = value;
+}
+
+void rt::FakeDeviceQuirks::set_ignore_session_deactivation(bool value)
+{
+    ignore_session_deactivation_ = value;
 }

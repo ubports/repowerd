@@ -29,12 +29,14 @@
 namespace repowerd
 {
 class Log;
+class DeviceQuirks;
 
 class LogindSessionTracker : public SessionTracker
 {
 public:
     LogindSessionTracker(
         std::shared_ptr<Log> const& log,
+        DeviceQuirks const& device_quirks,
         std::string const& dbus_bus_address);
 
     void start_processing() override;
@@ -68,6 +70,7 @@ private:
     std::string session_id_for_path(std::string const& session_path);
 
     std::shared_ptr<Log> const log;
+    bool const ignore_session_deactivation;
 
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
@@ -83,6 +86,7 @@ private:
         SessionType type;
     };
     std::unordered_map<std::string,SessionInfo> tracked_sessions;
+    std::string active_session_id;
 };
 
 }

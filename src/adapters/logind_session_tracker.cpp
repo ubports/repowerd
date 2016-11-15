@@ -17,6 +17,7 @@
  */
 
 #include "logind_session_tracker.h"
+#include "android_device_quirks.h"
 #include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
 
@@ -51,11 +52,14 @@ repowerd::SessionType logind_session_type_to_repowerd_type(
 
 repowerd::LogindSessionTracker::LogindSessionTracker(
     std::shared_ptr<Log> const& log,
+    DeviceQuirks const& quirks,
     std::string const& dbus_bus_address)
     : log{log},
+      ignore_session_deactivation{quirks.ignore_session_deactivation()},
       dbus_connection{dbus_bus_address},
       active_session_changed_handler{null_arg2_handler},
-      session_removed_handler{null_arg1_handler}
+      session_removed_handler{null_arg1_handler},
+      active_session_id{invalid_session_id}
 {
 }
 
@@ -235,9 +239,10 @@ void repowerd::LogindSessionTracker::activate_session(
         iter = tracked_sessions.find(session_id);
     }
 
-    if (iter != tracked_sessions.end())
+    if (iter != tracked_sessions.end() && iter->first != active_session_id)
     {
         log->log(log_tag, "activate_session(%s)", session_id.c_str());
+        active_session_id = iter->first;
         active_session_changed_handler(iter->first, iter->second.type);
     }
 }
@@ -245,6 +250,12 @@ void repowerd::LogindSessionTracker::activate_session(
 void repowerd::LogindSessionTracker::deactivate_session()
 {
     log->log(log_tag, "deactivate_session()");
+
+    if (ignore_session_deactivation)
+        return;
+
+    active_session_id = invalid_session_id;
+
     active_session_changed_handler(
         repowerd::invalid_session_id,
         repowerd::SessionType::RepowerdIncompatible);

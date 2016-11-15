@@ -33,6 +33,7 @@ public:
     virtual std::chrono::milliseconds synthetic_initial_proximity_event_delay() const = 0;
     virtual ProximityEventType synthetic_initial_proximity_event_type() const = 0;
     virtual bool normal_before_display_on_autobrightness() const = 0;
+    virtual bool ignore_session_deactivation() const = 0;
 
 protected:
     DeviceQuirks() = default;

@@ -38,6 +38,7 @@ add_executable(
     test_android_backlight.cpp
     test_android_autobrightness_algorithm.cpp
     test_android_device_config.cpp
+    test_android_device_quirks.cpp
     test_backlight_brightness_control.cpp
     test_brightness_params.cpp
     test_dev_alarm_wakeup_service.cpp

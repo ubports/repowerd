@@ -257,7 +257,7 @@ repowerd::DefaultDaemonConfig::the_session_tracker()
     if (!session_tracker)
     {
         session_tracker = std::make_shared<LogindSessionTracker>(
-            the_log(), the_dbus_bus_address());
+            the_log(), *the_device_quirks(), the_dbus_bus_address());
     }
 
     return session_tracker;

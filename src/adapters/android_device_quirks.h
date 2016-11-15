@@ -34,12 +34,14 @@ public:
     std::chrono::milliseconds synthetic_initial_proximity_event_delay() const override;
     ProximityEventType synthetic_initial_proximity_event_type() const override;
     bool normal_before_display_on_autobrightness() const override;
+    bool ignore_session_deactivation() const override;
 
 private:
     std::string const device_name_;
     std::chrono::milliseconds const synthetic_initial_proximity_event_delay_;
     ProximityEventType const synthetic_initial_proximity_event_type_;
     bool normal_before_display_on_autobrightness_;
+    bool const ignore_session_deactivation_;
 };
 
 }
