@@ -2,7 +2,6 @@
 Description=monitor and control system power state
 Wants=lxc-android-config.service
 After=lxc-android-config.service
-ConditionFileNotEmpty=/lib/systemd/system/lxc-android-config.service
 
 [Service]
 Type=dbus
