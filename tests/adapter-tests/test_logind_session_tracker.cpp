@@ -19,6 +19,7 @@
 #include "dbus_bus.h"
 #include "dbus_client.h"
 #include "fake_device_quirks.h"
+#include "fake_filesystem.h"
 #include "fake_log.h"
 #include "fake_shared.h"
 #include "fake_logind.h"
@@ -44,8 +45,8 @@ struct ALogindSessionTracker : testing::Test
 
     ALogindSessionTracker()
     {
-        fake_logind.add_session(session_id(0), "mir", session_pid(0));
-        fake_logind.add_session(session_id(1), "mir", session_pid(1));
+        fake_logind.add_session(session_id(0), "mir", session_pid(0), session_uid(0));
+        fake_logind.add_session(session_id(1), "mir", session_pid(1), session_uid(1));
         fake_logind.activate_session(session_id(0));
 
         use_logind_session_tracker(WithQuirk::none);
@@ -63,6 +64,7 @@ struct ALogindSessionTracker : testing::Test
 
         logind_session_tracker =
             std::make_unique<repowerd::LogindSessionTracker>(
+                rt::fake_shared(fake_filesystem),
                 rt::fake_shared(fake_log),
                 fake_device_quirks,
                 bus.address());
@@ -104,9 +106,22 @@ struct ALogindSessionTracker : testing::Test
 
     pid_t session_pid(int i)
     {
+        return 100 + i;
+    }
+
+    uid_t session_uid(int i)
+    {
         return 1000 + i;
     }
 
+    void associate_pid_with_uid(pid_t pid, uid_t uid)
+    {
+        auto const uid_str = std::to_string(uid);
+        fake_filesystem.add_file_with_contents(
+            "/proc/" + std::to_string(pid) + "/status",
+            "Uid:	" + uid_str + " " + uid_str + " " + uid_str + " " + uid_str);
+
+    }
     void wait_until_active_session_is(std::string const& session_id)
     {
         std::unique_lock<std::mutex> lock{session_mutex};
@@ -181,6 +196,7 @@ struct ALogindSessionTracker : testing::Test
 
     rt::DBusBus bus;
     rt::FakeLog fake_log;
+    rt::FakeFilesystem fake_filesystem;
     std::unique_ptr<repowerd::LogindSessionTracker> logind_session_tracker;
     rt::FakeLogind fake_logind{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
@@ -239,7 +255,7 @@ TEST_F(ALogindSessionTracker, notifies_of_session_deactivation)
 
 TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
 {
-    fake_logind.add_session(session_id(2), "mir", session_pid(2));
+    fake_logind.add_session(session_id(2), "mir", session_pid(2), session_uid(2));
     fake_logind.activate_session(session_id(2));
 
     wait_until_active_session_is(session_id(2), repowerd::SessionType::RepowerdCompatible);
@@ -247,7 +263,7 @@ TEST_F(ALogindSessionTracker, marks_mir_sessions_as_repowerd_compatible)
 
 TEST_F(ALogindSessionTracker, marks_non_mir_sessions_as_repowerd_incompatible)
 {
-    fake_logind.add_session(session_id(2), "x11", session_pid(2));
+    fake_logind.add_session(session_id(2), "x11", session_pid(2), session_uid(2));
     fake_logind.activate_session(session_id(2));
 
     wait_until_active_session_is(session_id(2), repowerd::SessionType::RepowerdIncompatible);
@@ -267,6 +283,49 @@ TEST_F(ALogindSessionTracker, returns_invalid_session_id_for_pid_of_untracked_se
 {
     EXPECT_THAT(logind_session_tracker->session_for_pid(session_pid(1)),
                 StrEq(repowerd::invalid_session_id));
+}
+
+TEST_F(ALogindSessionTracker,
+       returns_invalid_session_id_for_pid_belonging_to_inactive_session_user)
+{
+    fake_logind.activate_session(session_id(1));
+    wait_until_active_session_is(session_id(1));
+
+    pid_t const pid = 667;
+    associate_pid_with_uid(pid, session_uid(0));
+
+    EXPECT_THAT(logind_session_tracker->session_for_pid(pid),
+                StrEq(repowerd::invalid_session_id));
+}
+
+TEST_F(ALogindSessionTracker,
+       returns_invalid_session_id_for_pid_belonging_to_unknown_user)
+{
+    pid_t const pid = 667;
+    associate_pid_with_uid(pid, 9999);
+
+    EXPECT_THAT(logind_session_tracker->session_for_pid(pid),
+                StrEq(repowerd::invalid_session_id));
+}
+
+TEST_F(ALogindSessionTracker,
+       returns_active_session_id_for_pid_belonging_to_active_session_user)
+{
+    pid_t const pid = 667;
+    associate_pid_with_uid(pid, session_uid(0));
+
+    EXPECT_THAT(logind_session_tracker->session_for_pid(pid),
+                StrEq(session_id(0)));
+}
+
+TEST_F(ALogindSessionTracker, returns_active_session_id_for_pid_belonging_to_root)
+{
+    pid_t const pid = 667;
+    uid_t const root_uid = 0;
+    associate_pid_with_uid(pid, root_uid);
+
+    EXPECT_THAT(logind_session_tracker->session_for_pid(pid),
+                StrEq(session_id(0)));
 }
 
 TEST_F(ALogindSessionTracker, notifies_of_same_session_activation_after_deactivation)
@@ -318,7 +377,7 @@ TEST_F(ALogindSessionTracker, logs_active_session_at_startup)
 
 TEST_F(ALogindSessionTracker, logs_change_in_active_session)
 {
-    fake_logind.add_session(session_id(2), "x11", session_pid(2));
+    fake_logind.add_session(session_id(2), "x11", session_pid(2), session_uid(2));
     fake_logind.activate_session(session_id(2));
 
     wait_until_active_session_is(session_id(2));

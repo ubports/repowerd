@@ -48,13 +48,40 @@ repowerd::SessionType logind_session_type_to_repowerd_type(
         return repowerd::SessionType::RepowerdIncompatible;
 }
 
+uid_t euid_of_pid(repowerd::Filesystem& fs, pid_t pid)
+{
+    auto proc_status = fs.istream("/proc/" + std::to_string(pid) + "/status");
+    uid_t euid = -1;
+    std::string line;
+
+    while (std::getline(*proc_status, line))
+    {
+        if (line.find("Uid") == 0)
+        {
+            char const* const any_number = "0123456789";
+            char const* const any_whitespace = "\t ";
+
+            auto const ruid_pos = line.find_first_of(any_number);
+            auto const space_pos = line.find_first_of(any_whitespace, ruid_pos);
+            auto euid_pos = line.find_first_of(any_number, space_pos);
+            euid = std::stoi(line.substr(euid_pos));
+
+            break;
+        }
+    }
+
+    return euid;
+}
+
 }
 
 repowerd::LogindSessionTracker::LogindSessionTracker(
+    std::shared_ptr<Filesystem> const& filesystem,
     std::shared_ptr<Log> const& log,
     DeviceQuirks const& quirks,
     std::string const& dbus_bus_address)
-    : log{log},
+    : filesystem{filesystem},
+      log{log},
       ignore_session_deactivation{quirks.ignore_session_deactivation()},
       dbus_connection{dbus_bus_address},
       active_session_changed_handler{null_arg2_handler},
@@ -128,9 +155,25 @@ repowerd::LogindSessionTracker::register_session_removed_handler(
 
 std::string repowerd::LogindSessionTracker::session_for_pid(pid_t pid)
 {
-    auto const session_path = dbus_get_session_path_by_pid(pid);
-    return session_id_for_path(session_path);
+    std::string ret_session_id{invalid_session_id};
 
+    dbus_event_loop.enqueue(
+        [&]
+        {
+            auto const session_path = dbus_get_session_path_by_pid(pid);
+            ret_session_id = session_id_for_path(session_path);
+            if (ret_session_id == invalid_session_id)
+            {
+                auto const& active_session_path = tracked_sessions[active_session_id].path;
+                auto const active_session_uid = dbus_get_session_uid(active_session_path);
+                auto const pid_euid = euid_of_pid(*filesystem, pid);
+
+                if (pid_euid == 0 || pid_euid == active_session_uid)
+                    ret_session_id = active_session_id;
+            }
+        }).get();
+
+    return ret_session_id;
 }
 
 void repowerd::LogindSessionTracker::handle_dbus_signal(
@@ -393,4 +436,42 @@ std::string repowerd::LogindSessionTracker::session_id_for_path(
         });
 
     return iter != tracked_sessions.end() ? iter->first : invalid_session_id;
+}
+
+uid_t repowerd::LogindSessionTracker::dbus_get_session_uid(std::string const& session_path)
+{
+    int constexpr timeout_three_sec = 3000;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        dbus_logind_name,
+        session_path.c_str(),
+        "org.freedesktop.DBus.Properties",
+        "Get",
+        g_variant_new("(ss)", dbus_session_interface, "User"),
+        G_VARIANT_TYPE("(v)"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_three_sec,
+        null_cancellable,
+        error);
+
+    if (!result)
+    {
+        log->log(log_tag, "dbus_get_session_uid() failed to get session uid: %s",
+                 error.message_str().c_str());
+        return -1;
+    }
+
+    GVariant* type_variant{nullptr};
+    g_variant_get(result, "(v)", &type_variant);
+
+    guint uid = -1;
+    g_variant_get(type_variant, "(u&o)", &uid, nullptr);
+
+    g_variant_unref(type_variant);
+    g_variant_unref(result);
+
+    return uid;
 }

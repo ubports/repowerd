@@ -37,7 +37,11 @@ class FakeLogind : private DBusClient
 public:
     FakeLogind(std::string const& dbus_address);
 
-    void add_session(std::string const& session_path, std::string const& session_type, pid_t pid);
+    void add_session(
+        std::string const& session_path,
+        std::string const& session_type,
+        pid_t pid,
+        uid_t uid);
     void remove_session(std::string const& session_path);
     void activate_session(std::string const& session_path);
     void deactivate_session();
@@ -59,6 +63,7 @@ private:
     {
         std::string type;
         pid_t pid;
+        uid_t uid;
     };
 
     std::mutex sessions_mutex;

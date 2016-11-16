@@ -54,6 +54,7 @@ char const* const logind_session_introspection = R"(<!DOCTYPE node PUBLIC '-//fr
 <node>
     <interface name='org.freedesktop.login1.Session'>
         <property type='s' name='Type' access='read'/>
+        <property type='(uo)' name='User' access='read'/>
     </interface>
 </node>)";
 
@@ -115,11 +116,11 @@ rt::FakeLogind::FakeLogind(
 }
 
 void rt::FakeLogind::add_session(
-    std::string const& session_id, std::string const& session_type, pid_t pid)
+    std::string const& session_id, std::string const& session_type, pid_t pid, uid_t uid)
 {
     {
         std::lock_guard<std::mutex> lock{sessions_mutex};
-        sessions[session_id] = {session_type, pid};
+        sessions[session_id] = {session_type, pid, uid};
     }
 
     auto const session_path = session_path_for_id(session_id);
@@ -250,20 +251,38 @@ void rt::FakeLogind::dbus_method_call(
         g_dbus_method_invocation_return_value(invocation, properties);
     }
     else if (interface_name == "org.freedesktop.DBus.Properties" &&
-             method_name == "Get")
+             method_name == "Get" &&
+             sessions.find(session_id_for_path(object_path)) != sessions.end())
     {
-        std::string session_type;
+        char const* property_name_cstr{""};
+        g_variant_get(parameters, "(&s&s)", nullptr, &property_name_cstr);
+        std::string const property_name{property_name_cstr ? property_name_cstr : ""};
+
+        GVariant* property = nullptr;
         {
             std::lock_guard<std::mutex> lock{sessions_mutex};
             auto const iter = sessions.find(session_id_for_path(object_path));
             if (iter != sessions.end())
-                session_type = iter->second.type;
+            {
+                if (property_name == "Type")
+                {
+                    property = g_variant_new_parsed(
+                        "(<%s>,)",
+                        iter->second.type.c_str());
+                }
+                else if (property_name == "User")
+                {
+                    auto const user_path =
+                        "/org/freedesktop/login1/user/_" + std::to_string(iter->second.uid);
+                    property = g_variant_new_parsed(
+                        "(<(@u %u, @o %o)>,)",
+                        iter->second.uid,
+                        user_path.c_str());
+                }
+            }
         }
 
-        auto const properties =
-            g_variant_new_parsed("(<%s>,)", session_type.c_str());
-
-        g_dbus_method_invocation_return_value(invocation, properties);
+        g_dbus_method_invocation_return_value(invocation, property);
     }
     else if (interface_name == "org.freedesktop.login1.Manager" &&
              method_name == "GetSessionByPID")

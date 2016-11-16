@@ -22,9 +22,12 @@
 
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
+#include "filesystem.h"
 
 #include <memory>
 #include <unordered_map>
+
+#include <sys/types.h>
 
 namespace repowerd
 {
@@ -35,6 +38,7 @@ class LogindSessionTracker : public SessionTracker
 {
 public:
     LogindSessionTracker(
+        std::shared_ptr<Filesystem> const& filesystem,
         std::shared_ptr<Log> const& log,
         DeviceQuirks const& device_quirks,
         std::string const& dbus_bus_address);
@@ -68,7 +72,9 @@ private:
     std::string dbus_get_session_type(std::string const& session_path);
     std::string dbus_get_session_path_by_pid(pid_t pid);
     std::string session_id_for_path(std::string const& session_path);
+    uid_t dbus_get_session_uid(std::string const& session_path);
 
+    std::shared_ptr<Filesystem> const filesystem;
     std::shared_ptr<Log> const log;
     bool const ignore_session_deactivation;
 
