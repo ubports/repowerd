@@ -1,3 +1,12 @@
+repowerd (2016.11-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New 2016.11 release
+    - Support multiple user sessions
+    - Don't interfere with the power state of non-mir sessions
+    - Start repowerd at boot on desktop systems
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 23 Nov 2016 17:48:02 +0200
+
 repowerd (2016.10+16.10.20161007-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.10 release
