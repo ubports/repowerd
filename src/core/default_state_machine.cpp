@@ -202,6 +202,14 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
         schedule_normal_user_inactivity_alarm();
 }
 
+void repowerd::DefaultStateMachine::handle_lid_closed()
+{
+}
+
+void repowerd::DefaultStateMachine::handle_lid_open()
+{
+}
+
 void repowerd::DefaultStateMachine::handle_no_notification()
 {
     log->log(log_tag, "handle_no_notification");

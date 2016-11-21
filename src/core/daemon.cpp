@@ -21,6 +21,7 @@
 #include "brightness_control.h"
 #include "client_requests.h"
 #include "display_power_control.h"
+#include "lid.h"
 #include "notification_service.h"
 #include "null_state_machine.h"
 #include "power_button.h"
@@ -46,6 +47,7 @@ repowerd::Daemon::Session::Session(
 repowerd::Daemon::Daemon(DaemonConfig& config)
     : brightness_control{config.the_brightness_control()},
       client_requests{config.the_client_requests()},
+      lid{config.the_lid()},
       notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
       power_source{config.the_power_source()},
@@ -282,6 +284,22 @@ repowerd::Daemon::register_event_handlers()
                     [this, session_id] { handle_session_removed(session_id); });
             }));
 
+    registrations.push_back(
+        lid->register_lid_handler(
+            [this] (LidState lid_state)
+            {
+                if (lid_state == LidState::closed)
+                {
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_lid_closed(); });
+                }
+                else if (lid_state == LidState::open)
+                {
+                    enqueue_action_to_active_session(
+                        [this] (Session* s) { s->state_machine->handle_lid_open(); });
+                }
+            }));
+
     return registrations;
 }
 
@@ -293,6 +311,7 @@ void repowerd::Daemon::start_event_processing()
     session_tracker->start_processing();
 
     client_requests->start_processing();
+    lid->start_processing();
     notification_service->start_processing();
     power_button->start_processing();
     power_source->start_processing();

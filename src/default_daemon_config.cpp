@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
+#include "core/lid.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -69,6 +70,17 @@ struct NullBrightnessNotification : repowerd::BrightnessNotification
 {
     repowerd::HandlerRegistration register_brightness_handler(
         repowerd::BrightnessHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
+struct NullLid : repowerd::Lid
+{
+    void start_processing() override {}
+
+    repowerd::HandlerRegistration register_lid_handler(
+        repowerd::LidHandler const&) override
     {
         return NullHandlerRegistration{};
     }
@@ -499,6 +511,15 @@ repowerd::DefaultDaemonConfig::the_ofono_voice_call_service()
             the_dbus_bus_address());
     }
     return ofono_voice_call_service;
+}
+
+std::shared_ptr<repowerd::Lid>
+repowerd::DefaultDaemonConfig::the_lid()
+{
+    if (!lid)
+        lid = std::make_shared<NullLid>();
+
+    return lid;
 }
 
 std::shared_ptr<repowerd::Log>

@@ -23,6 +23,7 @@
 #include "fake_client_requests.h"
 #include "mock_display_power_control.h"
 #include "mock_display_power_event_sink.h"
+#include "fake_lid.h"
 #include "fake_log.h"
 #include "mock_modem_power_control.h"
 #include "fake_notification_service.h"
@@ -60,6 +61,11 @@ std::shared_ptr<repowerd::DisplayPowerControl> rt::DaemonConfig::the_display_pow
 std::shared_ptr<repowerd::DisplayPowerEventSink> rt::DaemonConfig::the_display_power_event_sink()
 {
     return the_mock_display_power_event_sink();
+}
+
+std::shared_ptr<repowerd::Lid> rt::DaemonConfig::the_lid()
+{
+    return the_fake_lid();
 }
 
 std::shared_ptr<repowerd::Log> rt::DaemonConfig::the_log()
@@ -174,6 +180,14 @@ rt::DaemonConfig::the_mock_display_power_event_sink()
         mock_display_power_event_sink = std::make_shared<NiceMock<rt::MockDisplayPowerEventSink>>();
 
     return mock_display_power_event_sink;
+}
+
+std::shared_ptr<rt::FakeLid> rt::DaemonConfig::the_fake_lid()
+{
+    if (!fake_lid)
+        fake_lid = std::make_shared<FakeLid>();
+
+    return fake_lid;
 }
 
 std::shared_ptr<rt::FakeLog> rt::DaemonConfig::the_fake_log()

@@ -19,6 +19,7 @@
 #include "daemon_config.h"
 #include "run_daemon.h"
 #include "fake_client_requests.h"
+#include "fake_lid.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
 #include "fake_power_source.h"
@@ -61,6 +62,9 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_no_notification, void());
     MOCK_METHOD0(handle_notification, void());
+
+    MOCK_METHOD0(handle_lid_closed, void());
+    MOCK_METHOD0(handle_lid_open, void());
 
     MOCK_METHOD0(handle_power_button_press, void());
     MOCK_METHOD0(handle_power_button_release, void());
@@ -823,4 +827,33 @@ TEST_F(ADaemon, starts_pauses_resumes_sessions_on_switch)
                       start("s1") +
                       pause("s1") +
                       resume(default_session)));
+}
+
+TEST_F(ADaemon, registers_starts_and_unregisters_lid_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_lid()->mock, register_lid_handler(_));
+    EXPECT_CALL(config.the_fake_lid()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_lid().get());
+
+    EXPECT_CALL(config.the_fake_lid()->mock, unregister_lid_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_lid().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_lid_closed)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_lid_closed());
+    config.the_fake_lid()->close();
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_lid_open)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_lid_open());
+    config.the_fake_lid()->open();
 }

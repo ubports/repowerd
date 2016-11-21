@@ -31,6 +31,7 @@ class MockBrightnessControl;
 class FakeClientRequests;
 class MockDisplayPowerControl;
 class MockDisplayPowerEventSink;
+class FakeLid;
 class FakeLog;
 class MockModemPowerControl;
 class FakeNotificationService;
@@ -52,6 +53,7 @@ public:
     std::shared_ptr<ClientRequests> the_client_requests() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<DisplayPowerEventSink> the_display_power_event_sink() override;
+    std::shared_ptr<Lid> the_lid() override;
     std::shared_ptr<Log> the_log() override;
     std::shared_ptr<ModemPowerControl> the_modem_power_control() override;
     std::shared_ptr<NotificationService> the_notification_service() override;
@@ -72,6 +74,7 @@ public:
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> the_mock_display_power_control();
     std::shared_ptr<testing::NiceMock<MockDisplayPowerEventSink>> the_mock_display_power_event_sink();
+    std::shared_ptr<FakeLid> the_fake_lid();
     std::shared_ptr<FakeLog> the_fake_log();
     std::shared_ptr<testing::NiceMock<MockModemPowerControl>> the_mock_modem_power_control();
     std::shared_ptr<FakeNotificationService> the_fake_notification_service();
@@ -94,6 +97,7 @@ private:
     std::shared_ptr<FakeClientRequests> fake_client_requests;
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> mock_display_power_control;
     std::shared_ptr<testing::NiceMock<MockDisplayPowerEventSink>> mock_display_power_event_sink;
+    std::shared_ptr<FakeLid> fake_lid;
     std::shared_ptr<FakeLog> fake_log;
     std::shared_ptr<testing::NiceMock<MockModemPowerControl>> mock_modem_power_control;
     std::shared_ptr<FakeNotificationService> fake_notification_service;

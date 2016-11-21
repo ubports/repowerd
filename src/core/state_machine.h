@@ -39,6 +39,9 @@ public:
     virtual void handle_disable_inactivity_timeout() = 0;
     virtual void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) = 0;
 
+    virtual void handle_lid_closed() = 0;
+    virtual void handle_lid_open() = 0;
+
     virtual void handle_no_notification() = 0;
     virtual void handle_notification() = 0;
 
