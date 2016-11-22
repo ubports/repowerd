@@ -72,6 +72,10 @@ void repowerd::LogindSystemPowerControl::power_off()
     dbus_power_off();
 }
 
+void repowerd::LogindSystemPowerControl::suspend_if_allowed()
+{
+}
+
 void repowerd::LogindSystemPowerControl::allow_default_system_handlers()
 {
     std::lock_guard<std::mutex> lock{inhibitions_mutex};

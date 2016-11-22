@@ -68,6 +68,7 @@ struct AcceptanceTestBase
     void client_request_disable_autobrightness(pid_t pid = default_pid);
     void client_request_enable_autobrightness(pid_t pid = default_pid);
     void client_request_set_normal_brightness_value(double value, pid_t pid = default_pid);
+    void close_lid();
     void emit_notification(std::string const& id);
     void emit_notification_done(std::string const& id);
     void emit_notification();
@@ -80,6 +81,7 @@ struct AcceptanceTestBase
     void emit_proximity_state_near_if_enabled();
     void emit_active_call();
     void emit_no_active_call();
+    void open_lid();
     void perform_user_activity_extending_power_state();
     void perform_user_activity_changing_power_state();
     void press_power_button();

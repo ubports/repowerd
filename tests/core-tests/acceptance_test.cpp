@@ -25,6 +25,7 @@
 #include "mock_display_power_event_sink.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_client_requests.h"
+#include "fake_lid.h"
 #include "fake_log.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
@@ -102,8 +103,8 @@ void rt::AcceptanceTestBase::expect_autobrightness_enabled()
 
 void rt::AcceptanceTestBase::expect_display_turns_off()
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
     EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
 }
 
 void rt::AcceptanceTestBase::expect_display_turns_on()
@@ -236,6 +237,12 @@ void rt::AcceptanceTestBase::client_request_set_normal_brightness_value(double v
     daemon.flush();
 }
 
+void rt::AcceptanceTestBase::close_lid()
+{
+    config.the_fake_lid()->close();
+    daemon.flush();
+}
+
 void rt::AcceptanceTestBase::emit_notification(std::string const& id)
 {
     config.the_fake_notification_service()->emit_notification(id);
@@ -305,6 +312,12 @@ void rt::AcceptanceTestBase::emit_active_call()
 void rt::AcceptanceTestBase::emit_no_active_call()
 {
     config.the_fake_voice_call_service()->emit_no_active_call();
+    daemon.flush();
+}
+
+void rt::AcceptanceTestBase::open_lid()
+{
+    config.the_fake_lid()->open();
     daemon.flush();
 }
 

@@ -130,6 +130,7 @@ struct NullSystemPowerControl : repowerd::SystemPowerControl
     void allow_suspend(std::string const&, repowerd::SuspendType) override {}
     void disallow_suspend(std::string const&, repowerd::SuspendType) override {}
     void power_off() override {}
+    void suspend_if_allowed() override {}
     void allow_default_system_handlers() override {}
     void disallow_default_system_handlers() override {}
 };

@@ -204,10 +204,19 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
 
 void repowerd::DefaultStateMachine::handle_lid_closed()
 {
+    log->log(log_tag, "handle_lid_closed()");
+
+    if (display_power_mode == DisplayPowerMode::on)
+        turn_off_display(DisplayPowerChangeReason::unknown);
+
+    system_power_control->suspend_if_allowed();
 }
 
 void repowerd::DefaultStateMachine::handle_lid_open()
 {
+    log->log(log_tag, "handle_lid_open()");
+
+    turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
 }
 
 void repowerd::DefaultStateMachine::handle_no_notification()

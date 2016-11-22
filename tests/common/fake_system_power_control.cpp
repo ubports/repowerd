@@ -50,6 +50,11 @@ void rt::FakeSystemPowerControl::power_off()
     mock.power_off();
 }
 
+void rt::FakeSystemPowerControl::suspend_if_allowed()
+{
+    mock.suspend_if_allowed();
+}
+
 void rt::FakeSystemPowerControl::allow_default_system_handlers()
 {
     mock.allow_default_system_handlers();

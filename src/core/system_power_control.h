@@ -34,6 +34,7 @@ public:
     virtual void disallow_suspend(std::string const& id, SuspendType suspend_type) = 0;
 
     virtual void power_off() = 0;
+    virtual void suspend_if_allowed() = 0;
 
     virtual void allow_default_system_handlers() = 0;
     virtual void disallow_default_system_handlers() = 0;
