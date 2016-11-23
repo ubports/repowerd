@@ -57,6 +57,13 @@ struct AUPowerPowerSource : testing::Test
                     mock_handlers.power_source_critical();
                 }));
 
+        registrations.push_back(
+            upower_power_source.register_lid_handler(
+                [this] (repowerd::LidState lid_state)
+                {
+                    mock_handlers.lid(lid_state);
+                }));
+
         fake_upower.add_device(device_path(0), unplugged_line_power);
         fake_upower.add_device(device_path(1), full_battery);
 
@@ -81,6 +88,7 @@ struct AUPowerPowerSource : testing::Test
     {
         MOCK_METHOD0(power_source_change, void());
         MOCK_METHOD0(power_source_critical, void());
+        MOCK_METHOD1(lid, void(repowerd::LidState));
     };
     testing::NiceMock<MockHandlers> mock_handlers;
 
@@ -281,4 +289,44 @@ TEST_F(AUPowerPowerSource, does_not_notify_of_critical_state_for_removed_battery
     fake_upower.change_device(device_path(1), removed_battery);
 
     std::this_thread::sleep_for(100ms);
+}
+
+TEST_F(AUPowerPowerSource, notifies_of_lid_closed)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, lid(repowerd::LidState::closed))
+        .WillOnce(WakeUp(&request_processed));
+
+    fake_upower.close_lid();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+
+    EXPECT_TRUE(fake_log.contains_line({"lid_is_closed", "true"}));
+}
+
+TEST_F(AUPowerPowerSource, notifies_of_lid_open)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, lid(repowerd::LidState::open))
+        .WillOnce(WakeUp(&request_processed));
+
+    fake_upower.open_lid();
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+
+    EXPECT_TRUE(fake_log.contains_line({"lid_is_closed", "false"}));
+}
+
+TEST_F(AUPowerPowerSource, second_start_processing_is_ignored)
+{
+    auto prev_num_calls = fake_upower.num_enumerate_devices_calls();
+
+    upower_power_source.start_processing();
+
+    EXPECT_THAT(fake_upower.num_enumerate_devices_calls(),
+                Eq(prev_num_calls));
 }

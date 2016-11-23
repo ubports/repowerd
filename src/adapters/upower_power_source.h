@@ -19,6 +19,7 @@
 #pragma once
 
 #include "src/core/power_source.h"
+#include "src/core/lid.h"
 
 #include "dbus_connection_handle.h"
 #include "dbus_event_loop.h"
@@ -31,7 +32,7 @@ namespace repowerd
 class Log;
 class DeviceConfig;
 
-class UPowerPowerSource : public PowerSource
+class UPowerPowerSource : public PowerSource, public Lid
 {
 public:
     UPowerPowerSource(
@@ -46,6 +47,9 @@ public:
 
     HandlerRegistration register_power_source_critical_handler(
         PowerSourceCriticalHandler const& handler) override;
+
+    HandlerRegistration register_lid_handler(
+        LidHandler const& handler) override;
 
     std::unordered_set<std::string> tracked_batteries();
 
@@ -64,6 +68,7 @@ private:
     void change_device(std::string const& device, GVariantIter* properties_iter);
     GVariant* get_device_properties(std::string const& device);
     bool is_using_battery_power();
+    void change_upower(GVariantIter* properties_iter);
 
     struct BatteryInfo
     {
@@ -82,6 +87,9 @@ private:
 
     PowerSourceChangeHandler power_source_change_handler;
     PowerSourceChangeHandler power_source_critical_handler;
+    LidHandler lid_handler;
+
+    bool started;
 
     std::unordered_map<std::string,BatteryInfo> batteries;
 };

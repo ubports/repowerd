@@ -25,6 +25,7 @@
 #include <condition_variable>
 #include <functional>
 #include <chrono>
+#include <atomic>
 
 namespace repowerd
 {
@@ -72,6 +73,11 @@ public:
     void remove_device(std::string const& device_path);
     void change_device(std::string const& device_path, DeviceInfo const& info);
 
+    void close_lid();
+    void open_lid();
+
+    int num_enumerate_devices_calls();
+
 private:
     void dbus_method_call(
         GDBusConnection* connection,
@@ -84,6 +90,8 @@ private:
     bool is_using_battery_power();
 
     repowerd::HandlerRegistration upower_handler_registration;
+
+    std::atomic<int> num_enumerate_device_calls_;
 
     std::mutex devices_mutex;
     std::unordered_map<std::string,DeviceInfo> devices;

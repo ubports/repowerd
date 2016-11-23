@@ -92,7 +92,8 @@ rt::FakeUPower::DeviceInfo rt::FakeUPower::DeviceInfo::for_unplugged_line_power(
 
 rt::FakeUPower::FakeUPower(
     std::string const& dbus_address)
-    : rt::DBusClient{dbus_address, "org.freedesktop.UPower", "/org/freedesktop/UPower"}
+    : rt::DBusClient{dbus_address, "org.freedesktop.UPower", "/org/freedesktop/UPower"},
+      num_enumerate_device_calls_{0}
 {
     connection.request_name("org.freedesktop.UPower");
 
@@ -210,6 +211,41 @@ void rt::FakeUPower::remove_device(std::string const& device_path)
     emit_signal_full("/org/freedesktop/UPower", "org.freedesktop.UPower", "DeviceRemoved", params);
 }
 
+void rt::FakeUPower::close_lid()
+{
+    auto const params_str =
+        "(@s 'org.freedesktop.UPower',"s +
+        " @a{sv} {'LidIsClosed': <@b true>}," +
+        " @as [])";
+    auto const params = g_variant_new_parsed(params_str.c_str());
+
+    emit_signal_full(
+        "/org/freedesktop/UPower",
+        "org.freedesktop.DBus.Properties",
+        "PropertiesChanged",
+        params);
+}
+
+void rt::FakeUPower::open_lid()
+{
+    auto const params_str =
+        "(@s 'org.freedesktop.UPower',"s +
+        " @a{sv} {'LidIsClosed': <@b false>}," +
+        " @as [])";
+    auto const params = g_variant_new_parsed(params_str.c_str());
+
+    emit_signal_full(
+        "/org/freedesktop/UPower",
+        "org.freedesktop.DBus.Properties",
+        "PropertiesChanged",
+        params);
+}
+
+int rt::FakeUPower::num_enumerate_devices_calls()
+{
+    return num_enumerate_device_calls_;
+}
+
 void rt::FakeUPower::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* /*sender_cstr*/,
@@ -225,6 +261,7 @@ void rt::FakeUPower::dbus_method_call(
 
     if (method_name == "EnumerateDevices")
     {
+        ++num_enumerate_device_calls_;
         std::string devices_str = "([";
         int count = 0;
         for (auto const& device : devices)

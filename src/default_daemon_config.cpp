@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
-#include "core/lid.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -70,17 +69,6 @@ struct NullBrightnessNotification : repowerd::BrightnessNotification
 {
     repowerd::HandlerRegistration register_brightness_handler(
         repowerd::BrightnessHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-};
-
-struct NullLid : repowerd::Lid
-{
-    void start_processing() override {}
-
-    repowerd::HandlerRegistration register_lid_handler(
-        repowerd::LidHandler const&) override
     {
         return NullHandlerRegistration{};
     }
@@ -242,13 +230,7 @@ repowerd::DefaultDaemonConfig::the_power_button_event_sink()
 std::shared_ptr<repowerd::PowerSource>
 repowerd::DefaultDaemonConfig::the_power_source()
 {
-    if (!power_source)
-    {
-        power_source = std::make_shared<UPowerPowerSource>(
-            the_log(), *the_device_config(), the_dbus_bus_address());
-    }
-
-    return power_source;
+    return the_upower_power_source();
 }
 
 std::shared_ptr<repowerd::ProximitySensor>
@@ -517,10 +499,7 @@ repowerd::DefaultDaemonConfig::the_ofono_voice_call_service()
 std::shared_ptr<repowerd::Lid>
 repowerd::DefaultDaemonConfig::the_lid()
 {
-    if (!lid)
-        lid = std::make_shared<NullLid>();
-
-    return lid;
+    return the_upower_power_source();
 }
 
 std::shared_ptr<repowerd::Log>
@@ -563,6 +542,18 @@ repowerd::DefaultDaemonConfig::the_unity_power_button()
     if (!unity_power_button)
         unity_power_button = std::make_shared<UnityPowerButton>(the_dbus_bus_address());
     return unity_power_button;
+}
+
+std::shared_ptr<repowerd::UPowerPowerSource>
+repowerd::DefaultDaemonConfig::the_upower_power_source()
+{
+    if (!upower_power_source)
+    {
+        upower_power_source = std::make_shared<UPowerPowerSource>(
+            the_log(), *the_device_config(), the_dbus_bus_address());
+    }
+
+    return upower_power_source;
 }
 
 std::shared_ptr<repowerd::WakeupService>

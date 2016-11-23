@@ -27,6 +27,7 @@ namespace
 {
 char const* const log_tag = "UPowerPowerSource";
 auto const null_handler = []{};
+auto const null_arg_handler = [](auto){};
 char const* const dbus_upower_name = "org.freedesktop.UPower";
 char const* const dbus_upower_path = "/org/freedesktop/UPower";
 char const* const dbus_upower_interface = "org.freedesktop.UPower";
@@ -70,12 +71,16 @@ repowerd::UPowerPowerSource::UPowerPowerSource(
       critical_temperature{get_critical_temperature(device_config)},
       dbus_connection{dbus_bus_address},
       power_source_change_handler{null_handler},
-      power_source_critical_handler{null_handler}
+      power_source_critical_handler{null_handler},
+      lid_handler{null_arg_handler},
+      started{false}
 {
 }
 
 void repowerd::UPowerPowerSource::start_processing()
 {
+    if (started) return;
+
     dbus_signal_handler_registration = dbus_event_loop.register_signal_handler(
         dbus_connection,
         dbus_upower_name,
@@ -96,6 +101,8 @@ void repowerd::UPowerPowerSource::start_processing()
         });
 
     dbus_event_loop.enqueue([this] { add_existing_batteries(); }).get();
+
+    started = true;
 }
 
 repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source_change_handler(
@@ -114,6 +121,15 @@ repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source
         dbus_event_loop,
             [this, &handler] { this->power_source_critical_handler = handler; },
             [this] { this->power_source_critical_handler = null_handler; }};
+}
+
+repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_lid_handler(
+    LidHandler const& handler)
+{
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+            [this, &handler] { this->lid_handler = handler; },
+            [this] { this->lid_handler = null_arg_handler; }};
 }
 
 std::unordered_set<std::string> repowerd::UPowerPowerSource::tracked_batteries()
@@ -150,6 +166,8 @@ void repowerd::UPowerPowerSource::handle_dbus_signal(
 
         if (properties_interface == "org.freedesktop.UPower.Device")
             change_device(object_path, properties_iter);
+        else if (properties_interface == "org.freedesktop.UPower")
+            change_upower(properties_iter);
 
         g_variant_iter_free(properties_iter);
     }
@@ -415,4 +433,29 @@ bool repowerd::UPowerPowerSource::is_using_battery_power()
     log->log(log_tag, "is_using_battery_power() => %s", ret ? "true" : "false");
 
     return ret;
+}
+
+void repowerd::UPowerPowerSource::change_upower(
+    GVariantIter* properties_iter)
+{
+    char const* key_cstr{""};
+    GVariant* value{nullptr};
+
+    while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
+    {
+        auto const key_str = std::string{key_cstr};
+
+        if (key_str == "LidIsClosed")
+        {
+            auto const lid_is_closed = g_variant_get_boolean(value);
+            log->log(log_tag, "change_upower(), lid_is_closed=%s", 
+                     lid_is_closed ? "true" : "false");
+            if (lid_is_closed)
+                lid_handler(LidState::closed);
+            else
+                lid_handler(LidState::open);
+        }
+
+        g_variant_unref(value);
+    }
 }
