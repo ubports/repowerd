@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "upower_power_source.h"
+#include "upower_power_source_and_lid.h"
 #include "device_config.h"
 #include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
@@ -25,7 +25,7 @@
 
 namespace
 {
-char const* const log_tag = "UPowerPowerSource";
+char const* const log_tag = "UPowerPowerSourceAndLid";
 auto const null_handler = []{};
 auto const null_arg_handler = [](auto){};
 char const* const dbus_upower_name = "org.freedesktop.UPower";
@@ -63,7 +63,7 @@ catch (...)
 
 }
 
-repowerd::UPowerPowerSource::UPowerPowerSource(
+repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
     std::shared_ptr<Log> const& log,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
@@ -77,7 +77,7 @@ repowerd::UPowerPowerSource::UPowerPowerSource(
 {
 }
 
-void repowerd::UPowerPowerSource::start_processing()
+void repowerd::UPowerPowerSourceAndLid::start_processing()
 {
     if (started) return;
 
@@ -105,7 +105,7 @@ void repowerd::UPowerPowerSource::start_processing()
     started = true;
 }
 
-repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source_change_handler(
+repowerd::HandlerRegistration repowerd::UPowerPowerSourceAndLid::register_power_source_change_handler(
     PowerSourceChangeHandler const& handler)
 {
     return EventLoopHandlerRegistration{
@@ -114,7 +114,7 @@ repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source
             [this] { this->power_source_change_handler = null_handler; }};
 }
 
-repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source_critical_handler(
+repowerd::HandlerRegistration repowerd::UPowerPowerSourceAndLid::register_power_source_critical_handler(
     PowerSourceCriticalHandler const& handler)
 {
     return EventLoopHandlerRegistration{
@@ -123,7 +123,7 @@ repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_power_source
             [this] { this->power_source_critical_handler = null_handler; }};
 }
 
-repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_lid_handler(
+repowerd::HandlerRegistration repowerd::UPowerPowerSourceAndLid::register_lid_handler(
     LidHandler const& handler)
 {
     return EventLoopHandlerRegistration{
@@ -132,7 +132,7 @@ repowerd::HandlerRegistration repowerd::UPowerPowerSource::register_lid_handler(
             [this] { this->lid_handler = null_arg_handler; }};
 }
 
-std::unordered_set<std::string> repowerd::UPowerPowerSource::tracked_batteries()
+std::unordered_set<std::string> repowerd::UPowerPowerSourceAndLid::tracked_batteries()
 {
     std::unordered_set<std::string> ret_batteries;
     dbus_event_loop.enqueue(
@@ -144,7 +144,7 @@ std::unordered_set<std::string> repowerd::UPowerPowerSource::tracked_batteries()
     return ret_batteries;
 }
 
-void repowerd::UPowerPowerSource::handle_dbus_signal(
+void repowerd::UPowerPowerSourceAndLid::handle_dbus_signal(
     GDBusConnection* /*connection*/,
     gchar const* /*sender*/,
     gchar const* object_path_cstr,
@@ -187,7 +187,7 @@ void repowerd::UPowerPowerSource::handle_dbus_signal(
     }
 }
 
-void repowerd::UPowerPowerSource::add_existing_batteries()
+void repowerd::UPowerPowerSourceAndLid::add_existing_batteries()
 {
     int constexpr timeout_default = -1;
     auto constexpr null_cancellable = nullptr;
@@ -225,7 +225,7 @@ void repowerd::UPowerPowerSource::add_existing_batteries()
     g_variant_unref(result);
 }
 
-void repowerd::UPowerPowerSource::add_device_if_battery(std::string const& device)
+void repowerd::UPowerPowerSourceAndLid::add_device_if_battery(std::string const& device)
 {
     auto properties = get_device_properties(device);
 
@@ -274,7 +274,7 @@ void repowerd::UPowerPowerSource::add_device_if_battery(std::string const& devic
     }
 }
 
-void repowerd::UPowerPowerSource::remove_device(std::string const& device)
+void repowerd::UPowerPowerSourceAndLid::remove_device(std::string const& device)
 {
     if (batteries.find(device) == batteries.end())
         return;
@@ -284,7 +284,7 @@ void repowerd::UPowerPowerSource::remove_device(std::string const& device)
     batteries.erase(device);
 }
 
-void repowerd::UPowerPowerSource::change_device(
+void repowerd::UPowerPowerSourceAndLid::change_device(
     std::string const& device, GVariantIter* properties_iter)
 {
     if (batteries.find(device) == batteries.end())
@@ -368,7 +368,7 @@ void repowerd::UPowerPowerSource::change_device(
         power_source_change_handler();
 }
 
-GVariant* repowerd::UPowerPowerSource::get_device_properties(std::string const& device)
+GVariant* repowerd::UPowerPowerSourceAndLid::get_device_properties(std::string const& device)
 {
     int constexpr timeout_default = -1;
     auto constexpr null_cancellable = nullptr;
@@ -396,7 +396,7 @@ GVariant* repowerd::UPowerPowerSource::get_device_properties(std::string const& 
     return result;
 }
 
-bool repowerd::UPowerPowerSource::is_using_battery_power()
+bool repowerd::UPowerPowerSourceAndLid::is_using_battery_power()
 {
     int constexpr timeout = 1000;
     auto constexpr null_cancellable = nullptr;
@@ -435,7 +435,7 @@ bool repowerd::UPowerPowerSource::is_using_battery_power()
     return ret;
 }
 
-void repowerd::UPowerPowerSource::change_upower(
+void repowerd::UPowerPowerSourceAndLid::change_upower(
     GVariantIter* properties_iter)
 {
     char const* key_cstr{""};

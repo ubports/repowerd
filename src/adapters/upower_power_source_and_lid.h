@@ -32,10 +32,10 @@ namespace repowerd
 class Log;
 class DeviceConfig;
 
-class UPowerPowerSource : public PowerSource, public Lid
+class UPowerPowerSourceAndLid : public PowerSource, public Lid
 {
 public:
-    UPowerPowerSource(
+    UPowerPowerSourceAndLid(
         std::shared_ptr<Log> const& log,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);

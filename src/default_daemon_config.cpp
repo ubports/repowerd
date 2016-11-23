@@ -44,7 +44,7 @@
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
-#include "adapters/upower_power_source.h"
+#include "adapters/upower_power_source_and_lid.h"
 
 namespace
 {
@@ -230,7 +230,7 @@ repowerd::DefaultDaemonConfig::the_power_button_event_sink()
 std::shared_ptr<repowerd::PowerSource>
 repowerd::DefaultDaemonConfig::the_power_source()
 {
-    return the_upower_power_source();
+    return the_upower_power_source_and_lid();
 }
 
 std::shared_ptr<repowerd::ProximitySensor>
@@ -499,7 +499,7 @@ repowerd::DefaultDaemonConfig::the_ofono_voice_call_service()
 std::shared_ptr<repowerd::Lid>
 repowerd::DefaultDaemonConfig::the_lid()
 {
-    return the_upower_power_source();
+    return the_upower_power_source_and_lid();
 }
 
 std::shared_ptr<repowerd::Log>
@@ -544,16 +544,16 @@ repowerd::DefaultDaemonConfig::the_unity_power_button()
     return unity_power_button;
 }
 
-std::shared_ptr<repowerd::UPowerPowerSource>
-repowerd::DefaultDaemonConfig::the_upower_power_source()
+std::shared_ptr<repowerd::UPowerPowerSourceAndLid>
+repowerd::DefaultDaemonConfig::the_upower_power_source_and_lid()
 {
-    if (!upower_power_source)
+    if (!upower_power_source_and_lid)
     {
-        upower_power_source = std::make_shared<UPowerPowerSource>(
+        upower_power_source_and_lid = std::make_shared<UPowerPowerSourceAndLid>(
             the_log(), *the_device_config(), the_dbus_bus_address());
     }
 
-    return upower_power_source;
+    return upower_power_source_and_lid;
 }
 
 std::shared_ptr<repowerd::WakeupService>

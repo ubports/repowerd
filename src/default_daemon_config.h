@@ -34,7 +34,7 @@ class LightSensor;
 class OfonoVoiceCallService;
 class UnityScreenService;
 class UnityPowerButton;
-class UPowerPowerSource;
+class UPowerPowerSourceAndLid;
 class WakeupService;
 
 class DefaultDaemonConfig : public DaemonConfig
@@ -73,7 +73,7 @@ public:
     std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
-    std::shared_ptr<UPowerPowerSource> the_upower_power_source();
+    std::shared_ptr<UPowerPowerSourceAndLid> the_upower_power_source_and_lid();
     std::shared_ptr<WakeupService> the_wakeup_service();
 
 private:
@@ -99,7 +99,7 @@ private:
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UnityPowerButton> unity_power_button;
     std::shared_ptr<UnityScreenService> unity_screen_service;
-    std::shared_ptr<UPowerPowerSource> upower_power_source;
+    std::shared_ptr<UPowerPowerSourceAndLid> upower_power_source_and_lid;
     std::shared_ptr<UserActivity> user_activity;
     std::shared_ptr<WakeupService> wakeup_service;
 };

@@ -25,7 +25,7 @@
 #include "spin_wait.h"
 #include "wait_condition.h"
 
-#include "src/adapters/upower_power_source.h"
+#include "src/adapters/upower_power_source_and_lid.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,26 +39,26 @@ using namespace std::chrono_literals;
 namespace
 {
 
-struct AUPowerPowerSource : testing::Test
+struct AUPowerPowerSourceAndLid : testing::Test
 {
-    AUPowerPowerSource()
+    AUPowerPowerSourceAndLid()
     {
         registrations.push_back(
-            upower_power_source.register_power_source_change_handler(
+            upower_power_source_and_lid.register_power_source_change_handler(
                 [this]
                 {
                     mock_handlers.power_source_change();
                 }));
 
         registrations.push_back(
-            upower_power_source.register_power_source_critical_handler(
+            upower_power_source_and_lid.register_power_source_critical_handler(
                 [this]
                 {
                     mock_handlers.power_source_critical();
                 }));
 
         registrations.push_back(
-            upower_power_source.register_lid_handler(
+            upower_power_source_and_lid.register_lid_handler(
                 [this] (repowerd::LidState lid_state)
                 {
                     mock_handlers.lid(lid_state);
@@ -67,13 +67,13 @@ struct AUPowerPowerSource : testing::Test
         fake_upower.add_device(device_path(0), unplugged_line_power);
         fake_upower.add_device(device_path(1), full_battery);
 
-        upower_power_source.start_processing();
+        upower_power_source_and_lid.start_processing();
     }
 
     void wait_for_tracked_batteries(std::unordered_set<std::string> const& batteries)
     {
         auto const result = rt::spin_wait_for_condition_or_timeout(
-            [this,&batteries] { return upower_power_source.tracked_batteries() == batteries; },
+            [this,&batteries] { return upower_power_source_and_lid.tracked_batteries() == batteries; },
             default_timeout);
         if (!result)
             throw std::runtime_error("Timeout while waiting for tracked batteries");
@@ -95,7 +95,7 @@ struct AUPowerPowerSource : testing::Test
     rt::DBusBus bus;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeLog fake_log;
-    repowerd::UPowerPowerSource upower_power_source{
+    repowerd::UPowerPowerSourceAndLid upower_power_source_and_lid{
         rt::fake_shared(fake_log),
         fake_device_config,
         bus.address()};
@@ -118,7 +118,7 @@ struct AUPowerPowerSource : testing::Test
 
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_change_from_full_to_discharging)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_change_from_full_to_discharging)
 {
     rt::WaitCondition request_processed;
 
@@ -131,7 +131,7 @@ TEST_F(AUPowerPowerSource, notifies_of_change_from_full_to_discharging)
     EXPECT_TRUE(request_processed.woken());
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_full)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_change_from_discharging_to_full)
 {
     rt::WaitCondition request_processed;
 
@@ -146,7 +146,7 @@ TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_full)
     EXPECT_TRUE(request_processed.woken());
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_charging)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_change_from_discharging_to_charging)
 {
     rt::WaitCondition request_processed;
 
@@ -161,7 +161,7 @@ TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_charging)
     EXPECT_TRUE(request_processed.woken());
 }
 
-TEST_F(AUPowerPowerSource,
+TEST_F(AUPowerPowerSourceAndLid,
        does_not_notify_of_change_from_full_to_charging_and_vice_versa)
 {
     EXPECT_CALL(mock_handlers, power_source_change()).Times(0);
@@ -172,7 +172,7 @@ TEST_F(AUPowerPowerSource,
     std::this_thread::sleep_for(100ms);
 }
 
-TEST_F(AUPowerPowerSource,
+TEST_F(AUPowerPowerSourceAndLid,
        notifies_of_change_for_battery_added_after_startup)
 {
     fake_upower.add_device(device_path(2), full_battery);
@@ -190,7 +190,7 @@ TEST_F(AUPowerPowerSource,
     EXPECT_TRUE(request_processed.woken());
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_change_for_removed_battery)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_change_for_removed_battery)
 {
     rt::WaitCondition request_processed;
 
@@ -206,7 +206,7 @@ TEST_F(AUPowerPowerSource, notifies_of_change_for_removed_battery)
     EXPECT_TRUE(request_processed.woken());
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_low_battery_energy_when_unplugged)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_critical_state_for_low_battery_energy_when_unplugged)
 {
     rt::WaitCondition request_processed;
 
@@ -223,7 +223,7 @@ TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_low_battery_energy_whe
     EXPECT_TRUE(fake_log.contains_line({"critical", "energy", "1.0%"}));
 }
 
-TEST_F(AUPowerPowerSource, does_not_notify_of_critical_state_for_low_battery_energy_when_plugged)
+TEST_F(AUPowerPowerSourceAndLid, does_not_notify_of_critical_state_for_low_battery_energy_when_plugged)
 {
     EXPECT_CALL(mock_handlers, power_source_critical()).Times(0);
 
@@ -235,7 +235,7 @@ TEST_F(AUPowerPowerSource, does_not_notify_of_critical_state_for_low_battery_ene
     std::this_thread::sleep_for(100ms);
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_high_battery_temperature_when_unplugged)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_critical_state_for_high_battery_temperature_when_unplugged)
 {
     rt::WaitCondition request_processed;
 
@@ -256,7 +256,7 @@ TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_high_battery_temperatu
          std::to_string(exploding_battery.temperature).substr(0,4)}));
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_high_battery_temperature_when_plugged)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_critical_state_for_high_battery_temperature_when_plugged)
 {
     rt::WaitCondition request_processed;
 
@@ -278,7 +278,7 @@ TEST_F(AUPowerPowerSource, notifies_of_critical_state_for_high_battery_temperatu
          std::to_string(exploding_battery.temperature).substr(0,4)}));
 }
 
-TEST_F(AUPowerPowerSource, does_not_notify_of_critical_state_for_removed_battery)
+TEST_F(AUPowerPowerSourceAndLid, does_not_notify_of_critical_state_for_removed_battery)
 {
     EXPECT_CALL(mock_handlers, power_source_critical()).Times(0);
 
@@ -291,7 +291,7 @@ TEST_F(AUPowerPowerSource, does_not_notify_of_critical_state_for_removed_battery
     std::this_thread::sleep_for(100ms);
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_lid_closed)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_lid_closed)
 {
     rt::WaitCondition request_processed;
 
@@ -306,7 +306,7 @@ TEST_F(AUPowerPowerSource, notifies_of_lid_closed)
     EXPECT_TRUE(fake_log.contains_line({"lid_is_closed", "true"}));
 }
 
-TEST_F(AUPowerPowerSource, notifies_of_lid_open)
+TEST_F(AUPowerPowerSourceAndLid, notifies_of_lid_open)
 {
     rt::WaitCondition request_processed;
 
@@ -321,11 +321,11 @@ TEST_F(AUPowerPowerSource, notifies_of_lid_open)
     EXPECT_TRUE(fake_log.contains_line({"lid_is_closed", "false"}));
 }
 
-TEST_F(AUPowerPowerSource, second_start_processing_is_ignored)
+TEST_F(AUPowerPowerSourceAndLid, second_start_processing_is_ignored)
 {
     auto prev_num_calls = fake_upower.num_enumerate_devices_calls();
 
-    upower_power_source.start_processing();
+    upower_power_source_and_lid.start_processing();
 
     EXPECT_THAT(fake_upower.num_enumerate_devices_calls(),
                 Eq(prev_num_calls));

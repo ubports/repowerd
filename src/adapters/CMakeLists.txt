@@ -52,7 +52,7 @@ set(
     unity_power_button.cpp
     unity_screen_service.cpp
     unity_user_activity.cpp
-    upower_power_source.cpp
+    upower_power_source_and_lid.cpp
 )
 
 add_library(
