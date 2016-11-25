@@ -19,6 +19,7 @@
 #pragma once
 
 #include "dbus_client.h"
+#include "src/adapters/fd.h"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -46,6 +47,9 @@ public:
     void activate_session(std::string const& session_path);
     void deactivate_session();
 
+    std::unordered_set<std::string> active_inhibitions();
+    std::string power_off_requests();
+
 private:
     void dbus_method_call(
         GDBusConnection* connection,
@@ -70,8 +74,10 @@ private:
     std::unordered_map<std::string,SessionInfo> sessions;
     std::unordered_map<std::string,HandlerRegistration> session_handler_registrations;
     std::string active_session_id;
+
+    std::unordered_map<std::string,Fd> inhibitions;
+    std::string power_off_requests_;
 };
 
 }
 }
-

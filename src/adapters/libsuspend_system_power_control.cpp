@@ -21,6 +21,8 @@
 
 #include "src/core/log.h"
 
+#include <stdexcept>
+
 namespace
 {
 char const* const log_tag = "LibsuspendSystemPowerControl";
@@ -31,6 +33,10 @@ repowerd::LibsuspendSystemPowerControl::LibsuspendSystemPowerControl(
     : log{log}
 {
     libsuspend_init(0);
+
+    if (std::string{libsuspend_getname()} == "mocksuspend")
+        throw std::runtime_error{"Failed to initialize libsuspend"};
+
     log->log(log_tag, "Initialized using backend %s", libsuspend_getname());
 }
 

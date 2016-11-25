@@ -45,6 +45,7 @@ add_executable(
     test_event_loop_timer.cpp
     test_fd.cpp
     test_logind_session_tracker.cpp
+    test_logind_system_power_control.cpp
     test_monotone_spline.cpp
     test_ofono_voice_call_service.cpp
     test_path.cpp

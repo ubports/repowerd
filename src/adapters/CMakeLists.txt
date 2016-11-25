@@ -35,6 +35,7 @@ set(
     fd.cpp
     libsuspend_system_power_control.cpp
     logind_session_tracker.cpp
+    logind_system_power_control.cpp
     monotone_spline.cpp
     null_log.cpp
     ofono_voice_call_service.cpp
@@ -64,6 +65,7 @@ target_link_libraries(
     suspend
     ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${GIO_UNIX_LDFLAGS} ${GIO_UNIX_LIBRARIES}
     ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
     ${UBUNTU_PLATFORM_HARDWARE_API_LDFLAGS} ${UBUNTU_PLATFORM_HARDWARE_API_LIBRARIES}
@@ -74,6 +76,7 @@ target_include_directories(
 
     ${ANDROID_PROPERTIES_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
+    ${GIO_UNIX_INCLUDE_DIRS}
     ${LIBHARDWARE_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_HARDWARE_API_INCLUDE_DIRS}

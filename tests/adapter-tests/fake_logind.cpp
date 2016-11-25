@@ -19,6 +19,9 @@
 #include "fake_logind.h"
 #include <algorithm>
 
+#include <gio/gunixfdlist.h>
+#include <fcntl.h>
+
 namespace rt = repowerd::test;
 using namespace std::literals::string_literals;
 
@@ -31,6 +34,16 @@ char const* const logind_introspection = R"(<!DOCTYPE node PUBLIC '-//freedeskto
         <method name='GetSessionByPID'>
             <arg name='pid' type='u'/>
             <arg name='session' type='o' direction='out'/>
+        </method>
+        <method name='Inhibit'>
+            <arg name='what' type='s'/>
+            <arg name='who' type='s'/>
+            <arg name='why' type='s'/>
+            <arg name='mode' type='s'/>
+            <arg name='fd' type='h' direction='out'/>
+        </method>
+        <method name='PowerOff'>
+            <arg name='interactive' type='b'/>
         </method>
         <signal name='SessionAdded'>
             <arg name='name' type='s'/>
@@ -219,6 +232,36 @@ void rt::FakeLogind::deactivate_session()
         "PropertiesChanged", params);
 }
 
+std::unordered_set<std::string> rt::FakeLogind::active_inhibitions()
+{
+    std::lock_guard<std::mutex> lock{sessions_mutex};
+
+    std::unordered_set<std::string> ret;
+
+    for (auto iter = inhibitions.begin(); iter != inhibitions.end(); )
+    {
+        char c = 0;
+        if (read(iter->second, &c, 1) == 0)
+        {
+            iter = inhibitions.erase(iter);
+        }
+        else
+        {
+            ret.insert(iter->first);
+            ++iter;
+        }
+    }
+
+    return ret;
+}
+
+std::string rt::FakeLogind::power_off_requests()
+{
+    std::lock_guard<std::mutex> lock{sessions_mutex};
+
+    return power_off_requests_;
+}
+
 void rt::FakeLogind::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* /*sender_cstr*/,
@@ -313,6 +356,50 @@ void rt::FakeLogind::dbus_method_call(
 
             g_dbus_method_invocation_return_value(invocation, session_variant);
         }
+    }
+    else if (interface_name == "org.freedesktop.login1.Manager" &&
+             method_name == "Inhibit")
+    {
+        char const* what_cstr = nullptr;
+        char const* who_cstr = nullptr;
+        char const* why_cstr = nullptr;
+        char const* mode_cstr = nullptr;
+
+        g_variant_get(parameters, "(&s&s&s&s)",
+                      &what_cstr, &who_cstr, &why_cstr, &mode_cstr);
+
+        int pipefd[2];
+        if (pipe2(pipefd, O_CLOEXEC | O_NONBLOCK) == -1)
+            pipefd[0] = pipefd[1] = -1;
+
+        auto inhibition_id =
+            std::string{what_cstr} + "," + who_cstr + "," + why_cstr + "," + mode_cstr;
+
+        {
+            std::lock_guard<std::mutex> lock{sessions_mutex};
+            inhibitions.emplace(inhibition_id, Fd{pipefd[0]});
+        }
+
+        auto const reply = g_variant_new_parsed("(@h 0,)");
+        auto const fd_list = g_unix_fd_list_new_from_array(pipefd + 1, 1);
+
+        g_dbus_method_invocation_return_value_with_unix_fd_list(
+            invocation, reply, fd_list);
+
+        g_object_unref(fd_list);
+    }
+    else if (interface_name == "org.freedesktop.login1.Manager" &&
+             method_name == "PowerOff")
+    {
+        gboolean interactive = TRUE;
+        g_variant_get(parameters, "(b)", &interactive);
+
+        {
+            std::lock_guard<std::mutex> lock{sessions_mutex};
+            power_off_requests_.append(interactive ? "t" : "f");
+        }
+
+        g_dbus_method_invocation_return_value(invocation, nullptr);
     }
     else
     {

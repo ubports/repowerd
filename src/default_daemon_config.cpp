@@ -29,6 +29,7 @@
 #include "adapters/event_loop_timer.h"
 #include "adapters/libsuspend_system_power_control.h"
 #include "adapters/logind_session_tracker.h"
+#include "adapters/logind_system_power_control.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/real_chrono.h"
@@ -111,6 +112,13 @@ struct NullProximitySensor : repowerd::ProximitySensor
     }
     void enable_proximity_events() override {}
     void disable_proximity_events() override {}
+};
+
+struct NullSystemPowerControl : repowerd::SystemPowerControl
+{
+    void allow_suspend(std::string const&) override {}
+    void disallow_suspend(std::string const&) override {}
+    void power_off() override {}
 };
 
 struct NullWakeupService : repowerd::WakeupService
@@ -275,9 +283,34 @@ repowerd::DefaultDaemonConfig::the_system_power_control()
 {
     if (!system_power_control)
     {
-        system_power_control = std::make_shared<LibsuspendSystemPowerControl>(
-            the_log());
+        try
+        {
+            system_power_control = std::make_shared<LibsuspendSystemPowerControl>(
+                the_log());
+        }
+        catch (std::exception const& e)
+        {
+            the_log()->log(log_tag, "Failed to create LibsuspendSystemPowerControl: %s", e.what());
+            the_log()->log(log_tag, "Trying LogindSystemPowerControl");
+        }
+
+        try
+        {
+            if (!system_power_control)
+            {
+                system_power_control = std::make_shared<LogindSystemPowerControl>(
+                    the_log(),
+                    the_dbus_bus_address());
+            }
+        }
+        catch (std::exception const& e)
+        {
+            the_log()->log(log_tag, "Failed to create LogindSystemPowerControl: %s", e.what());
+            the_log()->log(log_tag, "Falling back to NullSystemPowerControl");
+            system_power_control = std::make_shared<NullSystemPowerControl>();
+        }
     }
+
     return system_power_control;
 }
 
