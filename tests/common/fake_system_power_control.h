@@ -35,12 +35,15 @@ public:
     void allow_suspend(std::string const& id) override;
     void disallow_suspend(std::string const& id) override;
 
+    void power_off() override;
+
     bool is_suspend_allowed();
 
     struct MockMethods
     {
         MOCK_METHOD1(allow_suspend, void(std::string const&));
         MOCK_METHOD1(disallow_suspend, void(std::string const&));
+        MOCK_METHOD0(power_off, void());
     };
     testing::NiceMock<MockMethods> mock;
 

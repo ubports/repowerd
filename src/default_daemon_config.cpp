@@ -35,7 +35,6 @@
 #include "adapters/real_filesystem.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
-#include "adapters/system_shutdown_control.h"
 #include "adapters/ubuntu_light_sensor.h"
 #include "adapters/ubuntu_performance_booster.h"
 #include "adapters/ubuntu_proximity_sensor.h"
@@ -261,14 +260,6 @@ repowerd::DefaultDaemonConfig::the_session_tracker()
     }
 
     return session_tracker;
-}
-
-std::shared_ptr<repowerd::ShutdownControl>
-repowerd::DefaultDaemonConfig::the_shutdown_control()
-{
-    if (!shutdown_control)
-        shutdown_control = std::make_shared<SystemShutdownControl>(the_log());
-    return shutdown_control;
 }
 
 std::shared_ptr<repowerd::StateMachineFactory>

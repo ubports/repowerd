@@ -65,3 +65,10 @@ void repowerd::LibsuspendSystemPowerControl::disallow_suspend(std::string const&
         libsuspend_exit_suspend();
     }
 }
+
+void repowerd::LibsuspendSystemPowerControl::power_off()
+{
+    log->log(log_tag, "power_off()");
+
+    if (system("shutdown -P now")) {}
+}

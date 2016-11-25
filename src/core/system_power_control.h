@@ -31,6 +31,8 @@ public:
     virtual void allow_suspend(std::string const& id) = 0;
     virtual void disallow_suspend(std::string const& id) = 0;
 
+    virtual void power_off() = 0;
+
 protected:
     SystemPowerControl() = default;
     SystemPowerControl (SystemPowerControl const&) = default;

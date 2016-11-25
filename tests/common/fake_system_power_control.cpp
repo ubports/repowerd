@@ -32,6 +32,11 @@ void rt::FakeSystemPowerControl::disallow_suspend(std::string const& id)
     suspend_disallowances.insert(id);
 }
 
+void rt::FakeSystemPowerControl::power_off()
+{
+    mock.power_off();
+}
+
 bool rt::FakeSystemPowerControl::is_suspend_allowed()
 {
     return suspend_disallowances.empty();

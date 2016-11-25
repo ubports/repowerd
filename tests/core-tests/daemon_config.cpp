@@ -32,7 +32,6 @@
 #include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_session_tracker.h"
-#include "mock_shutdown_control.h"
 #include "fake_system_power_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
@@ -105,11 +104,6 @@ std::shared_ptr<repowerd::ProximitySensor> rt::DaemonConfig::the_proximity_senso
 std::shared_ptr<repowerd::SessionTracker> rt::DaemonConfig::the_session_tracker()
 {
     return the_fake_session_tracker();
-}
-
-std::shared_ptr<repowerd::ShutdownControl> rt::DaemonConfig::the_shutdown_control()
-{
-    return the_mock_shutdown_control();
 }
 
 std::shared_ptr<repowerd::StateMachineFactory> rt::DaemonConfig::the_state_machine_factory()
@@ -288,15 +282,6 @@ std::shared_ptr<rt::FakeSessionTracker> rt::DaemonConfig::the_fake_session_track
         fake_session_tracker = std::make_shared<rt::FakeSessionTracker>();
 
     return fake_session_tracker;
-}
-
-std::shared_ptr<NiceMock<rt::MockShutdownControl>>
-rt::DaemonConfig::the_mock_shutdown_control()
-{
-    if (!mock_shutdown_control)
-        mock_shutdown_control = std::make_shared<NiceMock<rt::MockShutdownControl>>();
-
-    return mock_shutdown_control;
 }
 
 std::shared_ptr<rt::FakeSystemPowerControl>

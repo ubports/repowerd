@@ -36,6 +36,8 @@ public:
     void allow_suspend(std::string const& id) override;
     void disallow_suspend(std::string const& id) override;
 
+    void power_off() override;
+
 private:
     std::shared_ptr<Log> const log;
 

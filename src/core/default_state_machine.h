@@ -115,7 +115,6 @@ private:
     std::shared_ptr<PerformanceBooster> const performance_booster;
     std::shared_ptr<PowerButtonEventSink> const power_button_event_sink;
     std::shared_ptr<ProximitySensor> const proximity_sensor;
-    std::shared_ptr<ShutdownControl> const shutdown_control;
     std::shared_ptr<SystemPowerControl> const system_power_control;
     std::shared_ptr<Timer> const timer;
 

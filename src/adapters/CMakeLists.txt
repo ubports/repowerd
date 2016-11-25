@@ -43,7 +43,6 @@ set(
     real_filesystem.cpp
     syslog_log.cpp
     sysfs_backlight.cpp
-    system_shutdown_control.cpp
     ubuntu_light_sensor.cpp
     ubuntu_performance_booster.cpp
     ubuntu_proximity_sensor.cpp
