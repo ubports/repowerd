@@ -43,6 +43,7 @@ add_executable(
     test_brightness_params.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp
+    test_fd.cpp
     test_logind_session_tracker.cpp
     test_monotone_spline.cpp
     test_ofono_voice_call_service.cpp

@@ -31,8 +31,8 @@ class Fd
 public:
     Fd(int fd);
     Fd(int fd, FdCloseFunc const& close_func);
-    Fd(Fd&&) = default;
-    Fd& operator=(Fd&&) = default;
+    Fd(Fd&&);
+    Fd& operator=(Fd&&);
     ~Fd();
 
     operator int() const;
@@ -40,6 +40,7 @@ public:
 private:
     Fd(Fd const&) = delete;
     Fd& operator=(Fd const&) = delete;
+    void close() const;
 
     int fd;
     FdCloseFunc close_func;

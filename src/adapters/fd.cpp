@@ -22,7 +22,7 @@
 
 repowerd::Fd::Fd(int fd)
     : fd{fd},
-      close_func{close}
+      close_func{::close}
 {
 }
 
@@ -32,12 +32,37 @@ repowerd::Fd::Fd(int fd, FdCloseFunc const& close_func)
 {
 }
 
+repowerd::Fd::Fd(Fd&& other)
+    : fd{other.fd},
+      close_func{std::move(other.close_func)}
+{
+    other.fd = -1;
+}
+
+repowerd::Fd& repowerd::Fd::operator=(Fd&& other)
+{
+    if (&other != this)
+    {
+        close();
+        fd = other.fd;
+        close_func = std::move(other.close_func);
+        other.fd = -1;
+    }
+
+    return *this;
+}
+
 repowerd::Fd::~Fd()
 {
-    if (fd >= 0) close_func(fd);
+    close();
 }
 
 repowerd::Fd::operator int() const
 {
     return fd;
+}
+
+void repowerd::Fd::close() const
+{
+    if (fd >= 0) close_func(fd);
 }
