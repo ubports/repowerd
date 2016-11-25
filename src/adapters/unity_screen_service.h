@@ -39,7 +39,7 @@ namespace repowerd
 class BrightnessNotification;
 class DeviceConfig;
 class Log;
-class SuspendControl;
+class SystemPowerControl;
 class WakeupService;
 
 class UnityScreenService : public ClientRequests,
@@ -51,7 +51,7 @@ public:
         std::shared_ptr<WakeupService> const& wakeup_service,
         std::shared_ptr<BrightnessNotification> const& brightness_notification,
         std::shared_ptr<Log> const& log,
-        std::shared_ptr<SuspendControl> const& suspend_control,
+        std::shared_ptr<SystemPowerControl> const& system_power_control,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
 
@@ -133,7 +133,7 @@ private:
 
     std::shared_ptr<WakeupService> const wakeup_service;
     std::shared_ptr<BrightnessNotification> const brightness_notification;
-    std::shared_ptr<SuspendControl> const suspend_control;
+    std::shared_ptr<SystemPowerControl> const system_power_control;
     std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;

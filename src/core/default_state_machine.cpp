@@ -28,7 +28,7 @@
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
 #include "shutdown_control.h"
-#include "suspend_control.h"
+#include "system_power_control.h"
 #include "timer.h"
 
 namespace
@@ -50,7 +50,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       power_button_event_sink{config.the_power_button_event_sink()},
       proximity_sensor{config.the_proximity_sensor()},
       shutdown_control{config.the_shutdown_control()},
-      suspend_control{config.the_suspend_control()},
+      system_power_control{config.the_system_power_control()},
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
@@ -554,7 +554,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
     if (reason != DisplayPowerChangeReason::proximity)
-        suspend_control->allow_suspend(suspend_id);
+        system_power_control->allow_suspend(suspend_id);
 }
 
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
@@ -562,7 +562,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
 {
     if (paused) return;
 
-    suspend_control->disallow_suspend(suspend_id);
+    system_power_control->disallow_suspend(suspend_id);
     performance_booster->enable_interactive_mode();
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;

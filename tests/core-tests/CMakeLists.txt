@@ -41,7 +41,7 @@ add_executable(
     test_power_source.cpp
     test_proximity_sensor.cpp
     test_session.cpp
-    test_suspend_control.cpp
+    test_system_power_control.cpp
     test_turn_on_display_at_startup.cpp
     test_user_activity.cpp
     test_voice_call.cpp

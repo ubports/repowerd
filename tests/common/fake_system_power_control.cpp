@@ -16,23 +16,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "fake_suspend_control.h"
+#include "fake_system_power_control.h"
 
 namespace rt = repowerd::test;
 
-void rt::FakeSuspendControl::allow_suspend(std::string const& id)
+void rt::FakeSystemPowerControl::allow_suspend(std::string const& id)
 {
     mock.allow_suspend(id);
     suspend_disallowances.erase(id);
 }
 
-void rt::FakeSuspendControl::disallow_suspend(std::string const& id)
+void rt::FakeSystemPowerControl::disallow_suspend(std::string const& id)
 {
     mock.disallow_suspend(id);
     suspend_disallowances.insert(id);
 }
 
-bool rt::FakeSuspendControl::is_suspend_allowed()
+bool rt::FakeSystemPowerControl::is_suspend_allowed()
 {
     return suspend_disallowances.empty();
 }

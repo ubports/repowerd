@@ -16,17 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "libsuspend_suspend_control.h"
+#include "libsuspend_system_power_control.h"
 #include "libsuspend/libsuspend.h"
 
 #include "src/core/log.h"
 
 namespace
 {
-char const* const log_tag = "LibsuspendSuspendControl";
+char const* const log_tag = "LibsuspendSystemPowerControl";
 }
 
-repowerd::LibsuspendSuspendControl::LibsuspendSuspendControl(
+repowerd::LibsuspendSystemPowerControl::LibsuspendSystemPowerControl(
     std::shared_ptr<Log> const& log)
     : log{log}
 {
@@ -34,7 +34,7 @@ repowerd::LibsuspendSuspendControl::LibsuspendSuspendControl(
     log->log(log_tag, "Initialized using backend %s", libsuspend_getname());
 }
 
-void repowerd::LibsuspendSuspendControl::allow_suspend(std::string const& id)
+void repowerd::LibsuspendSystemPowerControl::allow_suspend(std::string const& id)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 
@@ -49,7 +49,7 @@ void repowerd::LibsuspendSuspendControl::allow_suspend(std::string const& id)
     }
 }
 
-void repowerd::LibsuspendSuspendControl::disallow_suspend(std::string const& id)
+void repowerd::LibsuspendSystemPowerControl::disallow_suspend(std::string const& id)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 

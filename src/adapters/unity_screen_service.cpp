@@ -25,7 +25,7 @@
 
 #include "src/core/infinite_timeout.h"
 #include "src/core/log.h"
-#include "src/core/suspend_control.h"
+#include "src/core/system_power_control.h"
 
 #include <cmath>
 
@@ -154,12 +154,12 @@ repowerd::UnityScreenService::UnityScreenService(
     std::shared_ptr<WakeupService> const& wakeup_service,
     std::shared_ptr<BrightnessNotification> const& brightness_notification,
     std::shared_ptr<Log> const& log,
-    std::shared_ptr<SuspendControl> const& suspend_control,
+    std::shared_ptr<SystemPowerControl> const& system_power_control,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : wakeup_service{wakeup_service},
       brightness_notification{brightness_notification},
-      suspend_control{suspend_control},
+      system_power_control{system_power_control},
       log{log},
       dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_arg2_handler},
@@ -577,7 +577,7 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         if (request_sys_state_ids.erase(name) > 0 &&
             request_sys_state_ids.empty())
         {
-            suspend_control->allow_suspend(suspend_id);
+            system_power_control->allow_suspend(suspend_id);
         }
 
         auto const num_notifications_removed = active_notifications.erase(name);
@@ -684,7 +684,7 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
     auto const id = next_request_sys_state_id++;
     request_sys_state_ids.emplace(sender, id);
 
-    suspend_control->disallow_suspend(suspend_id);
+    system_power_control->disallow_suspend(suspend_id);
 
     log->log(log_tag, "dbus_requestSysState(%s,%s,%d) => %d",
              sender.c_str(), name.c_str(), state, id);
@@ -719,7 +719,7 @@ void repowerd::UnityScreenService::dbus_clearSysState(
 
     if (id_removed && request_sys_state_ids.empty())
     {
-        suspend_control->allow_suspend(suspend_id);
+        system_power_control->allow_suspend(suspend_id);
     }
 }
 

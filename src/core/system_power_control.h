@@ -18,29 +18,23 @@
 
 #pragma once
 
-#include "src/core/suspend_control.h"
-
-#include <memory>
-#include <mutex>
-#include <unordered_set>
+#include <string>
 
 namespace repowerd
 {
-class Log;
 
-class LibsuspendSuspendControl : public SuspendControl
+class SystemPowerControl
 {
 public:
-    LibsuspendSuspendControl(std::shared_ptr<Log> const& log);
+    virtual ~SystemPowerControl() = default;
 
-    void allow_suspend(std::string const& id) override;
-    void disallow_suspend(std::string const& id) override;
+    virtual void allow_suspend(std::string const& id) = 0;
+    virtual void disallow_suspend(std::string const& id) = 0;
 
-private:
-    std::shared_ptr<Log> const log;
-
-    std::mutex suspend_mutex;
-    std::unordered_set<std::string> suspend_disallowances;
+protected:
+    SystemPowerControl() = default;
+    SystemPowerControl (SystemPowerControl const&) = default;
+    SystemPowerControl& operator=(SystemPowerControl const&) = default;
 };
 
 }

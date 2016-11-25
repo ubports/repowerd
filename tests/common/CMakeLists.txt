@@ -18,7 +18,7 @@ add_library(
     repowerd-test-common STATIC
 
     fake_log.cpp
-    fake_suspend_control.cpp
+    fake_system_power_control.cpp
     spin_wait.cpp
 )
 

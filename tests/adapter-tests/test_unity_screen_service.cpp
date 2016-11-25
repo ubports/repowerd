@@ -20,7 +20,7 @@
 #include "fake_brightness_notification.h"
 #include "fake_device_config.h"
 #include "fake_log.h"
-#include "fake_suspend_control.h"
+#include "fake_system_power_control.h"
 #include "fake_wakeup_service.h"
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
@@ -107,13 +107,13 @@ struct AUnityScreenService : testing::Test
     rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeLog fake_log;
-    rt::FakeSuspendControl fake_suspend_control;
+    rt::FakeSystemPowerControl fake_system_power_control;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
         rt::fake_shared(fake_log),
-        rt::fake_shared(fake_suspend_control),
+        rt::fake_shared(fake_system_power_control),
         fake_device_config,
         bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};

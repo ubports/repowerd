@@ -25,7 +25,7 @@
 #include "fake_brightness_notification.h"
 #include "fake_device_config.h"
 #include "fake_log.h"
-#include "fake_suspend_control.h"
+#include "fake_system_power_control.h"
 #include "fake_wakeup_service.h"
 
 #include "fake_shared.h"
@@ -194,13 +194,13 @@ struct APowerdService : testing::Test
     rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeLog fake_log;
-    rt::FakeSuspendControl fake_suspend_control;
+    rt::FakeSystemPowerControl fake_system_power_control;
     rt::FakeWakeupService fake_wakeup_service;
     repowerd::UnityScreenService unity_screen_service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
         rt::fake_shared(fake_log),
-        rt::fake_shared(fake_suspend_control),
+        rt::fake_shared(fake_system_power_control),
         fake_device_config,
         bus.address()};
     PowerdDBusClient client{bus.address()};
@@ -219,7 +219,7 @@ TEST_F(APowerdService, disallows_suspend_for_request_sys_state_request)
 {
     client.request_request_sys_state(active_state).get();
 
-    EXPECT_FALSE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
 }
 
 TEST_F(APowerdService, returns_different_cookies_for_request_sys_state_requests)
@@ -249,7 +249,7 @@ TEST_F(APowerdService,
     auto reply1 = client.request_request_sys_state(active_state);
     client.request_clear_sys_state(reply1.get()).get();
 
-    EXPECT_TRUE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
 }
 
 TEST_F(APowerdService,
@@ -265,11 +265,11 @@ TEST_F(APowerdService,
     client.request_clear_sys_state(reply2.get());
     auto cookie3 = reply3.get();
 
-    EXPECT_FALSE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
 
     client.request_clear_sys_state(cookie3).get();
 
-    EXPECT_TRUE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
 }
 
 TEST_F(APowerdService,
@@ -283,7 +283,7 @@ TEST_F(APowerdService,
 
     EXPECT_TRUE(
         rt::spin_wait_for_condition_or_timeout(
-            [&] { return fake_suspend_control.is_suspend_allowed(); },
+            [&] { return fake_system_power_control.is_suspend_allowed(); },
             default_timeout));
 }
 
@@ -303,25 +303,25 @@ TEST_F(APowerdService,
     client.request_clear_sys_state(reply1.get());
     auto cookie2 = reply2.get();
 
-    EXPECT_FALSE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
 
     client.request_clear_sys_state(cookie2).get();
 
-    EXPECT_TRUE(fake_suspend_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
 }
 
 TEST_F(APowerdService, ignores_invalid_clear_sys_state_request)
 {
     std::string const invalid_cookie{"aaa"};
 
-    EXPECT_CALL(fake_suspend_control.mock, allow_suspend(_)).Times(0);
+    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_)).Times(0);
 
     client.request_clear_sys_state(invalid_cookie).get();
 }
 
 TEST_F(APowerdService, ignores_disconnects_from_clients_without_sys_state_request)
 {
-    EXPECT_CALL(fake_suspend_control.mock, allow_suspend(_)).Times(0);
+    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_)).Times(0);
 
     client.disconnect();
 

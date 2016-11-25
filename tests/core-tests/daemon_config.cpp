@@ -33,7 +33,7 @@
 #include "fake_proximity_sensor.h"
 #include "fake_session_tracker.h"
 #include "mock_shutdown_control.h"
-#include "fake_suspend_control.h"
+#include "fake_system_power_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
@@ -119,9 +119,9 @@ std::shared_ptr<repowerd::StateMachineFactory> rt::DaemonConfig::the_state_machi
     return state_machine_factory;
 }
 
-std::shared_ptr<repowerd::SuspendControl> rt::DaemonConfig::the_suspend_control()
+std::shared_ptr<repowerd::SystemPowerControl> rt::DaemonConfig::the_system_power_control()
 {
-    return the_fake_suspend_control();
+    return the_fake_system_power_control();
 }
 
 std::shared_ptr<repowerd::Timer> rt::DaemonConfig::the_timer()
@@ -299,13 +299,13 @@ rt::DaemonConfig::the_mock_shutdown_control()
     return mock_shutdown_control;
 }
 
-std::shared_ptr<rt::FakeSuspendControl>
-rt::DaemonConfig::the_fake_suspend_control()
+std::shared_ptr<rt::FakeSystemPowerControl>
+rt::DaemonConfig::the_fake_system_power_control()
 {
-    if (!fake_suspend_control)
-        fake_suspend_control = std::make_shared<rt::FakeSuspendControl>();
+    if (!fake_system_power_control)
+        fake_system_power_control = std::make_shared<rt::FakeSystemPowerControl>();
 
-    return fake_suspend_control;
+    return fake_system_power_control;
 }
 
 std::shared_ptr<rt::FakeTimer> rt::DaemonConfig::the_fake_timer()

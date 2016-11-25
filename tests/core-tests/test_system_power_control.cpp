@@ -17,7 +17,7 @@
  */
 
 #include "acceptance_test.h"
-#include "fake_suspend_control.h"
+#include "fake_system_power_control.h"
 
 #include <gtest/gtest.h>
 
@@ -26,27 +26,27 @@ namespace rt = repowerd::test;
 namespace
 {
 
-struct ASuspendControl : rt::AcceptanceTest
+struct ASystemPowerControl : rt::AcceptanceTest
 {
     void expect_suspend_is_allowed()
     {
-        EXPECT_TRUE(config.the_fake_suspend_control()->is_suspend_allowed());
+        EXPECT_TRUE(config.the_fake_system_power_control()->is_suspend_allowed());
     }
 
     void expect_suspend_is_disallowed()
     {
-        EXPECT_FALSE(config.the_fake_suspend_control()->is_suspend_allowed());
+        EXPECT_FALSE(config.the_fake_system_power_control()->is_suspend_allowed());
     }
 
     void expect_suspend_disallow()
     {
-        EXPECT_CALL(config.the_fake_suspend_control()->mock, disallow_suspend(testing::_));
+        EXPECT_CALL(config.the_fake_system_power_control()->mock, disallow_suspend(testing::_));
     }
 };
 
 }
 
-TEST_F(ASuspendControl, suspend_is_disallowed_when_display_turns_on)
+TEST_F(ASystemPowerControl, suspend_is_disallowed_when_display_turns_on)
 {
     expect_suspend_is_allowed();
 
@@ -55,7 +55,7 @@ TEST_F(ASuspendControl, suspend_is_disallowed_when_display_turns_on)
     expect_suspend_is_disallowed();
 }
 
-TEST_F(ASuspendControl, suspend_is_allowed_when_display_turns_off)
+TEST_F(ASystemPowerControl, suspend_is_allowed_when_display_turns_off)
 {
     turn_on_display();
     turn_off_display();
@@ -63,7 +63,7 @@ TEST_F(ASuspendControl, suspend_is_allowed_when_display_turns_off)
     expect_suspend_is_allowed();
 }
 
-TEST_F(ASuspendControl, suspend_is_disallowed_when_display_turns_off_due_to_proximity)
+TEST_F(ASystemPowerControl, suspend_is_disallowed_when_display_turns_off_due_to_proximity)
 {
     turn_on_display();
     emit_proximity_state_near();
@@ -71,7 +71,7 @@ TEST_F(ASuspendControl, suspend_is_disallowed_when_display_turns_off_due_to_prox
     expect_suspend_is_disallowed();
 }
 
-TEST_F(ASuspendControl, suspend_is_disallowed_before_display_is_turned_on)
+TEST_F(ASystemPowerControl, suspend_is_disallowed_before_display_is_turned_on)
 {
     testing::InSequence s;
     expect_suspend_disallow();

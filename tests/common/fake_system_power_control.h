@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "src/core/suspend_control.h"
+#include "src/core/system_power_control.h"
 
 #include <gmock/gmock.h>
 
@@ -29,7 +29,7 @@ namespace repowerd
 namespace test
 {
 
-class FakeSuspendControl : public SuspendControl
+class FakeSystemPowerControl : public SystemPowerControl
 {
 public:
     void allow_suspend(std::string const& id) override;

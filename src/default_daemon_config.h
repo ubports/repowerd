@@ -54,7 +54,7 @@ public:
     std::shared_ptr<SessionTracker> the_session_tracker() override;
     std::shared_ptr<ShutdownControl> the_shutdown_control() override;
     std::shared_ptr<StateMachineFactory> the_state_machine_factory() override;
-    std::shared_ptr<SuspendControl> the_suspend_control() override;
+    std::shared_ptr<SystemPowerControl> the_system_power_control() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
@@ -102,7 +102,7 @@ private:
     std::shared_ptr<SessionTracker> session_tracker;
     std::shared_ptr<ShutdownControl> shutdown_control;
     std::shared_ptr<StateMachineFactory> state_machine_factory;
-    std::shared_ptr<SuspendControl> suspend_control;
+    std::shared_ptr<SystemPowerControl> system_power_control;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UnityPowerButton> unity_power_button;
     std::shared_ptr<UnityScreenService> unity_screen_service;

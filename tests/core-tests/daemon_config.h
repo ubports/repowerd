@@ -41,7 +41,7 @@ class FakePowerSource;
 class FakeProximitySensor;
 class FakeSessionTracker;
 class MockShutdownControl;
-class FakeSuspendControl;
+class FakeSystemPowerControl;
 class FakeTimer;
 class FakeUserActivity;
 class FakeVoiceCallService;
@@ -64,7 +64,7 @@ public:
     std::shared_ptr<SessionTracker> the_session_tracker() override;
     std::shared_ptr<ShutdownControl> the_shutdown_control() override;
     std::shared_ptr<StateMachineFactory> the_state_machine_factory() override;
-    std::shared_ptr<SuspendControl> the_suspend_control() override;
+    std::shared_ptr<SystemPowerControl> the_system_power_control() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
@@ -92,7 +92,7 @@ public:
     std::shared_ptr<FakeProximitySensor> the_fake_proximity_sensor();
     std::shared_ptr<FakeSessionTracker> the_fake_session_tracker();
     std::shared_ptr<testing::NiceMock<MockShutdownControl>> the_mock_shutdown_control();
-    std::shared_ptr<FakeSuspendControl> the_fake_suspend_control();
+    std::shared_ptr<FakeSystemPowerControl> the_fake_system_power_control();
     std::shared_ptr<FakeTimer> the_fake_timer();
     std::shared_ptr<FakeUserActivity> the_fake_user_activity();
     std::shared_ptr<FakeVoiceCallService> the_fake_voice_call_service();
@@ -114,7 +114,7 @@ private:
     std::shared_ptr<FakeProximitySensor> fake_proximity_sensor;
     std::shared_ptr<FakeSessionTracker> fake_session_tracker;
     std::shared_ptr<testing::NiceMock<MockShutdownControl>> mock_shutdown_control;
-    std::shared_ptr<FakeSuspendControl> fake_suspend_control;
+    std::shared_ptr<FakeSystemPowerControl> fake_system_power_control;
     std::shared_ptr<FakeTimer> fake_timer;
     std::shared_ptr<FakeUserActivity> fake_user_activity;
     std::shared_ptr<FakeVoiceCallService> fake_voice_call_service;

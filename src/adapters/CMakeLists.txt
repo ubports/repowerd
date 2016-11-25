@@ -33,7 +33,7 @@ set(
     event_loop.cpp
     event_loop_timer.cpp
     fd.cpp
-    libsuspend_suspend_control.cpp
+    libsuspend_system_power_control.cpp
     logind_session_tracker.cpp
     monotone_spline.cpp
     null_log.cpp

@@ -27,7 +27,7 @@
 #include "adapters/console_log.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
-#include "adapters/libsuspend_suspend_control.h"
+#include "adapters/libsuspend_system_power_control.h"
 #include "adapters/logind_session_tracker.h"
 #include "adapters/null_log.h"
 #include "adapters/ofono_voice_call_service.h"
@@ -279,15 +279,15 @@ repowerd::DefaultDaemonConfig::the_state_machine_factory()
     return state_machine_factory;
 }
 
-std::shared_ptr<repowerd::SuspendControl>
-repowerd::DefaultDaemonConfig::the_suspend_control()
+std::shared_ptr<repowerd::SystemPowerControl>
+repowerd::DefaultDaemonConfig::the_system_power_control()
 {
-    if (!suspend_control)
+    if (!system_power_control)
     {
-        suspend_control = std::make_shared<LibsuspendSuspendControl>(
+        system_power_control = std::make_shared<LibsuspendSystemPowerControl>(
             the_log());
     }
-    return suspend_control;
+    return system_power_control;
 }
 
 std::shared_ptr<repowerd::Timer>
@@ -534,7 +534,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
             the_wakeup_service(),
             the_brightness_notification(),
             the_log(),
-            the_suspend_control(),
+            the_system_power_control(),
             *the_device_config(),
             the_dbus_bus_address());
     }
