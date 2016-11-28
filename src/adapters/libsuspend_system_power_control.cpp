@@ -80,3 +80,11 @@ void repowerd::LibsuspendSystemPowerControl::power_off()
 
     if (system("shutdown -P now")) {}
 }
+
+void repowerd::LibsuspendSystemPowerControl::allow_default_system_handlers()
+{
+}
+
+void repowerd::LibsuspendSystemPowerControl::disallow_default_system_handlers()
+{
+}

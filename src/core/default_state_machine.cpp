@@ -392,6 +392,7 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
 void repowerd::DefaultStateMachine::start()
 {
     log->log(log_tag, "start");
+    system_power_control->disallow_default_system_handlers();
 }
 
 void repowerd::DefaultStateMachine::pause()
@@ -406,6 +407,7 @@ void repowerd::DefaultStateMachine::pause()
 
     proximity_sensor->disable_proximity_events();
     brightness_control->disable_autobrightness();
+    system_power_control->allow_default_system_handlers();
 
     paused = true;
 }
@@ -415,6 +417,8 @@ void repowerd::DefaultStateMachine::resume()
     log->log(log_tag, "resume");
 
     paused = false;
+
+    system_power_control->disallow_default_system_handlers();
 
     if (autobrightness_enabled)
         brightness_control->enable_autobrightness();

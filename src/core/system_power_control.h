@@ -35,6 +35,9 @@ public:
 
     virtual void power_off() = 0;
 
+    virtual void allow_default_system_handlers() = 0;
+    virtual void disallow_default_system_handlers() = 0;
+
 protected:
     SystemPowerControl() = default;
     SystemPowerControl (SystemPowerControl const&) = default;

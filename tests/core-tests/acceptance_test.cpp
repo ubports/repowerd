@@ -383,3 +383,8 @@ bool rt::AcceptanceTest::are_proximity_events_enabled()
 {
     return config.the_fake_proximity_sensor()->are_proximity_events_enabled();
 }
+
+bool rt::AcceptanceTest::are_default_system_handlers_allowed()
+{
+    return config.the_fake_system_power_control()->are_default_system_handlers_allowed();
+}

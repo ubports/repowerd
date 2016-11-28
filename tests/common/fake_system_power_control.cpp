@@ -20,6 +20,11 @@
 
 namespace rt = repowerd::test;
 
+rt::FakeSystemPowerControl::FakeSystemPowerControl()
+    : are_default_system_handlers_allowed_{true}
+{
+}
+
 void rt::FakeSystemPowerControl::allow_suspend(
     std::string const& id, SuspendType suspend_type)
 {
@@ -45,10 +50,27 @@ void rt::FakeSystemPowerControl::power_off()
     mock.power_off();
 }
 
+void rt::FakeSystemPowerControl::allow_default_system_handlers()
+{
+    mock.allow_default_system_handlers();
+    are_default_system_handlers_allowed_ = true;
+}
+
+void rt::FakeSystemPowerControl::disallow_default_system_handlers()
+{
+    mock.disallow_default_system_handlers();
+    are_default_system_handlers_allowed_ = false;
+}
+
 bool rt::FakeSystemPowerControl::is_suspend_allowed(SuspendType suspend_type)
 {
     if (suspend_type == SuspendType::any)
         return any_suspend_disallowances.empty();
     else
         return automatic_suspend_disallowances.empty();
+}
+
+bool rt::FakeSystemPowerControl::are_default_system_handlers_allowed()
+{
+    return are_default_system_handlers_allowed_;
 }

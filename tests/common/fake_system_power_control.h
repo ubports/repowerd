@@ -32,24 +32,33 @@ namespace test
 class FakeSystemPowerControl : public SystemPowerControl
 {
 public:
+    FakeSystemPowerControl();
+
     void allow_suspend(std::string const& id, SuspendType suspend_type) override;
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 
     void power_off() override;
 
+    void allow_default_system_handlers() override;
+    void disallow_default_system_handlers() override;
+
     bool is_suspend_allowed(SuspendType suspend_type);
+    bool are_default_system_handlers_allowed();
 
     struct MockMethods
     {
         MOCK_METHOD2(allow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD0(power_off, void());
+        MOCK_METHOD0(allow_default_system_handlers, void());
+        MOCK_METHOD0(disallow_default_system_handlers, void());
     };
     testing::NiceMock<MockMethods> mock;
 
 private:
     std::unordered_set<std::string> automatic_suspend_disallowances;
     std::unordered_set<std::string> any_suspend_disallowances;
+    bool are_default_system_handlers_allowed_;
 };
 
 }

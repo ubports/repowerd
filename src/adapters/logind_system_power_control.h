@@ -42,6 +42,9 @@ public:
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
     void power_off() override;
 
+    void allow_default_system_handlers() override;
+    void disallow_default_system_handlers() override;
+
 private:
     std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;

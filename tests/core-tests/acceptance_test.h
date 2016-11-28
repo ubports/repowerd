@@ -93,6 +93,7 @@ struct AcceptanceTest : testing::Test
 
     bool log_contains_line(std::vector<std::string> const& words);
     bool are_proximity_events_enabled();
+    bool are_default_system_handlers_allowed();
 
     DaemonConfig config;
     Daemon daemon{config};

@@ -71,6 +71,14 @@ void repowerd::LogindSystemPowerControl::power_off()
     dbus_power_off();
 }
 
+void repowerd::LogindSystemPowerControl::allow_default_system_handlers()
+{
+}
+
+void repowerd::LogindSystemPowerControl::disallow_default_system_handlers()
+{
+}
+
 repowerd::Fd repowerd::LogindSystemPowerControl::dbus_inhibit(
     char const* what, char const* why)
 {

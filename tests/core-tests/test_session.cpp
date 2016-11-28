@@ -346,6 +346,31 @@ TEST_F(ASession, while_inactive_does_not_track_power_button_long_press)
     advance_time_by(power_button_long_press_timeout);
 }
 
+TEST_F(ASession,
+       switch_to_incompatible_session_allows_default_system_handlers_for_power)
+{
+    EXPECT_FALSE(are_default_system_handlers_allowed());
+
+    switch_to_session(incompatible(0));
+
+    EXPECT_TRUE(are_default_system_handlers_allowed());
+}
+
+TEST_F(ASession,
+       switch_to_compatible_session_disallows_default_system_handlers_for_power)
+{
+    EXPECT_FALSE(are_default_system_handlers_allowed());
+
+    switch_to_session(compatible(0));
+
+    EXPECT_FALSE(are_default_system_handlers_allowed());
+
+    switch_to_session(incompatible(0));
+    switch_to_session(compatible(0));
+
+    EXPECT_FALSE(are_default_system_handlers_allowed());
+}
+
 TEST_F(ASession, start_is_logged_if_compatible)
 {
     EXPECT_TRUE(log_contains_line({default_session_id, "start"}));

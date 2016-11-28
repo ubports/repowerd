@@ -38,6 +38,9 @@ public:
 
     void power_off() override;
 
+    void allow_default_system_handlers() override;
+    void disallow_default_system_handlers() override;
+
 private:
     std::shared_ptr<Log> const log;
 
