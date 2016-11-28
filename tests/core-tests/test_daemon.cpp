@@ -48,9 +48,9 @@ namespace
 struct MockStateMachine : public repowerd::StateMachine
 {
     MockStateMachine(
-        std::shared_ptr<std::string> const& pause_resume_log,
+        std::shared_ptr<std::string> const& sessions_activity_log,
         std::string const& name)
-        : pause_resume_log{pause_resume_log}, name{name}
+        : sessions_activity_log{sessions_activity_log}, name{name}
     {
     }
 
@@ -84,17 +84,23 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_enable_autobrightness, void());
     MOCK_METHOD0(handle_disable_autobrightness, void());
 
+
+    void start()
+    {
+        *sessions_activity_log += " start:" + name;
+    }
+
     void pause()
     {
-        *pause_resume_log += " pause:" + name;
+        *sessions_activity_log += " pause:" + name;
     }
 
     void resume()
     {
-        *pause_resume_log += " resume:" + name;
+        *sessions_activity_log += " resume:" + name;
     }
 
-    std::shared_ptr<std::string> const pause_resume_log;
+    std::shared_ptr<std::string> const sessions_activity_log;
     std::string const name;
 };
 
@@ -110,7 +116,7 @@ struct MockStateMachineFactory : public repowerd::StateMachineFactory
         if (mock_state_machine && mock_state_machine->name == name)
             mock_state_machines.push_back(std::move(mock_state_machine));
         else
-            mock_state_machines.push_back(std::make_shared<MockStateMachine>(pause_resume_log, name));
+            mock_state_machines.push_back(std::make_shared<MockStateMachine>(sessions_activity_log, name));
         return mock_state_machines.back();
     }
 
@@ -121,7 +127,7 @@ struct MockStateMachineFactory : public repowerd::StateMachineFactory
         else if (mock_state_machine)
             return mock_state_machine;
         else
-            return mock_state_machine = std::make_shared<MockStateMachine>(pause_resume_log, default_name);
+            return mock_state_machine = std::make_shared<MockStateMachine>(sessions_activity_log, default_name);
     }
 
     std::shared_ptr<MockStateMachine> the_mock_state_machine(int index)
@@ -130,7 +136,7 @@ struct MockStateMachineFactory : public repowerd::StateMachineFactory
     }
 
     std::string const default_name;
-    std::shared_ptr<std::string> pause_resume_log{std::make_shared<std::string>()};
+    std::shared_ptr<std::string> sessions_activity_log{std::make_shared<std::string>()};
     std::shared_ptr<MockStateMachine> mock_state_machine;
     std::vector<std::shared_ptr<MockStateMachine>> mock_state_machines;
 };
@@ -227,9 +233,9 @@ struct ADaemon : testing::Test
         daemon->flush();
     }
 
-    std::string pause_resume_log()
+    std::string sessions_activity_log()
     {
-        return *config.the_mock_state_machine_factory()->pause_resume_log;
+        return *config.the_mock_state_machine_factory()->sessions_activity_log;
     }
 };
 
@@ -790,6 +796,7 @@ TEST_F(ADaemon, makes_null_session_active_if_active_is_removed)
 
 TEST_F(ADaemon, pauses_active_session_before_removing_it)
 {
+    auto const start = [](std::string name) { return " start:" + name; };
     auto const pause = [](std::string name) { return " pause:" + name; };
 
     start_daemon();
@@ -798,21 +805,25 @@ TEST_F(ADaemon, pauses_active_session_before_removing_it)
     remove_session(
         config.the_fake_session_tracker()->default_session());
 
-    EXPECT_THAT(pause_resume_log(), StrEq(pause(default_session)));
+    EXPECT_THAT(sessions_activity_log(),
+                StrEq(start(default_session) +
+                      pause(default_session)));
 }
 
-TEST_F(ADaemon, does_not_resume_session_on_first_switch)
+TEST_F(ADaemon, starts_session_on_first_switch)
 {
     start_daemon();
 
     add_session("s1", repowerd::SessionType::RepowerdCompatible, 42);
     switch_to_session("s1");
 
-    EXPECT_THAT(pause_resume_log(), Not(HasSubstr("resume:s1")));
+    EXPECT_THAT(sessions_activity_log(), HasSubstr("start:s1"));
+    EXPECT_THAT(sessions_activity_log(), Not(HasSubstr("resume:s1")));
 }
 
-TEST_F(ADaemon, pauses_and_resumes_sessions_on_switch)
+TEST_F(ADaemon, starts_pauses_resumes_sessions_on_switch)
 {
+    auto const start = [](std::string name) { return " start:" + name; };
     auto const pause = [](std::string name) { return " pause:" + name; };
     auto const resume = [](std::string name) { return " resume:" + name; };
 
@@ -822,12 +833,17 @@ TEST_F(ADaemon, pauses_and_resumes_sessions_on_switch)
     add_session("s1", repowerd::SessionType::RepowerdCompatible, 42);
     switch_to_session("s1");
 
-    EXPECT_THAT(pause_resume_log(), StrEq(pause(default_session)));
+    EXPECT_THAT(sessions_activity_log(),
+                StrEq(start(default_session) +
+                      pause(default_session) +
+                      start("s1")));
 
     switch_to_session(default_session);
 
-    EXPECT_THAT(pause_resume_log(),
-                StrEq(pause(default_session) +
+    EXPECT_THAT(sessions_activity_log(),
+                StrEq(start(default_session) +
+                      pause(default_session) +
+                      start("s1") +
                       pause("s1") +
                       resume(default_session)));
 }

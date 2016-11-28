@@ -389,6 +389,11 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
     brightness_control->disable_autobrightness();
 }
 
+void repowerd::DefaultStateMachine::start()
+{
+    log->log(log_tag, "start");
+}
+
 void repowerd::DefaultStateMachine::pause()
 {
     log->log(log_tag, "pause");

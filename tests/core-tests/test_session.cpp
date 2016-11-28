@@ -345,3 +345,14 @@ TEST_F(ASession, while_inactive_does_not_track_power_button_long_press)
     expect_no_long_press_notification();
     advance_time_by(power_button_long_press_timeout);
 }
+
+TEST_F(ASession, start_is_logged_if_compatible)
+{
+    EXPECT_TRUE(log_contains_line({default_session_id, "start"}));
+
+    switch_to_session(compatible(0));
+    switch_to_session(incompatible(0));
+
+    EXPECT_FALSE(log_contains_line({incompatible(0), "start"}));
+    EXPECT_TRUE(log_contains_line({compatible(0), "start"}));
+}

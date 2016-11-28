@@ -56,6 +56,7 @@ public:
     void handle_enable_autobrightness() override {}
     void handle_disable_autobrightness() override {}
 
+    void start() override {}
     void pause() override {}
     void resume() override {}
 };
