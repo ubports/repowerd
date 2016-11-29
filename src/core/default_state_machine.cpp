@@ -552,7 +552,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
     if (reason != DisplayPowerChangeReason::proximity)
-        system_power_control->allow_suspend(suspend_id);
+        system_power_control->allow_suspend(suspend_id, SuspendType::automatic);
 }
 
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
@@ -560,7 +560,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
 {
     if (paused) return;
 
-    system_power_control->disallow_suspend(suspend_id);
+    system_power_control->disallow_suspend(suspend_id, SuspendType::automatic);
     performance_booster->enable_interactive_mode();
     display_power_control->turn_on();
     display_power_mode = DisplayPowerMode::on;

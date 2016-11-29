@@ -32,23 +32,24 @@ namespace test
 class FakeSystemPowerControl : public SystemPowerControl
 {
 public:
-    void allow_suspend(std::string const& id) override;
-    void disallow_suspend(std::string const& id) override;
+    void allow_suspend(std::string const& id, SuspendType suspend_type) override;
+    void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 
     void power_off() override;
 
-    bool is_suspend_allowed();
+    bool is_suspend_allowed(SuspendType suspend_type);
 
     struct MockMethods
     {
-        MOCK_METHOD1(allow_suspend, void(std::string const&));
-        MOCK_METHOD1(disallow_suspend, void(std::string const&));
+        MOCK_METHOD2(allow_suspend, void(std::string const&, SuspendType));
+        MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD0(power_off, void());
     };
     testing::NiceMock<MockMethods> mock;
 
 private:
-    std::unordered_set<std::string> suspend_disallowances;
+    std::unordered_set<std::string> automatic_suspend_disallowances;
+    std::unordered_set<std::string> any_suspend_disallowances;
 };
 
 }

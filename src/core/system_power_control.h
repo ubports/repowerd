@@ -23,13 +23,15 @@
 namespace repowerd
 {
 
+enum class SuspendType { automatic, any };
+
 class SystemPowerControl
 {
 public:
     virtual ~SystemPowerControl() = default;
 
-    virtual void allow_suspend(std::string const& id) = 0;
-    virtual void disallow_suspend(std::string const& id) = 0;
+    virtual void allow_suspend(std::string const& id, SuspendType suspend_type) = 0;
+    virtual void disallow_suspend(std::string const& id, SuspendType suspend_type) = 0;
 
     virtual void power_off() = 0;
 

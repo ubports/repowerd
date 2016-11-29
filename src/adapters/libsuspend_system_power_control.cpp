@@ -40,7 +40,8 @@ repowerd::LibsuspendSystemPowerControl::LibsuspendSystemPowerControl(
     log->log(log_tag, "Initialized using backend %s", libsuspend_getname());
 }
 
-void repowerd::LibsuspendSystemPowerControl::allow_suspend(std::string const& id)
+void repowerd::LibsuspendSystemPowerControl::allow_suspend(
+    std::string const& id, SuspendType)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 
@@ -55,7 +56,8 @@ void repowerd::LibsuspendSystemPowerControl::allow_suspend(std::string const& id
     }
 }
 
-void repowerd::LibsuspendSystemPowerControl::disallow_suspend(std::string const& id)
+void repowerd::LibsuspendSystemPowerControl::disallow_suspend(
+    std::string const& id, SuspendType)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 

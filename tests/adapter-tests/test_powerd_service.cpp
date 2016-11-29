@@ -189,6 +189,7 @@ struct APowerdService : testing::Test
 
     static int constexpr active_state{1};
     std::chrono::seconds const default_timeout{3};
+    repowerd::SuspendType const suspend_type_any{repowerd::SuspendType::any};
 
     rt::DBusBus bus;
     rt::FakeBrightnessNotification fake_brightness_notification;
@@ -219,7 +220,7 @@ TEST_F(APowerdService, disallows_suspend_for_request_sys_state_request)
 {
     client.request_request_sys_state(active_state).get();
 
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 }
 
 TEST_F(APowerdService, returns_different_cookies_for_request_sys_state_requests)
@@ -249,7 +250,7 @@ TEST_F(APowerdService,
     auto reply1 = client.request_request_sys_state(active_state);
     client.request_clear_sys_state(reply1.get()).get();
 
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 }
 
 TEST_F(APowerdService,
@@ -265,11 +266,11 @@ TEST_F(APowerdService,
     client.request_clear_sys_state(reply2.get());
     auto cookie3 = reply3.get();
 
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 
     client.request_clear_sys_state(cookie3).get();
 
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 }
 
 TEST_F(APowerdService,
@@ -283,7 +284,7 @@ TEST_F(APowerdService,
 
     EXPECT_TRUE(
         rt::spin_wait_for_condition_or_timeout(
-            [&] { return fake_system_power_control.is_suspend_allowed(); },
+            [&] { return fake_system_power_control.is_suspend_allowed(suspend_type_any); },
             default_timeout));
 }
 
@@ -303,25 +304,25 @@ TEST_F(APowerdService,
     client.request_clear_sys_state(reply1.get());
     auto cookie2 = reply2.get();
 
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 
     client.request_clear_sys_state(cookie2).get();
 
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed());
+    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
 }
 
 TEST_F(APowerdService, ignores_invalid_clear_sys_state_request)
 {
     std::string const invalid_cookie{"aaa"};
 
-    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_)).Times(0);
+    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_, _)).Times(0);
 
     client.request_clear_sys_state(invalid_cookie).get();
 }
 
 TEST_F(APowerdService, ignores_disconnects_from_clients_without_sys_state_request)
 {
-    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_)).Times(0);
+    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_, _)).Times(0);
 
     client.disconnect();
 

@@ -577,7 +577,7 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
         if (request_sys_state_ids.erase(name) > 0 &&
             request_sys_state_ids.empty())
         {
-            system_power_control->allow_suspend(suspend_id);
+            system_power_control->allow_suspend(suspend_id, SuspendType::any);
         }
 
         auto const num_notifications_removed = active_notifications.erase(name);
@@ -684,7 +684,7 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
     auto const id = next_request_sys_state_id++;
     request_sys_state_ids.emplace(sender, id);
 
-    system_power_control->disallow_suspend(suspend_id);
+    system_power_control->disallow_suspend(suspend_id, SuspendType::any);
 
     log->log(log_tag, "dbus_requestSysState(%s,%s,%d) => %d",
              sender.c_str(), name.c_str(), state, id);
@@ -719,7 +719,7 @@ void repowerd::UnityScreenService::dbus_clearSysState(
 
     if (id_removed && request_sys_state_ids.empty())
     {
-        system_power_control->allow_suspend(suspend_id);
+        system_power_control->allow_suspend(suspend_id, SuspendType::any);
     }
 }
 

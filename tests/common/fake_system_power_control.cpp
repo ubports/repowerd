@@ -20,16 +20,24 @@
 
 namespace rt = repowerd::test;
 
-void rt::FakeSystemPowerControl::allow_suspend(std::string const& id)
+void rt::FakeSystemPowerControl::allow_suspend(
+    std::string const& id, SuspendType suspend_type)
 {
-    mock.allow_suspend(id);
-    suspend_disallowances.erase(id);
+    mock.allow_suspend(id, suspend_type);
+    if (suspend_type == SuspendType::any)
+        any_suspend_disallowances.erase(id);
+    else
+        automatic_suspend_disallowances.erase(id);
 }
 
-void rt::FakeSystemPowerControl::disallow_suspend(std::string const& id)
+void rt::FakeSystemPowerControl::disallow_suspend(
+    std::string const& id, SuspendType suspend_type)
 {
-    mock.disallow_suspend(id);
-    suspend_disallowances.insert(id);
+    mock.disallow_suspend(id, suspend_type);
+    if (suspend_type == SuspendType::any)
+        any_suspend_disallowances.insert(id);
+    else
+        automatic_suspend_disallowances.insert(id);
 }
 
 void rt::FakeSystemPowerControl::power_off()
@@ -37,7 +45,10 @@ void rt::FakeSystemPowerControl::power_off()
     mock.power_off();
 }
 
-bool rt::FakeSystemPowerControl::is_suspend_allowed()
+bool rt::FakeSystemPowerControl::is_suspend_allowed(SuspendType suspend_type)
 {
-    return suspend_disallowances.empty();
+    if (suspend_type == SuspendType::any)
+        return any_suspend_disallowances.empty();
+    else
+        return automatic_suspend_disallowances.empty();
 }

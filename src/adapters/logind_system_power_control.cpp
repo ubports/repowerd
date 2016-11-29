@@ -41,8 +41,12 @@ repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
 {
 }
 
-void repowerd::LogindSystemPowerControl::allow_suspend(std::string const& id)
+void repowerd::LogindSystemPowerControl::allow_suspend(
+    std::string const& id, SuspendType suspend_type)
 {
+    if (suspend_type != SuspendType::any)
+        return;
+
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
 
     log->log(log_tag, "releasing inhibition for %s", id.c_str());
@@ -50,8 +54,12 @@ void repowerd::LogindSystemPowerControl::allow_suspend(std::string const& id)
     suspend_disallowances.erase(id);
 }
 
-void repowerd::LogindSystemPowerControl::disallow_suspend(std::string const& id)
+void repowerd::LogindSystemPowerControl::disallow_suspend(
+    std::string const& id, SuspendType suspend_type)
 {
+    if (suspend_type != SuspendType::any)
+        return;
+
     auto inhibition_fd = dbus_inhibit("sleep:idle", id.c_str());
 
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
