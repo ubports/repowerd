@@ -788,6 +788,19 @@ TEST_F(ADaemon, makes_null_session_active_if_active_is_removed)
     config.the_fake_power_button()->press();
 }
 
+TEST_F(ADaemon, pauses_active_session_before_removing_it)
+{
+    auto const pause = [](std::string name) { return " pause:" + name; };
+
+    start_daemon();
+    auto const default_session = config.the_fake_session_tracker()->default_session();
+
+    remove_session(
+        config.the_fake_session_tracker()->default_session());
+
+    EXPECT_THAT(pause_resume_log(), StrEq(pause(default_session)));
+}
+
 TEST_F(ADaemon, does_not_resume_session_on_first_switch)
 {
     start_daemon();

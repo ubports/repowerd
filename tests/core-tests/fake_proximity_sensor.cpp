@@ -72,3 +72,8 @@ void rt::FakeProximitySensor::set_proximity_state(ProximityState state)
 {
     this->state = state;
 }
+
+bool rt::FakeProximitySensor::are_proximity_events_enabled()
+{
+    return events_enabled;
+}

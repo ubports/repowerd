@@ -69,6 +69,16 @@ TEST_F(ASession, switch_to_incompatible_session_disables_inactivity_timeouts)
     advance_time_by(user_inactivity_normal_display_off_timeout);
 }
 
+TEST_F(ASession, removal_disables_inactivity_timeouts)
+{
+    turn_on_display();
+    remove_session(default_session_id);
+
+    expect_no_display_power_change();
+    expect_no_display_brightness_change();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+}
+
 TEST_F(ASession, switch_to_known_compatible_session_turns_on_display_with_normal_timeout)
 {
     expect_no_display_power_change();
@@ -93,6 +103,14 @@ TEST_F(ASession, switch_to_session_without_active_call_disables_proximity)
     expect_no_display_brightness_change();
     emit_proximity_state_near_if_enabled();
     emit_proximity_state_far_if_enabled();
+}
+
+TEST_F(ASession, removal_disables_proximity)
+{
+    emit_active_call();
+    remove_session(default_session_id);
+
+    EXPECT_FALSE(are_proximity_events_enabled());
 }
 
 TEST_F(ASession, switch_back_to_session_with_active_call_reenables_proximity)
@@ -143,6 +161,13 @@ TEST_F(ASession, switch_to_incompatible_session_disables_autobrightness)
     expect_autobrightness_disabled();
 
     switch_to_session(incompatible(0));
+}
+
+TEST_F(ASession, removal_disables_autobrightness)
+{
+    expect_autobrightness_disabled();
+
+    remove_session(default_session_id);
 }
 
 TEST_F(ASession,

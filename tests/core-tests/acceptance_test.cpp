@@ -351,6 +351,12 @@ void rt::AcceptanceTest::switch_to_session(std::string const& session_id)
     daemon.flush();
 }
 
+void rt::AcceptanceTest::remove_session(std::string const& session_id)
+{
+    config.the_fake_session_tracker()->remove_session(session_id);
+    daemon.flush();
+}
+
 void rt::AcceptanceTest::turn_off_display()
 {
     EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
@@ -371,4 +377,9 @@ void rt::AcceptanceTest::turn_on_display()
     daemon.flush();
     testing::Mock::VerifyAndClearExpectations(config.the_mock_display_power_control().get());
     testing::Mock::VerifyAndClearExpectations(config.the_mock_brightness_control().get());
+}
+
+bool rt::AcceptanceTest::are_proximity_events_enabled()
+{
+    return config.the_fake_proximity_sensor()->are_proximity_events_enabled();
 }

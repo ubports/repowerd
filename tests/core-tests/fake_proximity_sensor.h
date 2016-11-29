@@ -42,6 +42,7 @@ public:
     void emit_proximity_state(ProximityState state);
     void emit_proximity_state_if_enabled(ProximityState state);
     void set_proximity_state(ProximityState state);
+    bool are_proximity_events_enabled();
 
     struct Mock
     {

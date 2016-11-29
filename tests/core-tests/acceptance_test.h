@@ -87,10 +87,12 @@ struct AcceptanceTest : testing::Test
     void add_compatible_session(std::string const& session_id, pid_t pid);
     void add_incompatible_session(std::string const& session_id, pid_t pid);
     void switch_to_session(std::string const& session_id);
+    void remove_session(std::string const& session_id);
     void turn_off_display();
     void turn_on_display();
 
     bool log_contains_line(std::vector<std::string> const& words);
+    bool are_proximity_events_enabled();
 
     DaemonConfig config;
     Daemon daemon{config};

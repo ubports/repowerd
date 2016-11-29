@@ -414,7 +414,10 @@ void repowerd::Daemon::handle_session_removed(
     if (iter != sessions.end())
     {
         if (active_session == &iter->second)
+        {
+            active_session->state_machine->pause();
             active_session = &sessions.at(repowerd::invalid_session_id);
+        }
 
         sessions.erase(session_id);
     }
