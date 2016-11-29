@@ -59,6 +59,11 @@ struct ALogindSystemPowerControl : testing::Test
         return "sleep:idle,repowerd," + id + ",block";
     }
 
+    std::string idle_inhibition_name()
+    {
+        return "idle,repowerd,repowerd handles idle,block";
+    }
+
     std::chrono::seconds const default_timeout{3};
 };
 
@@ -121,6 +126,23 @@ TEST_F(ALogindSystemPowerControl, powers_off_system)
     expect_power_off_requests("f");
 }
 
+TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_adds_inhibition)
+{
+    expect_inhibitions({});
+
+    system_power_control.disallow_default_system_handlers();
+
+    expect_inhibitions({idle_inhibition_name()});
+}
+
+TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_removes_inhibition)
+{
+    system_power_control.disallow_default_system_handlers();
+    system_power_control.allow_default_system_handlers();
+
+    expect_inhibitions({});
+}
+
 TEST_F(ALogindSystemPowerControl, disallow_any_suspend_logs_inhibition)
 {
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
@@ -142,6 +164,21 @@ TEST_F(ALogindSystemPowerControl, allow_and_disallow_automatic_suspend_log_nothi
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::automatic);
 
     EXPECT_FALSE(fake_log.contains_line({"inhibit"}));
+}
+
+TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_logs_inhibition)
+{
+    system_power_control.disallow_default_system_handlers();
+
+    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle"}));
+    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle", "done"}));
+}
+
+TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_logs_inhibition_release)
+{
+    system_power_control.allow_default_system_handlers();
+
+    EXPECT_TRUE(fake_log.contains_line({"releasing", "idle", "inhibition"}));
 }
 
 TEST_F(ALogindSystemPowerControl, power_off_is_logged)

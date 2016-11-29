@@ -54,6 +54,7 @@ private:
 
     std::mutex inhibitions_mutex;
     std::unordered_map<std::string, Fd> suspend_disallowances;
+    Fd idle_inhibition_fd;
 };
 
 }
