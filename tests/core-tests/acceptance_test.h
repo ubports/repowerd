@@ -34,10 +34,12 @@ namespace repowerd
 namespace test
 {
 
-struct AcceptanceTest : testing::Test
+struct AcceptanceTestBase
 {
-    AcceptanceTest();
-    ~AcceptanceTest();
+    AcceptanceTestBase(std::shared_ptr<DaemonConfig> const& daemon_config);
+    ~AcceptanceTestBase();
+
+    void run_daemon();
 
     void expect_autobrightness_disabled();
     void expect_autobrightness_enabled();
@@ -95,7 +97,8 @@ struct AcceptanceTest : testing::Test
     bool are_proximity_events_enabled();
     bool are_default_system_handlers_allowed();
 
-    DaemonConfig config;
+    std::shared_ptr<DaemonConfig> config_ptr;
+    DaemonConfig& config;
     Daemon daemon{config};
     std::thread daemon_thread;
 
@@ -109,6 +112,11 @@ struct AcceptanceTest : testing::Test
     std::chrono::milliseconds const infinite_timeout;
 
     std::string const default_session_id;
+};
+
+struct AcceptanceTest : AcceptanceTestBase, testing::Test
+{
+    AcceptanceTest();
 };
 
 }

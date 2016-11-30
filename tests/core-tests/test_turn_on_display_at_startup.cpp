@@ -16,16 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "acceptance_test.h"
 #include "daemon_config.h"
-#include "run_daemon.h"
-#include "mock_display_power_control.h"
-#include "mock_brightness_control.h"
-#include "fake_log.h"
 #include "fake_state_machine_options.h"
-
-#include "src/core/daemon.h"
-
-#include <thread>
+#include "fake_shared.h"
 
 #include <gtest/gtest.h>
 
@@ -57,38 +51,35 @@ struct DaemonConfigWithTurnOnDisplayAtStartup : rt::DaemonConfig
 
     std::shared_ptr<StateMachineOptionsWithTurnOnDisplayAtStartup> state_machine_options;
 };
-}
 
-TEST(ATurnOnDisplayAtStartupOption, if_enabled_turns_on_display_at_startup)
+struct ATurnOnDisplayAtStartupOption : testing::Test
 {
     DaemonConfigWithTurnOnDisplayAtStartup config;
+};
+
+}
+
+TEST_F(ATurnOnDisplayAtStartupOption, if_enabled_turns_on_display_at_startup)
+{
     config.the_state_machine_options();
     config.state_machine_options->set_turn_on_display_at_startup(true);
 
-    repowerd::Daemon daemon{config};
+    rt::AcceptanceTestBase test{rt::fake_shared(config)};
 
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
-    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
+    test.expect_display_turns_on();
 
-    auto daemon_thread = rt::run_daemon(daemon);
-
-    daemon.stop();
-    daemon_thread.join();
+    test.run_daemon();
 }
 
-TEST(ATurnOnDisplayAtStartupOption, if_disabled_does_not_turn_on_display_at_startup)
+TEST_F(ATurnOnDisplayAtStartupOption, if_disabled_does_not_turn_on_display_at_startup)
 {
-    DaemonConfigWithTurnOnDisplayAtStartup config;
     config.the_state_machine_options();
     config.state_machine_options->set_turn_on_display_at_startup(false);
 
-    repowerd::Daemon daemon{config};
+    rt::AcceptanceTestBase test{rt::fake_shared(config)};
 
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
-    EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness()).Times(0);
+    test.expect_no_display_power_change();
+    test.expect_no_display_brightness_change();
 
-    auto daemon_thread = rt::run_daemon(daemon);
-
-    daemon.stop();
-    daemon_thread.join();
+    test.run_daemon();
 }
