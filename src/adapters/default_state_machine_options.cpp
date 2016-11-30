@@ -17,6 +17,7 @@
  */
 
 #include "default_state_machine_options.h"
+#include "src/core/log.h"
 
 #include <hybris/properties/properties.h>
 
@@ -24,6 +25,8 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+char const* const log_tag = "DefaultStateMachineOptions";
 
 std::string determine_device_name()
 {
@@ -43,10 +46,29 @@ bool treat_power_button_as_user_activity_for(
 
 }
 
-repowerd::DefaultStateMachineOptions::DefaultStateMachineOptions()
-    : treat_power_button_as_user_activity_{
+repowerd::DefaultStateMachineOptions::DefaultStateMachineOptions(
+    repowerd::Log& log)
+    : device_name_{determine_device_name()},
+      treat_power_button_as_user_activity_{
         treat_power_button_as_user_activity_for(determine_device_name())}
 {
+    log.log(log_tag, "DeviceName: %s", device_name_.c_str());
+    log.log(log_tag, "Option: notification_expiration_timeout=%d",
+            static_cast<int>(notification_expiration_timeout().count()));
+    log.log(log_tag, "Option: power_button_long_press_timeout=%d",
+            static_cast<int>(power_button_long_press_timeout().count()));
+    log.log(log_tag, "Option: treat_power_button_as_user_activity=%s",
+            treat_power_button_as_user_activity() ? "true" : "false");
+    log.log(log_tag, "Option: turn_on_display_at_startup=%s",
+            turn_on_display_at_startup() ? "true" : "false");
+    log.log(log_tag, "Option: user_inactivity_normal_display_dim_duration=%d",
+            static_cast<int>(user_inactivity_normal_display_dim_duration().count()));
+    log.log(log_tag, "Option: user_inactivity_normal_display_off_timeout=%d",
+            static_cast<int>(user_inactivity_normal_display_off_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_post_notification_display_off_timeout=%d",
+            static_cast<int>(user_inactivity_post_notification_display_off_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_reduced_display_off_timeout=%d",
+            static_cast<int>(user_inactivity_reduced_display_off_timeout().count()));
 }
 
 std::chrono::milliseconds

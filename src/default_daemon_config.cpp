@@ -283,7 +283,8 @@ std::shared_ptr<repowerd::StateMachineOptions>
 repowerd::DefaultDaemonConfig::the_state_machine_options()
 {
     if (!state_machine_options)
-        state_machine_options = std::make_shared<DefaultStateMachineOptions>();
+        state_machine_options = std::make_shared<DefaultStateMachineOptions>(*the_log());
+
     return state_machine_options;
 }
 

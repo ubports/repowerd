@@ -20,13 +20,16 @@
 
 #include "src/core/state_machine_options.h"
 
+#include <string>
+
 namespace repowerd
 {
+class Log;
 
 class DefaultStateMachineOptions : public StateMachineOptions
 {
 public:
-    DefaultStateMachineOptions();
+    DefaultStateMachineOptions(Log& log);
 
     std::chrono::milliseconds notification_expiration_timeout() const override;
     std::chrono::milliseconds power_button_long_press_timeout() const override;
@@ -39,6 +42,7 @@ public:
     bool turn_on_display_at_startup() const override;
 
 private:
+    std::string const device_name_;
     bool const treat_power_button_as_user_activity_;
 };
 
