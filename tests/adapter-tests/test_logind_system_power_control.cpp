@@ -49,6 +49,11 @@ struct ALogindSystemPowerControl : testing::Test
         EXPECT_THAT(fake_logind.active_inhibitions(), ContainerEq(inhibitions));
     }
 
+    void expect_no_inhibitions()
+    {
+        EXPECT_THAT(fake_logind.active_inhibitions(), IsEmpty());
+    }
+
     void expect_power_off_requests(std::string const& power_off_requests)
     {
         EXPECT_THAT(fake_logind.power_off_requests(), StrEq(power_off_requests));
@@ -101,14 +106,14 @@ TEST_F(ALogindSystemPowerControl, allow_any_suspend_removes_inhibition)
         });
 
     system_power_control.allow_suspend("id3", repowerd::SuspendType::any);
-    expect_inhibitions({});
+    expect_no_inhibitions();
 }
 
 TEST_F(ALogindSystemPowerControl, disallow_automatic_suspend_is_a_noop)
 {
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::automatic);
 
-    expect_inhibitions({});
+    expect_no_inhibitions();
 }
 
 TEST_F(ALogindSystemPowerControl, allow_automatic_suspend_is_a_noop)
@@ -128,7 +133,7 @@ TEST_F(ALogindSystemPowerControl, powers_off_system)
 
 TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_adds_inhibition)
 {
-    expect_inhibitions({});
+    expect_no_inhibitions();
 
     system_power_control.disallow_default_system_handlers();
 
@@ -140,7 +145,7 @@ TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_removes_inhibiti
     system_power_control.disallow_default_system_handlers();
     system_power_control.allow_default_system_handlers();
 
-    expect_inhibitions({});
+    expect_no_inhibitions();
 }
 
 TEST_F(ALogindSystemPowerControl, disallow_any_suspend_logs_inhibition)

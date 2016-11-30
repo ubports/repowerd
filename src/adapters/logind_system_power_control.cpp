@@ -134,7 +134,7 @@ repowerd::Fd repowerd::LogindSystemPowerControl::dbus_inhibit(
         log->log(log_tag, "dbus_inhibit(%s,%s) done", what, why);
     g_object_unref(fd_list);
 
-    return std::move(inhibit_fd);
+    return inhibit_fd;
 }
 
 void repowerd::LogindSystemPowerControl::dbus_power_off()
