@@ -38,6 +38,7 @@
 
 #include "src/core/daemon.h"
 #include "src/core/infinite_timeout.h"
+#include "src/core/state_machine_options.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,20 +48,20 @@ using namespace testing;
 
 rt::AcceptanceTest::AcceptanceTest()
     : notification_expiration_timeout{
-          config.notification_expiration_timeout()},
+          config.the_state_machine_options()->notification_expiration_timeout()},
       power_button_long_press_timeout{
-          config.power_button_long_press_timeout()},
+          config.the_state_machine_options()->power_button_long_press_timeout()},
       user_inactivity_normal_display_dim_duration{
-          config.user_inactivity_normal_display_dim_duration()},
+          config.the_state_machine_options()->user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_dim_timeout{
-          config.user_inactivity_normal_display_off_timeout() -
-          config.user_inactivity_normal_display_dim_duration()},
+          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout() -
+          config.the_state_machine_options()->user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_off_timeout{
-          config.user_inactivity_normal_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
-          config.user_inactivity_post_notification_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_post_notification_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
-          config.user_inactivity_reduced_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_reduced_display_off_timeout()},
       infinite_timeout{repowerd::infinite_timeout},
       default_session_id{
           config.the_fake_session_tracker()->default_session()}

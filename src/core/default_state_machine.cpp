@@ -27,6 +27,7 @@
 #include "performance_booster.h"
 #include "power_button_event_sink.h"
 #include "proximity_sensor.h"
+#include "state_machine_options.h"
 #include "system_power_control.h"
 #include "timer.h"
 
@@ -54,19 +55,19 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
       power_button_long_press_alarm_id{AlarmId::invalid},
       power_button_long_press_detected{false},
-      power_button_long_press_timeout{config.power_button_long_press_timeout()},
+      power_button_long_press_timeout{config.the_state_machine_options()->power_button_long_press_timeout()},
       user_inactivity_display_dim_alarm_id{AlarmId::invalid},
       user_inactivity_display_off_alarm_id{AlarmId::invalid},
       user_inactivity_normal_display_dim_duration{
-          config.user_inactivity_normal_display_dim_duration()},
+          config.the_state_machine_options()->user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_off_timeout{
-          config.user_inactivity_normal_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{
-          config.user_inactivity_reduced_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_reduced_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
-          config.user_inactivity_post_notification_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_post_notification_display_off_timeout()},
       notification_expiration_timeout{
-          config.notification_expiration_timeout()},
+          config.the_state_machine_options()->notification_expiration_timeout()},
       scheduled_timeout_type{ScheduledTimeoutType::none},
       paused{false},
       autobrightness_enabled{false},

@@ -53,17 +53,11 @@ public:
     std::shared_ptr<ProximitySensor> the_proximity_sensor() override;
     std::shared_ptr<SessionTracker> the_session_tracker() override;
     std::shared_ptr<StateMachineFactory> the_state_machine_factory() override;
+    std::shared_ptr<StateMachineOptions> the_state_machine_options() override;
     std::shared_ptr<SystemPowerControl> the_system_power_control() override;
     std::shared_ptr<Timer> the_timer() override;
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
-
-    std::chrono::milliseconds notification_expiration_timeout() override;
-    std::chrono::milliseconds power_button_long_press_timeout() override;
-    std::chrono::milliseconds user_inactivity_normal_display_dim_duration() override;
-    std::chrono::milliseconds user_inactivity_normal_display_off_timeout() override;
-    std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() override;
-    std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() override;
 
     bool turn_on_display_at_startup() override;
 
@@ -100,6 +94,7 @@ private:
     std::shared_ptr<ProximitySensor> proximity_sensor;
     std::shared_ptr<SessionTracker> session_tracker;
     std::shared_ptr<StateMachineFactory> state_machine_factory;
+    std::shared_ptr<StateMachineOptions> state_machine_options;
     std::shared_ptr<SystemPowerControl> system_power_control;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<UnityPowerButton> unity_power_button;

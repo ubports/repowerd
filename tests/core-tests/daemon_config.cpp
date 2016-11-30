@@ -32,6 +32,7 @@
 #include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_session_tracker.h"
+#include "fake_state_machine_options.h"
 #include "fake_system_power_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
@@ -113,6 +114,13 @@ std::shared_ptr<repowerd::StateMachineFactory> rt::DaemonConfig::the_state_machi
     return state_machine_factory;
 }
 
+std::shared_ptr<repowerd::StateMachineOptions> rt::DaemonConfig::the_state_machine_options()
+{
+    if (!state_machine_options)
+        state_machine_options = std::make_shared<FakeStateMachineOptions>();
+    return state_machine_options;
+}
+
 std::shared_ptr<repowerd::SystemPowerControl> rt::DaemonConfig::the_system_power_control()
 {
     return the_fake_system_power_control();
@@ -131,42 +139,6 @@ std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
 std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_service()
 {
     return the_fake_voice_call_service();
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::notification_expiration_timeout()
-{
-    return 60s;
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::power_button_long_press_timeout()
-{
-    return 2s;
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::user_inactivity_normal_display_dim_duration()
-{
-    return 10s;
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::user_inactivity_normal_display_off_timeout()
-{
-    return 60s;
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::user_inactivity_post_notification_display_off_timeout()
-{
-    return 3s;
-}
-
-std::chrono::milliseconds
-rt::DaemonConfig::user_inactivity_reduced_display_off_timeout()
-{
-    return 8s;
 }
 
 bool rt::DaemonConfig::turn_on_display_at_startup()

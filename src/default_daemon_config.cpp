@@ -25,6 +25,7 @@
 #include "adapters/android_device_quirks.h"
 #include "adapters/backlight_brightness_control.h"
 #include "adapters/console_log.h"
+#include "adapters/default_state_machine_options.h"
 #include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
 #include "adapters/libsuspend_system_power_control.h"
@@ -44,8 +45,6 @@
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
 #include "adapters/upower_power_source.h"
-
-using namespace std::chrono_literals;
 
 namespace
 {
@@ -280,6 +279,14 @@ repowerd::DefaultDaemonConfig::the_state_machine_factory()
     return state_machine_factory;
 }
 
+std::shared_ptr<repowerd::StateMachineOptions>
+repowerd::DefaultDaemonConfig::the_state_machine_options()
+{
+    if (!state_machine_options)
+        state_machine_options = std::make_shared<DefaultStateMachineOptions>();
+    return state_machine_options;
+}
+
 std::shared_ptr<repowerd::SystemPowerControl>
 repowerd::DefaultDaemonConfig::the_system_power_control()
 {
@@ -336,42 +343,6 @@ std::shared_ptr<repowerd::VoiceCallService>
 repowerd::DefaultDaemonConfig::the_voice_call_service()
 {
     return the_ofono_voice_call_service();
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::notification_expiration_timeout()
-{
-    return 60s;
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::power_button_long_press_timeout()
-{
-    return 2s;
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::user_inactivity_normal_display_dim_duration()
-{
-    return 10s;
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::user_inactivity_normal_display_off_timeout()
-{
-    return 60s;
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::user_inactivity_post_notification_display_off_timeout()
-{
-    return 5s;
-}
-
-std::chrono::milliseconds
-repowerd::DefaultDaemonConfig::user_inactivity_reduced_display_off_timeout()
-{
-    return 10s;
 }
 
 bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()

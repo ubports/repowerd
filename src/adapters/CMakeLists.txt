@@ -30,6 +30,7 @@ set(
     dbus_event_loop.cpp
     dbus_message_handle.cpp
     dev_alarm_wakeup_service.cpp
+    default_state_machine_options.cpp
     event_loop.cpp
     event_loop_timer.cpp
     fd.cpp

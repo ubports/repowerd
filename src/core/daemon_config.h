@@ -38,6 +38,7 @@ class PowerSource;
 class ProximitySensor;
 class SessionTracker;
 class StateMachineFactory;
+class StateMachineOptions;
 class SystemPowerControl;
 class Timer;
 class UserActivity;
@@ -62,17 +63,11 @@ public:
     virtual std::shared_ptr<ProximitySensor> the_proximity_sensor() = 0;
     virtual std::shared_ptr<SessionTracker> the_session_tracker() = 0;
     virtual std::shared_ptr<StateMachineFactory> the_state_machine_factory() = 0;
+    virtual std::shared_ptr<StateMachineOptions> the_state_machine_options() = 0;
     virtual std::shared_ptr<SystemPowerControl> the_system_power_control() = 0;
     virtual std::shared_ptr<Timer> the_timer() = 0;
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
     virtual std::shared_ptr<VoiceCallService> the_voice_call_service() = 0;
-
-    virtual std::chrono::milliseconds notification_expiration_timeout() = 0;
-    virtual std::chrono::milliseconds power_button_long_press_timeout() = 0;
-    virtual std::chrono::milliseconds user_inactivity_normal_display_dim_duration() = 0;
-    virtual std::chrono::milliseconds user_inactivity_normal_display_off_timeout() = 0;
-    virtual std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() = 0;
-    virtual std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() = 0;
 
     virtual bool turn_on_display_at_startup() = 0;
 

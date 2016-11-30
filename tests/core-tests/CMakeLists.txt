@@ -25,6 +25,7 @@ add_executable(
     fake_power_source.cpp
     fake_proximity_sensor.cpp
     fake_session_tracker.cpp
+    fake_state_machine_options.cpp
     fake_timer.cpp
     fake_user_activity.cpp
     fake_voice_call_service.cpp
