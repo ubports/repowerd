@@ -18,7 +18,36 @@
 
 #include "default_state_machine_options.h"
 
+#include <hybris/properties/properties.h>
+
 using namespace std::chrono_literals;
+
+namespace
+{
+
+std::string determine_device_name()
+{
+    char name[PROP_VALUE_MAX] = "";
+    property_get("ro.product.device", name, "");
+    return name;
+}
+
+bool treat_power_button_as_user_activity_for(
+    std::string const& device_name)
+{
+    // On non-phablet/non-android devices the power button
+    // is treated as a generic power-state-changing user activity, i.e.,
+    // it can turn on the screen but not turn it off
+    return device_name.empty();
+}
+
+}
+
+repowerd::DefaultStateMachineOptions::DefaultStateMachineOptions()
+    : treat_power_button_as_user_activity_{
+        treat_power_button_as_user_activity_for(determine_device_name())}
+{
+}
 
 std::chrono::milliseconds
 repowerd::DefaultStateMachineOptions::notification_expiration_timeout() const
@@ -54,6 +83,11 @@ std::chrono::milliseconds
 repowerd::DefaultStateMachineOptions::user_inactivity_reduced_display_off_timeout() const
 {
     return 10s;
+}
+
+bool repowerd::DefaultStateMachineOptions::treat_power_button_as_user_activity() const
+{
+    return treat_power_button_as_user_activity_;
 }
 
 bool repowerd::DefaultStateMachineOptions::turn_on_display_at_startup() const

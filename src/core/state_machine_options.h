@@ -36,6 +36,7 @@ public:
     virtual std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() const = 0;
     virtual std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() const = 0;
 
+    virtual bool treat_power_button_as_user_activity() const = 0;
     virtual bool turn_on_display_at_startup() const = 0;
 
 protected:

@@ -68,6 +68,8 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
           config.the_state_machine_options()->user_inactivity_post_notification_display_off_timeout()},
       notification_expiration_timeout{
           config.the_state_machine_options()->notification_expiration_timeout()},
+      treat_power_button_as_user_activity{
+          config.the_state_machine_options()->treat_power_button_as_user_activity()},
       turn_on_display_at_startup{
           config.the_state_machine_options()->turn_on_display_at_startup()},
       scheduled_timeout_type{ScheduledTimeoutType::none},
@@ -245,7 +247,14 @@ void repowerd::DefaultStateMachine::handle_power_button_press()
 
     display_power_mode_at_power_button_press = display_power_mode;
 
-    if (display_power_mode == DisplayPowerMode::off)
+    if (treat_power_button_as_user_activity &&
+        display_power_mode == DisplayPowerMode::on)
+    {
+        brighten_display();
+        schedule_normal_user_inactivity_alarm();
+        display_power_mode_reason = DisplayPowerChangeReason::power_button;
+    }
+    else if (display_power_mode == DisplayPowerMode::off)
     {
         turn_on_display_with_normal_timeout(DisplayPowerChangeReason::power_button);
     }
@@ -262,7 +271,8 @@ void repowerd::DefaultStateMachine::handle_power_button_release()
     {
         power_button_long_press_detected = false;
     }
-    else if (display_power_mode_at_power_button_press == DisplayPowerMode::on)
+    else if (display_power_mode_at_power_button_press == DisplayPowerMode::on &&
+             !treat_power_button_as_user_activity)
     {
         turn_off_display(DisplayPowerChangeReason::power_button);
     }

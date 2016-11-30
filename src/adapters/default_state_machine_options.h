@@ -26,6 +26,8 @@ namespace repowerd
 class DefaultStateMachineOptions : public StateMachineOptions
 {
 public:
+    DefaultStateMachineOptions();
+
     std::chrono::milliseconds notification_expiration_timeout() const override;
     std::chrono::milliseconds power_button_long_press_timeout() const override;
     std::chrono::milliseconds user_inactivity_normal_display_dim_duration() const override;
@@ -33,7 +35,11 @@ public:
     std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() const override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() const override;
 
+    bool treat_power_button_as_user_activity() const override;
     bool turn_on_display_at_startup() const override;
+
+private:
+    bool const treat_power_button_as_user_activity_;
 };
 
 }

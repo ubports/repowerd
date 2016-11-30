@@ -33,6 +33,7 @@ add_executable(
     run_daemon.cpp
 
     test_client_requests.cpp
+    test_treat_power_button_as_user_activity.cpp
     test_daemon.cpp
     test_fake_timer.cpp
     test_modem_power_control.cpp

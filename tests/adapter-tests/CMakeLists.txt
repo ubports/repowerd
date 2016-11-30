@@ -41,6 +41,7 @@ add_executable(
     test_android_device_quirks.cpp
     test_backlight_brightness_control.cpp
     test_brightness_params.cpp
+    test_default_state_machine_options.cpp
     test_dev_alarm_wakeup_service.cpp
     test_event_loop_timer.cpp
     test_fd.cpp

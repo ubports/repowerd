@@ -35,6 +35,7 @@ public:
     std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() const override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() const override;
 
+    bool treat_power_button_as_user_activity() const override;
     bool turn_on_display_at_startup() const override;
 };
 

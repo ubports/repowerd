@@ -57,6 +57,11 @@ rt::FakeStateMachineOptions::user_inactivity_reduced_display_off_timeout() const
     return 10s;
 }
 
+bool rt::FakeStateMachineOptions::treat_power_button_as_user_activity() const
+{
+    return false;
+}
+
 bool rt::FakeStateMachineOptions::turn_on_display_at_startup() const
 {
     return false;

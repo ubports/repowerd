@@ -135,6 +135,7 @@ private:
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const notification_expiration_timeout;
+    bool const treat_power_button_as_user_activity;
     bool const turn_on_display_at_startup;
     ScheduledTimeoutType scheduled_timeout_type;
 
