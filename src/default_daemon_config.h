@@ -59,8 +59,6 @@ public:
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
 
-    bool turn_on_display_at_startup() override;
-
     std::shared_ptr<Backlight> the_backlight();
     std::shared_ptr<BacklightBrightnessControl> the_backlight_brightness_control();
     std::shared_ptr<BrightnessNotification> the_brightness_notification();

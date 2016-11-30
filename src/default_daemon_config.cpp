@@ -345,11 +345,6 @@ repowerd::DefaultDaemonConfig::the_voice_call_service()
     return the_ofono_voice_call_service();
 }
 
-bool repowerd::DefaultDaemonConfig::turn_on_display_at_startup()
-{
-    return true;
-}
-
 std::shared_ptr<repowerd::Backlight>
 repowerd::DefaultDaemonConfig::the_backlight()
 {

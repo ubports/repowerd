@@ -141,11 +141,6 @@ std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_ser
     return the_fake_voice_call_service();
 }
 
-bool rt::DaemonConfig::turn_on_display_at_startup()
-{
-    return false;
-}
-
 std::shared_ptr<NiceMock<rt::MockBrightnessControl>>
 rt::DaemonConfig::the_mock_brightness_control()
 {

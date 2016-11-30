@@ -69,8 +69,6 @@ public:
     virtual std::shared_ptr<UserActivity> the_user_activity() = 0;
     virtual std::shared_ptr<VoiceCallService> the_voice_call_service() = 0;
 
-    virtual bool turn_on_display_at_startup() = 0;
-
 protected:
     DaemonConfig() = default;
     DaemonConfig(DaemonConfig const&) = delete;

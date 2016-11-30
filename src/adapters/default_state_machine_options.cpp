@@ -55,3 +55,8 @@ repowerd::DefaultStateMachineOptions::user_inactivity_reduced_display_off_timeou
 {
     return 10s;
 }
+
+bool repowerd::DefaultStateMachineOptions::turn_on_display_at_startup() const
+{
+    return true;
+}

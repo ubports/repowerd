@@ -55,7 +55,6 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       timer{config.the_timer()},
       user_activity{config.the_user_activity()},
       voice_call_service{config.the_voice_call_service()},
-      turn_on_display_at_startup{config.turn_on_display_at_startup()},
       running{false}
 {
     sessions.emplace(repowerd::invalid_session_id, Session{std::make_shared<NullStateMachine>()});
@@ -396,9 +395,6 @@ void repowerd::Daemon::handle_session_activated(
                 Session{state_machine_factory->create_state_machine(session_id)}).first;
 
             iter->second.state_machine->start();
-
-            if (turn_on_display_at_startup)
-                iter->second.state_machine->handle_turn_on_display();
         }
         else
         {

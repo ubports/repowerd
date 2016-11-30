@@ -56,3 +56,8 @@ rt::FakeStateMachineOptions::user_inactivity_reduced_display_off_timeout() const
 {
     return 10s;
 }
+
+bool rt::FakeStateMachineOptions::turn_on_display_at_startup() const
+{
+    return false;
+}

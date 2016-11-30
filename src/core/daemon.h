@@ -87,7 +87,6 @@ private:
     std::shared_ptr<UserActivity> const user_activity;
     std::shared_ptr<VoiceCallService> const voice_call_service;
 
-    bool const turn_on_display_at_startup;
     bool running;
 
     std::unordered_map<std::string,Session> sessions;

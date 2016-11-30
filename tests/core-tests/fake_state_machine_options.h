@@ -34,6 +34,8 @@ public:
     std::chrono::milliseconds user_inactivity_normal_display_off_timeout() const override;
     std::chrono::milliseconds user_inactivity_post_notification_display_off_timeout() const override;
     std::chrono::milliseconds user_inactivity_reduced_display_off_timeout() const override;
+
+    bool turn_on_display_at_startup() const override;
 };
 
 }

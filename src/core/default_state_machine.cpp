@@ -68,6 +68,8 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
           config.the_state_machine_options()->user_inactivity_post_notification_display_off_timeout()},
       notification_expiration_timeout{
           config.the_state_machine_options()->notification_expiration_timeout()},
+      turn_on_display_at_startup{
+          config.the_state_machine_options()->turn_on_display_at_startup()},
       scheduled_timeout_type{ScheduledTimeoutType::none},
       paused{false},
       autobrightness_enabled{false},
@@ -321,14 +323,6 @@ void repowerd::DefaultStateMachine::handle_proximity_near()
         turn_off_display(DisplayPowerChangeReason::proximity);
 }
 
-void repowerd::DefaultStateMachine::handle_turn_on_display()
-{
-    log->log(log_tag, "handle_turn_on_display");
-
-    if (display_power_mode == DisplayPowerMode::off)
-        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
-}
-
 void repowerd::DefaultStateMachine::handle_user_activity_changing_power_state()
 {
     log->log(log_tag, "handle_user_activity_changing_power_state");
@@ -393,7 +387,11 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
 void repowerd::DefaultStateMachine::start()
 {
     log->log(log_tag, "start");
+
     system_power_control->disallow_default_system_handlers();
+
+    if (turn_on_display_at_startup)
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
 }
 
 void repowerd::DefaultStateMachine::pause()
