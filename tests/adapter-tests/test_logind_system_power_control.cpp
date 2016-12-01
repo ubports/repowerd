@@ -20,6 +20,7 @@
 #include "fake_log.h"
 #include "fake_shared.h"
 #include "fake_logind.h"
+#include "spin_wait.h"
 
 #include "src/adapters/logind_system_power_control.h"
 
@@ -46,11 +47,17 @@ struct ALogindSystemPowerControl : testing::Test
 
     void expect_inhibitions(std::unordered_set<std::string> const& inhibitions)
     {
+        rt::spin_wait_for_condition_or_timeout(
+            [&] { return fake_logind.active_inhibitions() == inhibitions; },
+            default_timeout);
         EXPECT_THAT(fake_logind.active_inhibitions(), ContainerEq(inhibitions));
     }
 
     void expect_no_inhibitions()
     {
+        rt::spin_wait_for_condition_or_timeout(
+            [&] { return fake_logind.active_inhibitions().empty(); },
+            default_timeout);
         EXPECT_THAT(fake_logind.active_inhibitions(), IsEmpty());
     }
 
