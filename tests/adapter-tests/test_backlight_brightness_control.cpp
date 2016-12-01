@@ -27,6 +27,7 @@
 #include "fake_device_quirks.h"
 #include "fake_log.h"
 #include "fake_shared.h"
+#include "spin_wait.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -204,6 +205,8 @@ struct ABacklightBrightnessControl : Test
     double const dim_percent =
         static_cast<double>(fake_device_config.brightness_dim_value) /
             fake_device_config.brightness_max_value;
+
+    std::chrono::seconds default_timeout{3};
 };
 
 MATCHER_P(IsAbout, a, "")
@@ -289,6 +292,10 @@ TEST_F(ABacklightBrightnessControl,
 {
     light_sensor.emit_light_if_enabled(500.0);
 
+    // BacklightBrightnessControl handles light events asynchronously,
+    // so we need to allow some time for the request to be processed
+    std::this_thread::sleep_for(100ms);
+
     EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
 }
 
@@ -299,7 +306,12 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.enable_autobrightness();
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+    // BacklightBrightnessControl handles light events asynchronously,
+    // so we need to allow some time for the request to be processed
+    rt::spin_wait_for_condition_or_timeout(
+        [&] { return autobrightness_algorithm.light_history.size() == 1; },
+        default_timeout);
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(1));
 }
 
 TEST_F(ABacklightBrightnessControl,
@@ -309,7 +321,12 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.set_normal_brightness();
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+    // BacklightBrightnessControl handles light events asynchronously,
+    // so we need to allow some time for the request to be processed
+    rt::spin_wait_for_condition_or_timeout(
+        [&] { return autobrightness_algorithm.light_history.size() == 1; },
+        default_timeout);
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(1));
 }
 
 TEST_F(ABacklightBrightnessControl,
