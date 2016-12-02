@@ -71,9 +71,9 @@ struct ALogindSystemPowerControl : testing::Test
         return "sleep:idle,repowerd," + id + ",block";
     }
 
-    std::string idle_inhibition_name()
+    std::string idle_and_lid_inhibition_name()
     {
-        return "idle,repowerd,repowerd handles idle,block";
+        return "idle:handle-lid-switch,repowerd,repowerd handles idle and lid,block";
     }
 
     std::chrono::seconds const default_timeout{3};
@@ -178,7 +178,7 @@ TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_adds_inhibiti
 
     system_power_control.disallow_default_system_handlers();
 
-    expect_inhibitions({idle_inhibition_name()});
+    expect_inhibitions({idle_and_lid_inhibition_name()});
 }
 
 TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_removes_inhibition)
@@ -216,15 +216,15 @@ TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_logs_inhibiti
 {
     system_power_control.disallow_default_system_handlers();
 
-    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle"}));
-    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle", "done"}));
+    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle:handle-lid-switch"}));
+    EXPECT_TRUE(fake_log.contains_line({"inhibit", "idle:handle-lid-switch", "done"}));
 }
 
 TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_logs_inhibition_release)
 {
     system_power_control.allow_default_system_handlers();
 
-    EXPECT_TRUE(fake_log.contains_line({"releasing", "idle", "inhibition"}));
+    EXPECT_TRUE(fake_log.contains_line({"releasing", "idle", "lid", "inhibition"}));
 }
 
 TEST_F(ALogindSystemPowerControl, power_off_is_logged)

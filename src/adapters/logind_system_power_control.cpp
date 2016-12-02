@@ -38,7 +38,7 @@ repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
     std::string const& dbus_bus_address)
     : log{log},
       dbus_connection{dbus_bus_address},
-      idle_inhibition_fd{-1}
+      idle_and_lid_inhibition_fd{-1}
 {
 }
 
@@ -89,17 +89,17 @@ void repowerd::LogindSystemPowerControl::allow_default_system_handlers()
 {
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
 
-    log->log(log_tag, "releasing idle inhibition");
+    log->log(log_tag, "releasing idle and lid inhibition");
 
-    idle_inhibition_fd = Fd{-1};
+    idle_and_lid_inhibition_fd = Fd{-1};
 }
 
 void repowerd::LogindSystemPowerControl::disallow_default_system_handlers()
 {
-    auto inhibition_fd = dbus_inhibit("idle", "repowerd handles idle");
+    auto inhibition_fd = dbus_inhibit("idle:handle-lid-switch", "repowerd handles idle and lid");
 
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
-    idle_inhibition_fd = std::move(inhibition_fd);
+    idle_and_lid_inhibition_fd = std::move(inhibition_fd);
 }
 
 repowerd::Fd repowerd::LogindSystemPowerControl::dbus_inhibit(
