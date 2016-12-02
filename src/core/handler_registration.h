@@ -27,14 +27,16 @@ namespace repowerd
 class HandlerRegistration
 {
 public:
-    HandlerRegistration() = default;
+    HandlerRegistration();
     HandlerRegistration(std::function<void()> const& unregister);
+
+    HandlerRegistration(HandlerRegistration&& other);
+    HandlerRegistration& operator=(HandlerRegistration&& other);
+
     ~HandlerRegistration();
-    HandlerRegistration(HandlerRegistration&& reg) = default;
-    HandlerRegistration& operator=(HandlerRegistration&& reg) = default;
 
 private:
-    std::unique_ptr<std::function<void()>> unregister;
+    std::function<void()> unregister;
 };
 
 }

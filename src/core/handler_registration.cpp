@@ -18,12 +18,41 @@
 
 #include "handler_registration.h"
 
+namespace
+{
+auto const null_unregister = []{};
+}
+
+repowerd::HandlerRegistration::HandlerRegistration()
+    : unregister{null_unregister}
+{
+}
+
 repowerd::HandlerRegistration::HandlerRegistration(std::function<void()> const& unregister)
-    : unregister{std::make_unique<std::function<void()>>(unregister)}
+    : unregister{unregister}
 {
 }
 
 repowerd::HandlerRegistration::~HandlerRegistration()
 {
-    if (unregister) (*unregister)();
+    unregister();
+}
+
+repowerd::HandlerRegistration::HandlerRegistration(HandlerRegistration&& other)
+    : unregister{std::move(other.unregister)}
+{
+    other.unregister = null_unregister;
+}
+
+repowerd::HandlerRegistration&
+repowerd::HandlerRegistration::operator=(HandlerRegistration&& other)
+{
+    if (&other != this)
+    {
+        unregister();
+        unregister = std::move(other.unregister);
+        other.unregister = null_unregister;
+    }
+
+    return *this;
 }

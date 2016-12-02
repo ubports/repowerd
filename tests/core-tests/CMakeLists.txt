@@ -36,6 +36,7 @@ add_executable(
     test_treat_power_button_as_user_activity.cpp
     test_daemon.cpp
     test_fake_timer.cpp
+    test_handler_registration.cpp
     test_modem_power_control.cpp
     test_notification.cpp
     test_performance_booster.cpp
