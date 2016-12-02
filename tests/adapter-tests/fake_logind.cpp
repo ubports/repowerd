@@ -45,6 +45,9 @@ char const* const logind_introspection = R"(<!DOCTYPE node PUBLIC '-//freedeskto
         <method name='PowerOff'>
             <arg name='interactive' type='b'/>
         </method>
+        <method name='Suspend'>
+            <arg name='interactive' type='b'/>
+        </method>
         <signal name='SessionAdded'>
             <arg name='name' type='s'/>
             <arg name='path' type='o'/>
@@ -255,11 +258,11 @@ std::unordered_set<std::string> rt::FakeLogind::active_inhibitions()
     return ret;
 }
 
-std::string rt::FakeLogind::power_off_requests()
+std::string rt::FakeLogind::power_requests()
 {
     std::lock_guard<std::mutex> lock{sessions_mutex};
 
-    return power_off_requests_;
+    return power_requests_;
 }
 
 void rt::FakeLogind::dbus_method_call(
@@ -396,7 +399,20 @@ void rt::FakeLogind::dbus_method_call(
 
         {
             std::lock_guard<std::mutex> lock{sessions_mutex};
-            power_off_requests_.append(interactive ? "t" : "f");
+            power_requests_.append(interactive ? "[power-off:t]" : "[power-off:f]");
+        }
+
+        g_dbus_method_invocation_return_value(invocation, nullptr);
+    }
+    else if (interface_name == "org.freedesktop.login1.Manager" &&
+             method_name == "Suspend")
+    {
+        gboolean interactive = TRUE;
+        g_variant_get(parameters, "(b)", &interactive);
+
+        {
+            std::lock_guard<std::mutex> lock{sessions_mutex};
+            power_requests_.append(interactive ? "[suspend:t]" : "[suspend:f]");
         }
 
         g_dbus_method_invocation_return_value(invocation, nullptr);

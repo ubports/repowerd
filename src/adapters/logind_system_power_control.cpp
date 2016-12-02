@@ -74,6 +74,15 @@ void repowerd::LogindSystemPowerControl::power_off()
 
 void repowerd::LogindSystemPowerControl::suspend_if_allowed()
 {
+    auto const allowed_to_suspend =
+        [this]
+        {
+            std::lock_guard<std::mutex> lock{inhibitions_mutex};
+            return suspend_disallowances.empty();
+        };
+
+    if (allowed_to_suspend())
+        dbus_suspend();
 }
 
 void repowerd::LogindSystemPowerControl::allow_default_system_handlers()
@@ -166,6 +175,35 @@ void repowerd::LogindSystemPowerControl::dbus_power_off()
         log->log(log_tag, "dbus_power_off() failed: %s", error.message_str().c_str());
     else
         log->log(log_tag, "dbus_power_off() done");
+
+    g_variant_unref(result);
+}
+
+void repowerd::LogindSystemPowerControl::dbus_suspend()
+{
+    int constexpr timeout_default = -1;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+
+    log->log(log_tag, "dbus_suspend()...");
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        dbus_logind_name,
+        dbus_manager_path,
+        dbus_manager_interface,
+        "Suspend",
+        g_variant_new("(b)", FALSE),
+        nullptr,
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_default,
+        null_cancellable,
+        error);
+
+    if (!result)
+        log->log(log_tag, "dbus_suspend() failed: %s", error.message_str().c_str());
+    else
+        log->log(log_tag, "dbus_suspend() done");
 
     g_variant_unref(result);
 }

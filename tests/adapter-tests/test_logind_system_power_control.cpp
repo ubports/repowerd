@@ -61,9 +61,9 @@ struct ALogindSystemPowerControl : testing::Test
         EXPECT_THAT(fake_logind.active_inhibitions(), IsEmpty());
     }
 
-    void expect_power_off_requests(std::string const& power_off_requests)
+    void expect_power_requests(std::string const& power_requests)
     {
-        EXPECT_THAT(fake_logind.power_off_requests(), StrEq(power_off_requests));
+        EXPECT_THAT(fake_logind.power_requests(), StrEq(power_requests));
     }
 
     std::string inhibition_name_for_id(std::string const& id)
@@ -135,7 +135,41 @@ TEST_F(ALogindSystemPowerControl, powers_off_system)
 {
     system_power_control.power_off();
 
-    expect_power_off_requests("f");
+    expect_power_requests("[power-off:f]");
+}
+
+TEST_F(ALogindSystemPowerControl, suspend_if_allowed_suspends_if_no_disallowances)
+{
+    expect_power_requests("");
+
+    system_power_control.suspend_if_allowed();
+
+    expect_power_requests("[suspend:f]");
+}
+
+TEST_F(ALogindSystemPowerControl, suspend_if_allowed_does_not_suspend_if_there_are_disallowances)
+{
+    expect_power_requests("");
+
+    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
+    system_power_control.suspend_if_allowed();
+
+    expect_power_requests("");
+}
+
+TEST_F(ALogindSystemPowerControl,
+       suspend_if_allowed_suspends_after_disallowance_have_been_removed)
+{
+    expect_power_requests("");
+
+    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
+    system_power_control.disallow_suspend("id2", repowerd::SuspendType::any);
+    system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
+    system_power_control.allow_suspend("id2", repowerd::SuspendType::any);
+
+    system_power_control.suspend_if_allowed();
+
+    expect_power_requests("[suspend:f]");
 }
 
 TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_adds_inhibition)
@@ -199,4 +233,12 @@ TEST_F(ALogindSystemPowerControl, power_off_is_logged)
 
     EXPECT_TRUE(fake_log.contains_line({"power_off"}));
     EXPECT_TRUE(fake_log.contains_line({"power_off", "done"}));
+}
+
+TEST_F(ALogindSystemPowerControl, suspend_is_logged)
+{
+    system_power_control.suspend_if_allowed();
+
+    EXPECT_TRUE(fake_log.contains_line({"suspend"}));
+    EXPECT_TRUE(fake_log.contains_line({"suspend", "done"}));
 }

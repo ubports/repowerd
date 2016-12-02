@@ -52,6 +52,7 @@ private:
 
     Fd dbus_inhibit(char const* what, char const* who);
     void dbus_power_off();
+    void dbus_suspend();
 
     std::mutex inhibitions_mutex;
     std::unordered_map<std::string, Fd> suspend_disallowances;
