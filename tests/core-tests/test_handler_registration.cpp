@@ -88,7 +88,11 @@ TEST(AHandlerRegistration, move_assignment_handles_self_assignment)
 
     {
         repowerd::HandlerRegistration reg{[&] { unregistered = true; }};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wself-move"
         reg = std::move(reg);
+#pragma GCC diagnostic pop
         EXPECT_FALSE(unregistered);
     }
 
