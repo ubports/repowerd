@@ -1,3 +1,11 @@
+repowerd (2016.10.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * 2016.10.1 release:
+    - Fix "[mako] Alarm doesn't ring when screen locked" (LP: #1588526)
+    - Fix "[mako] Awful life battery since OTA 13" (LP: #1630382)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 06 Dec 2016 15:57:26 +0200
+
 repowerd (2016.10+16.10.20161007-0ubuntu1) yakkety; urgency=medium
 
   * New 2016.10 release
