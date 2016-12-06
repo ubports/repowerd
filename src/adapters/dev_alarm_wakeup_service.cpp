@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <system_error>
-#include <limits>
 
 namespace
 {
@@ -77,12 +76,12 @@ repowerd::DevAlarmWakeupService::DevAlarmWakeupService(
                 {
                     auto const wakeup = *wakeups.begin();
                     wakeups.erase(wakeups.begin());
-                    reset_hardware_alarm();
                     auto const handler = wakeup_handler;
                     lock.unlock();
                     handler(wakeup.second);
                     lock.lock();
                 }
+                reset_hardware_alarm();
             }
         });
 }
@@ -160,8 +159,7 @@ void repowerd::DevAlarmWakeupService::reset_hardware_alarm()
     {
         if (wakeups.empty())
         {
-            next_wakeup.tv_sec = std::numeric_limits<decltype(next_wakeup.tv_sec)>::max();
-            next_wakeup.tv_nsec = std::numeric_limits<decltype(next_wakeup.tv_nsec)>::max();
+            next_wakeup = to_timespec(system_clock::now() + std::chrono::hours(24 * 30));
         }
         else
         {
