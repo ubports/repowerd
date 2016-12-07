@@ -36,9 +36,13 @@ std::string determine_device_name()
     return name;
 }
 
-std::chrono::milliseconds synthetic_initial_proximity_event_delay_for(std::string)
+std::chrono::milliseconds synthetic_initial_proximity_event_delay_for(std::string const& device_name)
 {
-    return 500ms;
+    // Mako can be a bit slow to report proximity when waking from suspend
+    if (device_name == "mako")
+        return 700ms;
+    else
+        return 500ms;
 }
 
 repowerd::AndroidDeviceQuirks::ProximityEventType
