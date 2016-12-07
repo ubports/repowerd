@@ -104,6 +104,8 @@ struct AUPowerPowerSource : testing::Test
         rt::FakeUPower::DeviceInfo::for_battery(rt::FakeUPower::DeviceState::discharging);
     rt::FakeUPower::DeviceInfo const charging_battery =
         rt::FakeUPower::DeviceInfo::for_battery(rt::FakeUPower::DeviceState::charging);
+    rt::FakeUPower::DeviceInfo const pending_charge_battery =
+        rt::FakeUPower::DeviceInfo::for_battery(rt::FakeUPower::DeviceState::pending_charge);
 
     std::chrono::seconds const default_timeout{3};
 };
@@ -148,6 +150,21 @@ TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_charging)
 
     fake_upower.change_device(device_path(1), discharging_battery);
     fake_upower.change_device(device_path(1), charging_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUPowerPowerSource, notifies_of_change_from_discharging_to_pending_charge)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, power_source_change())
+        .WillOnce(Return())
+        .WillOnce(WakeUp(&request_processed));
+
+    fake_upower.change_device(device_path(1), discharging_battery);
+    fake_upower.change_device(device_path(1), pending_charge_battery);
 
     request_processed.wait_for(default_timeout);
     EXPECT_TRUE(request_processed.woken());
