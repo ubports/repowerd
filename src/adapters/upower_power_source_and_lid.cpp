@@ -335,7 +335,8 @@ void repowerd::UPowerPowerSourceAndLid::change_device(
         if (new_info.state == static_cast<uint32_t>(DeviceState::discharging) ||
             (old_info.state == static_cast<uint32_t>(DeviceState::discharging) &&
              (new_info.state == static_cast<uint32_t>(DeviceState::charging) ||
-              new_info.state == static_cast<uint32_t>(DeviceState::fully_charged))))
+              new_info.state == static_cast<uint32_t>(DeviceState::fully_charged) ||
+              new_info.state == static_cast<uint32_t>(DeviceState::pending_charge))))
         {
             change = true;
         }
