@@ -40,6 +40,7 @@ set(
     path.cpp
     real_chrono.cpp
     real_filesystem.cpp
+    real_temporary_suspend_inhibition.cpp
     syslog_log.cpp
     sysfs_backlight.cpp
     system_shutdown_control.cpp

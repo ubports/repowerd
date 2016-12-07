@@ -18,37 +18,23 @@
 
 #pragma once
 
-#include "src/core/suspend_control.h"
-
-#include <gmock/gmock.h>
-
-#include <unordered_set>
-#include <mutex>
+#include <chrono>
+#include <string>
 
 namespace repowerd
 {
-namespace test
-{
 
-class FakeSuspendControl : public SuspendControl
+class TemporarySuspendInhibition
 {
 public:
-    void allow_suspend(std::string const& id) override;
-    void disallow_suspend(std::string const& id) override;
+    virtual ~TemporarySuspendInhibition() = default;
 
-    bool is_suspend_allowed();
+    virtual void inhibit_suspend_for(std::chrono::milliseconds timeout, std::string const& name) = 0;
 
-    struct MockMethods
-    {
-        MOCK_METHOD1(allow_suspend, void(std::string const&));
-        MOCK_METHOD1(disallow_suspend, void(std::string const&));
-    };
-    testing::NiceMock<MockMethods> mock;
-
-private:
-    std::mutex mutex;
-    std::unordered_set<std::string> suspend_disallowances;
+protected:
+    TemporarySuspendInhibition() = default;
+    TemporarySuspendInhibition(TemporarySuspendInhibition const&) = delete;
+    TemporarySuspendInhibition& operator=(TemporarySuspendInhibition const&) = delete;
 };
 
-}
 }

@@ -18,37 +18,27 @@
 
 #pragma once
 
-#include "src/core/suspend_control.h"
+#include "temporary_suspend_inhibition.h"
+#include "event_loop.h"
 
-#include <gmock/gmock.h>
-
-#include <unordered_set>
-#include <mutex>
+#include <atomic>
+#include <memory>
 
 namespace repowerd
 {
-namespace test
-{
+class SuspendControl;
 
-class FakeSuspendControl : public SuspendControl
+class RealTemporarySuspendInhibition : public TemporarySuspendInhibition
 {
 public:
-    void allow_suspend(std::string const& id) override;
-    void disallow_suspend(std::string const& id) override;
+    RealTemporarySuspendInhibition(std::shared_ptr<SuspendControl> const& suspend_control);
 
-    bool is_suspend_allowed();
-
-    struct MockMethods
-    {
-        MOCK_METHOD1(allow_suspend, void(std::string const&));
-        MOCK_METHOD1(disallow_suspend, void(std::string const&));
-    };
-    testing::NiceMock<MockMethods> mock;
+    void inhibit_suspend_for(std::chrono::milliseconds timeout, std::string const& name) override;
 
 private:
-    std::mutex mutex;
-    std::unordered_set<std::string> suspend_disallowances;
+    std::shared_ptr<SuspendControl> const suspend_control;
+    EventLoop event_loop;
+    std::atomic<unsigned int> id;
 };
 
-}
 }

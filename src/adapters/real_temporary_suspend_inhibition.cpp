@@ -16,39 +16,29 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#pragma once
+#include "real_temporary_suspend_inhibition.h"
 
 #include "src/core/suspend_control.h"
 
-#include <gmock/gmock.h>
-
-#include <unordered_set>
-#include <mutex>
-
-namespace repowerd
+repowerd::RealTemporarySuspendInhibition::RealTemporarySuspendInhibition(
+    std::shared_ptr<SuspendControl> const& suspend_control)
+    : suspend_control{suspend_control},
+      id{0}
 {
-namespace test
-{
-
-class FakeSuspendControl : public SuspendControl
-{
-public:
-    void allow_suspend(std::string const& id) override;
-    void disallow_suspend(std::string const& id) override;
-
-    bool is_suspend_allowed();
-
-    struct MockMethods
-    {
-        MOCK_METHOD1(allow_suspend, void(std::string const&));
-        MOCK_METHOD1(disallow_suspend, void(std::string const&));
-    };
-    testing::NiceMock<MockMethods> mock;
-
-private:
-    std::mutex mutex;
-    std::unordered_set<std::string> suspend_disallowances;
-};
-
 }
+
+void repowerd::RealTemporarySuspendInhibition::inhibit_suspend_for(
+    std::chrono::milliseconds timeout, std::string const& name)
+{
+    auto const cur_id = id++;
+    auto const suspend_id = name + std::to_string(cur_id);
+
+    suspend_control->disallow_suspend(suspend_id);
+
+    event_loop.schedule_in(
+        timeout,
+        [this, suspend_id]
+        {
+            suspend_control->allow_suspend(suspend_id);
+        });
 }
