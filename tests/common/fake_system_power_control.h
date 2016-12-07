@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 
 #include <unordered_set>
+#include <mutex>
 
 namespace repowerd
 {
@@ -58,6 +59,7 @@ public:
     testing::NiceMock<MockMethods> mock;
 
 private:
+    std::mutex mutex;
     std::unordered_set<std::string> automatic_suspend_disallowances;
     std::unordered_set<std::string> any_suspend_disallowances;
     bool are_default_system_handlers_allowed_;

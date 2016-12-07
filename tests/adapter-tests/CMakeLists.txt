@@ -53,6 +53,7 @@ add_executable(
     test_powerd_service.cpp
     test_real_chrono.cpp
     test_real_filesystem.cpp
+    test_real_temporary_suspend_inhibition.cpp
     test_sysfs_backlight.cpp
     test_ubuntu_light_sensor.cpp
     test_ubuntu_proximity_sensor.cpp
@@ -76,7 +77,7 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_TESTS)
-    set(ADAPTER_TESTS_FILTER "${ADAPTER_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*")
+    set(ADAPTER_TESTS_FILTER "${ADAPTER_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*:ARealTemporarySuspendInhibition.*")
 endif()
 
 add_test(
