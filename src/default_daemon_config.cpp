@@ -35,6 +35,7 @@
 #include "adapters/ofono_voice_call_service.h"
 #include "adapters/real_chrono.h"
 #include "adapters/real_filesystem.h"
+#include "adapters/real_temporary_suspend_inhibition.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
 #include "adapters/ubuntu_light_sensor.h"
@@ -511,6 +512,17 @@ repowerd::DefaultDaemonConfig::the_lid()
     return the_upower_power_source_and_lid();
 }
 
+std::shared_ptr<repowerd::TemporarySuspendInhibition>
+repowerd::DefaultDaemonConfig::the_temporary_suspend_inhibition()
+{
+    if (!temporary_suspend_inhibition)
+    {
+        temporary_suspend_inhibition = std::make_shared<RealTemporarySuspendInhibition>(
+            the_system_power_control());
+    }
+    return temporary_suspend_inhibition;
+}
+
 std::shared_ptr<repowerd::Log>
 repowerd::DefaultDaemonConfig::the_log()
 {
@@ -538,6 +550,7 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
             the_brightness_notification(),
             the_log(),
             the_system_power_control(),
+            the_temporary_suspend_inhibition(),
             *the_device_config(),
             the_dbus_bus_address());
     }

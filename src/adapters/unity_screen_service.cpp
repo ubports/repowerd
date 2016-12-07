@@ -21,6 +21,7 @@
 #include "brightness_notification.h"
 #include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
+#include "temporary_suspend_inhibition.h"
 #include "wakeup_service.h"
 
 #include "src/core/infinite_timeout.h"
@@ -155,11 +156,13 @@ repowerd::UnityScreenService::UnityScreenService(
     std::shared_ptr<BrightnessNotification> const& brightness_notification,
     std::shared_ptr<Log> const& log,
     std::shared_ptr<SystemPowerControl> const& system_power_control,
+    std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : wakeup_service{wakeup_service},
       brightness_notification{brightness_notification},
       system_power_control{system_power_control},
+      temporary_suspend_inhibition{temporary_suspend_inhibition},
       log{log},
       dbus_connection{dbus_bus_address},
       disable_inactivity_timeout_handler{null_arg2_handler},
@@ -237,8 +240,11 @@ void repowerd::UnityScreenService::start_processing()
         });
 
     wakeup_handler_registration = wakeup_service->register_wakeup_handler(
-        [this] (std::string const&)
+        [this] (std::string const& cookie)
         {
+            temporary_suspend_inhibition->inhibit_suspend_for(
+                std::chrono::seconds{3}, "Wakeup_" + cookie);
+
             dbus_event_loop.enqueue([this] { dbus_emit_Wakeup(); });
         });
 

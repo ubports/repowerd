@@ -32,6 +32,7 @@ class DeviceQuirks;
 class Filesystem;
 class LightSensor;
 class OfonoVoiceCallService;
+class TemporarySuspendInhibition;
 class UnityScreenService;
 class UnityPowerButton;
 class UPowerPowerSourceAndLid;
@@ -71,6 +72,7 @@ public:
     std::shared_ptr<Filesystem> the_filesystem();
     std::shared_ptr<LightSensor> the_light_sensor();
     std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
+    std::shared_ptr<TemporarySuspendInhibition> the_temporary_suspend_inhibition();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
     std::shared_ptr<UPowerPowerSourceAndLid> the_upower_power_source_and_lid();
@@ -97,6 +99,7 @@ private:
     std::shared_ptr<StateMachineOptions> state_machine_options;
     std::shared_ptr<SystemPowerControl> system_power_control;
     std::shared_ptr<Timer> timer;
+    std::shared_ptr<TemporarySuspendInhibition> temporary_suspend_inhibition;
     std::shared_ptr<UnityPowerButton> unity_power_button;
     std::shared_ptr<UnityScreenService> unity_screen_service;
     std::shared_ptr<UPowerPowerSourceAndLid> upower_power_source_and_lid;
