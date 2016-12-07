@@ -20,6 +20,7 @@
 #include "device_config.h"
 #include "event_loop_handler_registration.h"
 #include "scoped_g_error.h"
+#include "temporary_suspend_inhibition.h"
 
 #include "src/core/log.h"
 
@@ -65,9 +66,11 @@ catch (...)
 
 repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
     std::shared_ptr<Log> const& log,
+    std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : log{log},
+      temporary_suspend_inhibition{temporary_suspend_inhibition},
       critical_temperature{get_critical_temperature(device_config)},
       dbus_connection{dbus_bus_address},
       power_source_change_handler{null_handler},
@@ -360,6 +363,12 @@ void repowerd::UPowerPowerSourceAndLid::change_device(
                      new_info.temperature, critical_temperature);
             critical = true;
         }
+    }
+
+    if (critical || change)
+    {
+        temporary_suspend_inhibition->inhibit_suspend_for(
+            std::chrono::seconds{2}, "UPowerPowerSource");
     }
 
     if (critical)

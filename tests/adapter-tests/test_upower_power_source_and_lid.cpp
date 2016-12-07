@@ -26,6 +26,7 @@
 #include "wait_condition.h"
 
 #include "src/adapters/upower_power_source_and_lid.h"
+#include "src/adapters/temporary_suspend_inhibition.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -38,6 +39,11 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+struct MockTemporarySuspendInhibition : repowerd::TemporarySuspendInhibition
+{
+    MOCK_METHOD2(inhibit_suspend_for, void(std::chrono::milliseconds,std::string const&));
+};
 
 struct AUPowerPowerSourceAndLid : testing::Test
 {
@@ -95,8 +101,10 @@ struct AUPowerPowerSourceAndLid : testing::Test
     rt::DBusBus bus;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeLog fake_log;
+    NiceMock<MockTemporarySuspendInhibition> mock_temporary_suspend_inhibition;
     repowerd::UPowerPowerSourceAndLid upower_power_source_and_lid{
         rt::fake_shared(fake_log),
+        rt::fake_shared(mock_temporary_suspend_inhibition),
         fake_device_config,
         bus.address()};
     rt::FakeUPower fake_upower{bus.address()};
@@ -346,4 +354,33 @@ TEST_F(AUPowerPowerSourceAndLid, second_start_processing_is_ignored)
 
     EXPECT_THAT(fake_upower.num_enumerate_devices_calls(),
                 Eq(prev_num_calls));
+}
+
+TEST_F(AUPowerPowerSourceAndLid, inhibits_suspend_temporarily_on_change)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_temporary_suspend_inhibition, inhibit_suspend_for(2000ms, _))
+        .WillOnce(WakeUp(&request_processed));
+
+    fake_upower.change_device(device_path(1), discharging_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUPowerPowerSourceAndLid, inhibits_suspend_temporarily_on_critical_state)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_temporary_suspend_inhibition, inhibit_suspend_for(2000ms, _))
+        .WillOnce(WakeUp(&request_processed));
+
+    auto exploding_battery = discharging_battery;
+    // shutdown_battery_temperature is in celcius * 10
+    exploding_battery.temperature = fake_device_config.shutdown_battery_temperature * 0.1;
+    fake_upower.change_device(device_path(1), exploding_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
 }

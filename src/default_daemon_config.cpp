@@ -572,7 +572,10 @@ repowerd::DefaultDaemonConfig::the_upower_power_source_and_lid()
     if (!upower_power_source_and_lid)
     {
         upower_power_source_and_lid = std::make_shared<UPowerPowerSourceAndLid>(
-            the_log(), *the_device_config(), the_dbus_bus_address());
+            the_log(),
+            the_temporary_suspend_inhibition(),
+            *the_device_config(),
+            the_dbus_bus_address());
     }
 
     return upower_power_source_and_lid;

@@ -31,12 +31,14 @@ namespace repowerd
 {
 class Log;
 class DeviceConfig;
+class TemporarySuspendInhibition;
 
 class UPowerPowerSourceAndLid : public PowerSource, public Lid
 {
 public:
     UPowerPowerSourceAndLid(
         std::shared_ptr<Log> const& log,
+        std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
 
@@ -79,6 +81,7 @@ private:
     };
 
     std::shared_ptr<Log> const log;
+    std::shared_ptr<TemporarySuspendInhibition> const temporary_suspend_inhibition;
     double const critical_temperature;
 
     DBusConnectionHandle dbus_connection;
