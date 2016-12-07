@@ -30,12 +30,14 @@ namespace repowerd
 {
 class Log;
 class DeviceConfig;
+class TemporarySuspendInhibition;
 
 class UPowerPowerSource : public PowerSource
 {
 public:
     UPowerPowerSource(
         std::shared_ptr<Log> const& log,
+        std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
 
@@ -64,6 +66,7 @@ private:
     void change_device(std::string const& device, GVariantIter* properties_iter);
     GVariant* get_device_properties(std::string const& device);
     bool is_using_battery_power();
+    void disallow_suspend_temporarily();
 
     struct BatteryInfo
     {
@@ -74,6 +77,7 @@ private:
     };
 
     std::shared_ptr<Log> const log;
+    std::shared_ptr<TemporarySuspendInhibition> const temporary_suspend_inhibition;
     double const critical_temperature;
 
     DBusConnectionHandle dbus_connection;

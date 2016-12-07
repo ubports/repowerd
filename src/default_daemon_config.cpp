@@ -224,7 +224,7 @@ repowerd::DefaultDaemonConfig::the_power_source()
     if (!power_source)
     {
         power_source = std::make_shared<UPowerPowerSource>(
-            the_log(), *the_device_config(), the_dbus_bus_address());
+            the_log(), the_temporary_suspend_inhibition(), *the_device_config(), the_dbus_bus_address());
     }
 
     return power_source;
