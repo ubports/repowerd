@@ -25,6 +25,7 @@
 #include "unity_screen_dbus_client.h"
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
+#include "src/adapters/temporary_suspend_inhibition.h"
 #include "src/adapters/unity_screen_power_state_change_reason.h"
 #include "src/adapters/unity_screen_service.h"
 #include "src/core/infinite_timeout.h"
@@ -41,6 +42,11 @@ namespace rt = repowerd::test;
 
 namespace
 {
+
+struct NullTemporarySuspendInhibition : repowerd::TemporarySuspendInhibition
+{
+    void inhibit_suspend_for(std::chrono::milliseconds, std::string const&) {}
+};
 
 struct AUnityScreenService : testing::Test
 {
@@ -107,11 +113,13 @@ struct AUnityScreenService : testing::Test
     rt::FakeLog fake_log;
     rt::FakeSuspendControl fake_suspend_control;
     rt::FakeWakeupService fake_wakeup_service;
+    NullTemporarySuspendInhibition null_temporary_suspend_inhibition;
     repowerd::UnityScreenService service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
         rt::fake_shared(fake_log),
         rt::fake_shared(fake_suspend_control),
+        rt::fake_shared(null_temporary_suspend_inhibition),
         fake_device_config,
         bus.address()};
     rt::UnityScreenDBusClient client{bus.address()};

@@ -39,6 +39,7 @@ class BrightnessNotification;
 class DeviceConfig;
 class Log;
 class SuspendControl;
+class TemporarySuspendInhibition;
 class WakeupService;
 
 class UnityScreenService : public ClientRequests,
@@ -51,6 +52,7 @@ public:
         std::shared_ptr<BrightnessNotification> const& brightness_notification,
         std::shared_ptr<Log> const& log,
         std::shared_ptr<SuspendControl> const& suspend_control,
+        std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
 
@@ -131,6 +133,7 @@ private:
     std::shared_ptr<WakeupService> const wakeup_service;
     std::shared_ptr<BrightnessNotification> const brightness_notification;
     std::shared_ptr<SuspendControl> const suspend_control;
+    std::shared_ptr<TemporarySuspendInhibition> const temporary_suspend_inhibition;
     std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;

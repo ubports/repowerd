@@ -18,6 +18,7 @@
 
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_message_handle.h"
+#include "src/adapters/temporary_suspend_inhibition.h"
 #include "src/adapters/unity_screen_service.h"
 
 #include "dbus_bus.h"
@@ -48,6 +49,11 @@ namespace
 char const* const powerd_service_name = "com.canonical.powerd";
 char const* const powerd_path = "/com/canonical/powerd";
 char const* const powerd_interface = "com.canonical.powerd";
+
+struct MockTemporarySuspendInhibition : repowerd::TemporarySuspendInhibition
+{
+    MOCK_METHOD2(inhibit_suspend_for, void(std::chrono::milliseconds,std::string const&));
+};
 
 struct PowerdDBusClient : rt::DBusClient
 {
@@ -196,11 +202,13 @@ struct APowerdService : testing::Test
     rt::FakeLog fake_log;
     rt::FakeSuspendControl fake_suspend_control;
     rt::FakeWakeupService fake_wakeup_service;
+    NiceMock<MockTemporarySuspendInhibition> mock_temporary_suspend_inhibition;
     repowerd::UnityScreenService unity_screen_service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
         rt::fake_shared(fake_log),
         rt::fake_shared(fake_suspend_control),
+        rt::fake_shared(mock_temporary_suspend_inhibition),
         fake_device_config,
         bus.address()};
     PowerdDBusClient client{bus.address()};
@@ -369,6 +377,19 @@ TEST_F(APowerdService, clears_wakeup)
 
     EXPECT_THAT(wakeup_future.wait_for(std::chrono::milliseconds{100}),
                 Eq(std::future_status::timeout));
+}
+
+TEST_F(APowerdService, inhibits_suspend_temporarily_when_wakeup_is_triggered)
+{
+    auto const tp = std::chrono::system_clock::from_time_t(12345);
+
+    client.request_request_wakeup(tp).get();
+
+    auto const inhibition_timeout = std::chrono::milliseconds{3000};
+    EXPECT_CALL(mock_temporary_suspend_inhibition,
+                inhibit_suspend_for(inhibition_timeout, _));
+
+    fake_wakeup_service.emit_next_wakeup();
 }
 
 TEST_F(APowerdService, replies_to_get_brightness_params_request)
