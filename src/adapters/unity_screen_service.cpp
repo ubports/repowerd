@@ -810,7 +810,7 @@ pid_t repowerd::UnityScreenService::dbus_get_invocation_sender_pid(
     auto const result = g_dbus_connection_call_sync(
         dbus_connection,
         "org.freedesktop.DBus",
-        "/",
+        "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
         "GetConnectionUnixProcessID",
         g_variant_new("(s)", sender),
