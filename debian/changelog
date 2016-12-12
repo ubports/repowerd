@@ -1,4 +1,4 @@
-repowerd (2016.12-0ubuntu1) UNRELEASED; urgency=medium
+repowerd (2016.12+17.04.20161212.1-0ubuntu1) zesty; urgency=medium
 
   * New 2016.12 release
     - Support suspending with logind
@@ -9,7 +9,7 @@ repowerd (2016.12-0ubuntu1) UNRELEASED; urgency=medium
     - Fix "[mako] Alarm doesn't ring when screen locked" (LP: #1588526)
     - Fix "[mako] Awful life battery since OTA 13" (LP: #1630382)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 12 Dec 2016 16:35:39 +0200
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 12 Dec 2016 19:02:03 +0000
 
 repowerd (2016.11+17.04.20161124-0ubuntu1) zesty; urgency=medium
 
