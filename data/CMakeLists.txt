@@ -19,7 +19,7 @@ FILE(GLOB dbus_config_files "${CMAKE_CURRENT_SOURCE_DIR}/dbus-configs/*.conf")
 
 install(
   FILES ${device_config_files}
-  DESTINATION ${REPOWERD_DEVICE_CONFIGS_PATH}
+  DESTINATION ${REPOWERD_DEVICE_CONFIG_DIR}
 )
 
 install(

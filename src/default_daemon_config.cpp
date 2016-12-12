@@ -438,11 +438,20 @@ repowerd::DefaultDaemonConfig::the_device_config()
 {
     if (!device_config)
     {
+        auto const dir_env_cstr = getenv("REPOWERD_DEVICE_CONFIG_DIR");
+        std::string const dir_env{dir_env_cstr ? dir_env_cstr : ""};
+
+        std::vector<std::string> device_config_dirs{POWERD_DEVICE_CONFIG_DIR};
+
+        if (dir_env.empty())
+            device_config_dirs.push_back(REPOWERD_DEVICE_CONFIG_DIR);
+        else
+            device_config_dirs.push_back(dir_env);
+
         device_config = std::make_shared<AndroidDeviceConfig>(
             the_log(),
             the_filesystem(),
-            std::vector<std::string>{
-                POWERD_DEVICE_CONFIGS_PATH, REPOWERD_DEVICE_CONFIGS_PATH});
+            device_config_dirs);
     }
 
     return device_config;

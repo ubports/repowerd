@@ -173,3 +173,15 @@ TEST_F(AnAndroidDeviceConfig, logs_properties)
     EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfigwithoutprefix", "680"}));
     EXPECT_TRUE(fake_log->contains_line({"Property", "integerconfigwithoutprefixnew", "123"}));
 }
+
+TEST_F(AnAndroidDeviceConfig, logs_config_dirs)
+{
+    repowerd::AndroidDeviceConfig config{
+        fake_log,
+        fake_fs,
+        {config_dir_1, config_dir_2, config_dir_empty}};
+
+    EXPECT_TRUE(fake_log->contains_line({"config", "directory", config_dir_1}));
+    EXPECT_TRUE(fake_log->contains_line({"config", "directory", config_dir_2}));
+    EXPECT_TRUE(fake_log->contains_line({"config", "directory", config_dir_empty}));
+}

@@ -51,6 +51,9 @@ repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
     : log{log},
       filesystem{filesystem}
 {
+    for (auto const& dir : config_dirs)
+        log->log(log_tag, "Using config directory: %s", dir.c_str());
+
     parse_first_matching_file_in_dirs(config_dirs, "config-default.xml");
 
     auto const device_name = determine_device_name();

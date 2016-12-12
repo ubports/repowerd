@@ -14,8 +14,8 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_definitions(-DPOWERD_DEVICE_CONFIGS_PATH=\"${POWERD_DEVICE_CONFIGS_PATH}\")
-add_definitions(-DREPOWERD_DEVICE_CONFIGS_PATH=\"${REPOWERD_DEVICE_CONFIGS_PATH}\")
+add_definitions(-DPOWERD_DEVICE_CONFIG_DIR=\"${POWERD_DEVICE_CONFIG_DIR}\")
+add_definitions(-DREPOWERD_DEVICE_CONFIG_DIR=\"${REPOWERD_DEVICE_CONFIG_DIR}\")
 
 include_directories(
     ${CMAKE_SOURCE_DIR}
