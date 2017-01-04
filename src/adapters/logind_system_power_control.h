@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace repowerd
 {
@@ -40,8 +41,11 @@ public:
 
     void allow_suspend(std::string const& id, SuspendType suspend_type) override;
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
+
     void power_off() override;
     void suspend_if_allowed() override;
+    void suspend_when_allowed(std::string const& id) override;
+    void cancel_suspend_when_allowed(std::string const& id) override;
 
     void allow_default_system_handlers() override;
     void disallow_default_system_handlers() override;
@@ -56,6 +60,7 @@ private:
 
     std::mutex inhibitions_mutex;
     std::unordered_map<std::string, Fd> suspend_disallowances;
+    std::unordered_set<std::string> pending_suspends;
     Fd idle_and_lid_inhibition_fd;
 };
 

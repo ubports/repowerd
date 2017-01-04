@@ -209,12 +209,14 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
     if (display_power_mode == DisplayPowerMode::on)
         turn_off_display(DisplayPowerChangeReason::unknown);
 
-    system_power_control->suspend_if_allowed();
+    system_power_control->suspend_when_allowed("DefaultStateMachine::Lid");
 }
 
 void repowerd::DefaultStateMachine::handle_lid_open()
 {
     log->log(log_tag, "handle_lid_open()");
+
+    system_power_control->cancel_suspend_when_allowed("DefaultStateMachine::Lid");
 
     turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
 }

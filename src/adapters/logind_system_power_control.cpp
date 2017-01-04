@@ -48,11 +48,17 @@ void repowerd::LogindSystemPowerControl::allow_suspend(
     if (suspend_type != SuspendType::any)
         return;
 
-    std::lock_guard<std::mutex> lock{inhibitions_mutex};
+    std::unique_lock<std::mutex> lock{inhibitions_mutex};
 
     log->log(log_tag, "releasing inhibition for %s", id.c_str());
 
     suspend_disallowances.erase(id);
+
+    if (!pending_suspends.empty())
+    {
+        lock.unlock();
+        suspend_if_allowed();
+    }
 }
 
 void repowerd::LogindSystemPowerControl::disallow_suspend(
@@ -83,6 +89,23 @@ void repowerd::LogindSystemPowerControl::suspend_if_allowed()
 
     if (allowed_to_suspend())
         dbus_suspend();
+}
+
+void repowerd::LogindSystemPowerControl::suspend_when_allowed(std::string const& id)
+{
+    {
+        std::lock_guard<std::mutex> lock{inhibitions_mutex};
+        pending_suspends.insert(id);
+    }
+
+    suspend_if_allowed();
+}
+
+void repowerd::LogindSystemPowerControl::cancel_suspend_when_allowed(std::string const& id)
+{
+    std::lock_guard<std::mutex> lock{inhibitions_mutex};
+
+    pending_suspends.erase(id);
 }
 
 void repowerd::LogindSystemPowerControl::allow_default_system_handlers()

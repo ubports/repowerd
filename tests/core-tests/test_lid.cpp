@@ -29,21 +29,28 @@ namespace
 
 struct ALid : rt::AcceptanceTest
 {
-    void expect_suspend_if_allowed()
+    void expect_suspend_when_allowed()
     {
-        EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_if_allowed());
+        EXPECT_CALL(config.the_fake_system_power_control()->mock,
+                    suspend_when_allowed(_));
+    }
+
+    void expect_cancel_suspend_when_allowed()
+    {
+        EXPECT_CALL(config.the_fake_system_power_control()->mock,
+                    cancel_suspend_when_allowed(_));
     }
 };
 
 }
 
-TEST_F(ALid, closed_turns_off_display_beforing_suspending_if_allowed)
+TEST_F(ALid, closed_turns_off_display_beforing_suspending_when_allowed)
 {
     turn_on_display();
 
     InSequence s;
     expect_display_turns_off();
-    expect_suspend_if_allowed();
+    expect_suspend_when_allowed();
 
     close_lid();
 }
@@ -58,6 +65,12 @@ TEST_F(ALid, closed_is_logged)
 TEST_F(ALid, opened_turns_on_display)
 {
     expect_display_turns_on();
+    open_lid();
+}
+
+TEST_F(ALid, opened_cancels_suspend_when_allowed)
+{
+    expect_cancel_suspend_when_allowed();
     open_lid();
 }
 

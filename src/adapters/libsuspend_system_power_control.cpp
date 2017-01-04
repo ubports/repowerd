@@ -85,6 +85,16 @@ void repowerd::LibsuspendSystemPowerControl::suspend_if_allowed()
 {
 }
 
+void repowerd::LibsuspendSystemPowerControl::suspend_when_allowed(
+    std::string const&)
+{
+}
+
+void repowerd::LibsuspendSystemPowerControl::cancel_suspend_when_allowed(
+    std::string const&)
+{
+}
+
 void repowerd::LibsuspendSystemPowerControl::allow_default_system_handlers()
 {
 }

@@ -40,6 +40,8 @@ public:
 
     void power_off() override;
     void suspend_if_allowed() override;
+    void suspend_when_allowed(std::string const& id) override;
+    void cancel_suspend_when_allowed(std::string const& id) override;
 
     void allow_default_system_handlers() override;
     void disallow_default_system_handlers() override;
@@ -53,6 +55,8 @@ public:
         MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD0(power_off, void());
         MOCK_METHOD0(suspend_if_allowed, void());
+        MOCK_METHOD1(suspend_when_allowed, void(std::string const&));
+        MOCK_METHOD1(cancel_suspend_when_allowed, void(std::string const&));
         MOCK_METHOD0(allow_default_system_handlers, void());
         MOCK_METHOD0(disallow_default_system_handlers, void());
     };
