@@ -18,8 +18,18 @@
 
 #include "event_loop.h"
 
+#include <pthread.h>
+
 namespace
 {
+
+void set_thread_name(std::thread& thread, std::string const& name)
+{
+    static size_t const max_name_len = 15;
+    auto const proper_name = name.substr(0, max_name_len);
+
+    pthread_setname_np(thread.native_handle(), proper_name.c_str());
+}
 
 struct GSourceContext
 {
@@ -49,7 +59,7 @@ struct GSourceContext
 
 }
 
-repowerd::EventLoop::EventLoop()
+repowerd::EventLoop::EventLoop(std::string const& name)
     : main_context{g_main_context_new()},
       main_loop{g_main_loop_new(main_context, FALSE)}
 {
@@ -59,6 +69,8 @@ repowerd::EventLoop::EventLoop()
             g_main_context_push_thread_default(main_context);
             g_main_loop_run(main_loop);
         }};
+
+    set_thread_name(loop_thread, name);
 
     enqueue([]{}).wait();
 }

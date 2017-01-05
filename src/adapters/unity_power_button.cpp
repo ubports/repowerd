@@ -30,6 +30,7 @@ char const* const dbus_power_button_interface = "com.canonical.Unity.PowerButton
 repowerd::UnityPowerButton::UnityPowerButton(
     std::string const& dbus_bus_address)
     : dbus_connection{dbus_bus_address},
+      dbus_event_loop{"PowerButton"},
       power_button_handler{null_handler}
 {
 }

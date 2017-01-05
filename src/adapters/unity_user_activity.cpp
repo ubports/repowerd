@@ -39,6 +39,7 @@ repowerd::UserActivityType user_activity_type_from_dbus_value(int32_t value)
 repowerd::UnityUserActivity::UnityUserActivity(
     std::string const& dbus_bus_address)
     : dbus_connection{dbus_bus_address},
+      dbus_event_loop{"UserActivity"},
       user_activity_handler{null_handler}
 {
 }

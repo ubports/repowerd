@@ -28,6 +28,7 @@ auto const null_handler = [](double){};
 
 repowerd::UbuntuLightSensor::UbuntuLightSensor()
     : sensor{ua_sensors_light_new()},
+      event_loop{"Light"},
       handler{null_handler},
       enabled{false}
 {

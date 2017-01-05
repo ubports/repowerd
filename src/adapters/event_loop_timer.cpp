@@ -25,7 +25,8 @@ auto const null_handler = [](auto){};
 }
 
 repowerd::EventLoopTimer::EventLoopTimer()
-    : alarm_handler{null_handler},
+    : event_loop{"Timer"},
+      alarm_handler{null_handler},
       next_alarm_id{1}
 {
 }

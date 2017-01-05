@@ -50,6 +50,8 @@ using DBusEventLoopSignalHandler =
 class DBusEventLoop : public EventLoop
 {
 public:
+    using EventLoop::EventLoop;
+
     repowerd::HandlerRegistration register_object_handler(
         GDBusConnection* dbus_connection,
         char const* dbus_path,

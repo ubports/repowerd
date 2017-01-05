@@ -23,6 +23,7 @@
 repowerd::RealTemporarySuspendInhibition::RealTemporarySuspendInhibition(
     std::shared_ptr<SystemPowerControl> const& system_power_control)
     : system_power_control{system_power_control},
+      event_loop{"TempSuspendInhibit"},
       id{0}
 {
 }

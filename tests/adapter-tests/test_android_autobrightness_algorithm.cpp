@@ -43,7 +43,7 @@ struct AnAndroidAutobrightnessAlgorithm : Test
         event_loop.enqueue([]{}).get();
     }
 
-    repowerd::EventLoop event_loop;
+    repowerd::EventLoop event_loop{"test"};
     std::shared_ptr<rt::FakeLog> const fake_log{std::make_shared<rt::FakeLog>()};
 
     rt::FakeDeviceConfig device_config_with_valid_curves;

@@ -133,6 +133,7 @@ rt::DBusClient::DBusClient(
     std::string const& destination,
     std::string const& path)
     : connection{bus_address.c_str()},
+      event_loop{destination},
       destination{destination},
       path{path}
 {

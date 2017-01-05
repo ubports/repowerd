@@ -84,6 +84,7 @@ repowerd::LogindSessionTracker::LogindSessionTracker(
       log{log},
       ignore_session_deactivation{quirks.ignore_session_deactivation()},
       dbus_connection{dbus_bus_address},
+      dbus_event_loop{"Logind"},
       active_session_changed_handler{null_arg2_handler},
       session_removed_handler{null_arg1_handler},
       active_session_id{invalid_session_id}

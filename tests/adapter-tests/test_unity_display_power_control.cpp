@@ -48,7 +48,8 @@ class FakeUnityDisplayDBusService
 {
 public:
     FakeUnityDisplayDBusService(std::string const& bus_address)
-        : dbus_connection{bus_address}
+        : dbus_connection{bus_address},
+          dbus_event_loop{"FakeUnityDisplay"}
     {
         dbus_connection.request_name("com.canonical.Unity.Display");
         unity_display_handler_registation = dbus_event_loop.register_object_handler(

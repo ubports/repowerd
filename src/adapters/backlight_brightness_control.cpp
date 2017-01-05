@@ -71,6 +71,7 @@ repowerd::BacklightBrightnessControl::BacklightBrightnessControl(
       normal_before_display_on_autobrightness{
           quirks.normal_before_display_on_autobrightness()},
       ab_supported{autobrightness_algorithm->init(event_loop)},
+      event_loop{"Backlight"},
       brightness_handler{null_handler},
       dim_brightness{dim_brightness_percent(device_config)},
       normal_brightness{normal_brightness_percent(device_config)},

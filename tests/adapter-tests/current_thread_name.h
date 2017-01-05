@@ -18,39 +18,14 @@
 
 #pragma once
 
-#include <thread>
-#include <functional>
-#include <future>
 #include <string>
-
-#include <glib.h>
 
 namespace repowerd
 {
-
-using EventLoopCancellation = std::function<void()>;
-
-class EventLoop
+namespace test
 {
-public:
-    EventLoop(std::string const& name);
-    ~EventLoop();
 
-    void stop();
+std::string current_thread_name();
 
-    std::future<void> enqueue(std::function<void()> const& callback);
-    std::future<void> schedule_in(
-        std::chrono::milliseconds, std::function<void()> const& callback);
-
-    void schedule_with_cancellation_in(
-        std::chrono::milliseconds,
-        std::function<void()> const& callback,
-        std::function<void(EventLoopCancellation const&)> const& cancellation_ready);
-
-protected:
-    std::thread loop_thread;
-    GMainContext* main_context;
-    GMainLoop* main_loop;
-};
-
+}
 }

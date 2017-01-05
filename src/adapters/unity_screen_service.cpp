@@ -165,6 +165,7 @@ repowerd::UnityScreenService::UnityScreenService(
       temporary_suspend_inhibition{temporary_suspend_inhibition},
       log{log},
       dbus_connection{dbus_bus_address},
+      dbus_event_loop{"DBusService"},
       disable_inactivity_timeout_handler{null_arg2_handler},
       enable_inactivity_timeout_handler{null_arg2_handler},
       set_inactivity_timeout_handler{null_arg2_handler},

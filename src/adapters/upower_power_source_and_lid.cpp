@@ -73,6 +73,7 @@ repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
       temporary_suspend_inhibition{temporary_suspend_inhibition},
       critical_temperature{get_critical_temperature(device_config)},
       dbus_connection{dbus_bus_address},
+      dbus_event_loop{"UPower"},
       power_source_change_handler{null_handler},
       power_source_critical_handler{null_handler},
       lid_handler{null_arg_handler},

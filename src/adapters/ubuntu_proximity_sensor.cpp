@@ -43,6 +43,7 @@ repowerd::UbuntuProximitySensor::UbuntuProximitySensor(
     DeviceQuirks const& device_quirks)
     : log{log},
       sensor{ua_sensors_proximity_new()},
+      event_loop{"Proximity"},
       handler{null_handler},
       synthetic_event_seqno{1},
       synthetic_event_delay{device_quirks.synthetic_initial_proximity_event_delay()},

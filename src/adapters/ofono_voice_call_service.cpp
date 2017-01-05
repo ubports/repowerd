@@ -118,6 +118,7 @@ repowerd::OfonoVoiceCallService::OfonoVoiceCallService(
     std::string const& dbus_bus_address)
     : log{log},
       dbus_connection{dbus_bus_address},
+      dbus_event_loop{"Ofono"},
       active_call_handler{null_handler},
       no_active_call_handler{null_handler}
 {
