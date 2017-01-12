@@ -17,6 +17,7 @@
  */
 
 #include "acceptance_test.h"
+#include "fake_display_information.h"
 #include "fake_system_power_control.h"
 
 #include <gtest/gtest.h>
@@ -39,6 +40,17 @@ struct ALid : rt::AcceptanceTest
     {
         EXPECT_CALL(config.the_fake_system_power_control()->mock,
                     cancel_suspend_when_allowed(_));
+    }
+
+    void expect_no_suspend_when_allowed()
+    {
+        EXPECT_CALL(config.the_fake_system_power_control()->mock,
+                    suspend_when_allowed(_)).Times(0);
+    }
+
+    void activate_external_display()
+    {
+        config.the_fake_display_information()->set_has_active_external_displays(true);
     }
 };
 
@@ -79,4 +91,15 @@ TEST_F(ALid, opened_is_logged)
     open_lid();
 
     EXPECT_TRUE(log_contains_line({"lid_open"}));
+}
+
+TEST_F(ALid, closed_does_not_turns_off_display_nor_suspend_if_external_displays_active)
+{
+    activate_external_display();
+    turn_on_display();
+
+    expect_no_display_power_change();
+    expect_no_suspend_when_allowed();
+
+    close_lid();
 }

@@ -41,6 +41,7 @@ class WakeupService;
 class DefaultDaemonConfig : public DaemonConfig
 {
 public:
+    std::shared_ptr<DisplayInformation> the_display_information() override;
     std::shared_ptr<BrightnessControl> the_brightness_control() override;
     std::shared_ptr<ClientRequests> the_client_requests() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
@@ -79,6 +80,7 @@ public:
     std::shared_ptr<WakeupService> the_wakeup_service();
 
 private:
+    std::shared_ptr<DisplayInformation> display_information;
     std::shared_ptr<Backlight> backlight;
     std::shared_ptr<BacklightBrightnessControl> backlight_brightness_control;
     std::shared_ptr<BrightnessControl> brightness_control;

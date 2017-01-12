@@ -18,6 +18,7 @@
 
 #include "default_state_machine.h"
 
+#include "display_information.h"
 #include "brightness_control.h"
 #include "display_power_control.h"
 #include "display_power_event_sink.h"
@@ -41,6 +42,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
     std::string const& name)
     : log_tag_str{std::string{"DefaultStateMachine["} + name + "]"},
       log_tag{log_tag_str.c_str()},
+      display_information{config.the_display_information()},
       brightness_control{config.the_brightness_control()},
       display_power_control{config.the_display_power_control()},
       display_power_event_sink{config.the_display_power_event_sink()},
@@ -206,10 +208,13 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
 {
     log->log(log_tag, "handle_lid_closed()");
 
-    if (display_power_mode == DisplayPowerMode::on)
-        turn_off_display(DisplayPowerChangeReason::unknown);
+    if (!display_information->has_active_external_displays())
+    {
+        if (display_power_mode == DisplayPowerMode::on)
+            turn_off_display(DisplayPowerChangeReason::unknown);
 
-    system_power_control->suspend_when_allowed("DefaultStateMachine::Lid");
+        system_power_control->suspend_when_allowed("DefaultStateMachine::Lid");
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_lid_open()

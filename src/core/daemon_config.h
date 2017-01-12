@@ -24,6 +24,7 @@
 namespace repowerd
 {
 
+class DisplayInformation;
 class BrightnessControl;
 class ClientRequests;
 class DisplayPowerControl;
@@ -50,6 +51,7 @@ class DaemonConfig
 public:
     virtual ~DaemonConfig() = default;
 
+    virtual std::shared_ptr<DisplayInformation> the_display_information() = 0;
     virtual std::shared_ptr<BrightnessControl> the_brightness_control() = 0;
     virtual std::shared_ptr<ClientRequests> the_client_requests() = 0;
     virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;

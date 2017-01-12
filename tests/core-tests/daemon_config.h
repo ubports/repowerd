@@ -27,6 +27,7 @@ namespace repowerd
 namespace test
 {
 
+class FakeDisplayInformation;
 class MockBrightnessControl;
 class FakeClientRequests;
 class MockDisplayPowerControl;
@@ -49,6 +50,7 @@ class FakeVoiceCallService;
 class DaemonConfig : public repowerd::DaemonConfig
 {
 public:
+    std::shared_ptr<DisplayInformation> the_display_information() override;
     std::shared_ptr<BrightnessControl> the_brightness_control() override;
     std::shared_ptr<ClientRequests> the_client_requests() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
@@ -70,6 +72,7 @@ public:
     std::shared_ptr<UserActivity> the_user_activity() override;
     std::shared_ptr<VoiceCallService> the_voice_call_service() override;
 
+    std::shared_ptr<FakeDisplayInformation> the_fake_display_information();
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> the_mock_brightness_control();
     std::shared_ptr<FakeClientRequests> the_fake_client_requests();
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> the_mock_display_power_control();
@@ -93,6 +96,7 @@ private:
     std::shared_ptr<StateMachineFactory> state_machine_factory;
     std::shared_ptr<StateMachineOptions> state_machine_options;
 
+    std::shared_ptr<FakeDisplayInformation> fake_display_information;
     std::shared_ptr<testing::NiceMock<MockBrightnessControl>> mock_brightness_control;
     std::shared_ptr<FakeClientRequests> fake_client_requests;
     std::shared_ptr<testing::NiceMock<MockDisplayPowerControl>> mock_display_power_control;

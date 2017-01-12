@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
+#include "core/display_information.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -54,6 +55,11 @@ char const* const log_tag = "DefaultDaemonConfig";
 struct NullHandlerRegistration : repowerd::HandlerRegistration
 {
     NullHandlerRegistration() : HandlerRegistration{[]{}} {}
+};
+
+struct NullDisplayInformation : repowerd::DisplayInformation
+{
+    bool has_active_external_displays() override { return false; }
 };
 
 struct NullBrightnessControl : repowerd::BrightnessControl
@@ -142,6 +148,15 @@ struct NullWakeupService : repowerd::WakeupService
     }
 };
 
+}
+
+std::shared_ptr<repowerd::DisplayInformation>
+repowerd::DefaultDaemonConfig::the_display_information()
+{
+    if (!display_information)
+        display_information = std::make_shared<NullDisplayInformation>();
+
+    return display_information;
 }
 
 std::shared_ptr<repowerd::BrightnessControl>

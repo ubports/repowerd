@@ -19,6 +19,7 @@ add_executable(
 
     acceptance_test.cpp
     daemon_config.cpp
+    fake_display_information.cpp
     fake_client_requests.cpp
     fake_lid.cpp
     fake_notification_service.cpp

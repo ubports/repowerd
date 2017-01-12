@@ -109,6 +109,7 @@ private:
 
     std::string const log_tag_str;
     char const* const log_tag;
+    std::shared_ptr<DisplayInformation> const display_information;
     std::shared_ptr<BrightnessControl> const brightness_control;
     std::shared_ptr<DisplayPowerControl> const display_power_control;
     std::shared_ptr<DisplayPowerEventSink> const display_power_event_sink;

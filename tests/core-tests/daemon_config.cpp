@@ -19,6 +19,7 @@
 #include "daemon_config.h"
 #include "src/core/default_state_machine_factory.h"
 
+#include "fake_display_information.h"
 #include "mock_brightness_control.h"
 #include "fake_client_requests.h"
 #include "mock_display_power_control.h"
@@ -42,6 +43,11 @@
 namespace rt = repowerd::test;
 using testing::NiceMock;
 using namespace std::chrono_literals;
+
+std::shared_ptr<repowerd::DisplayInformation> rt::DaemonConfig::the_display_information()
+{
+    return the_fake_display_information();
+}
 
 std::shared_ptr<repowerd::BrightnessControl> rt::DaemonConfig::the_brightness_control()
 {
@@ -145,6 +151,14 @@ std::shared_ptr<repowerd::UserActivity> rt::DaemonConfig::the_user_activity()
 std::shared_ptr<repowerd::VoiceCallService> rt::DaemonConfig::the_voice_call_service()
 {
     return the_fake_voice_call_service();
+}
+
+std::shared_ptr<rt::FakeDisplayInformation> rt::DaemonConfig::the_fake_display_information()
+{
+    if (!fake_display_information)
+        fake_display_information = std::make_shared<rt::FakeDisplayInformation>();
+
+    return fake_display_information;
 }
 
 std::shared_ptr<NiceMock<rt::MockBrightnessControl>>
