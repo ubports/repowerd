@@ -49,7 +49,7 @@ set(
     ubuntu_light_sensor.cpp
     ubuntu_performance_booster.cpp
     ubuntu_proximity_sensor.cpp
-    unity_display_power_control.cpp
+    unity_display.cpp
     unity_power_button.cpp
     unity_screen_service.cpp
     unity_user_activity.cpp

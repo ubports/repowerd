@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "unity_display_power_control.h"
+#include "unity_display.h"
 #include "scoped_g_error.h"
 
 #include <gio/gio.h>
@@ -26,10 +26,10 @@ namespace
 char const* const unity_display_bus_name = "com.canonical.Unity.Display";
 char const* const unity_display_object_path = "/com/canonical/Unity/Display";
 char const* const unity_display_interface_name = "com.canonical.Unity.Display";
-char const* const log_tag = "UnityDisplayPowerControl";
+char const* const log_tag = "UnityDisplay";
 }
 
-repowerd::UnityDisplayPowerControl::UnityDisplayPowerControl(
+repowerd::UnityDisplay::UnityDisplay(
     std::shared_ptr<Log> const& log,
     std::string const& dbus_bus_address)
     : log{log},
@@ -59,7 +59,7 @@ repowerd::UnityDisplayPowerControl::UnityDisplayPowerControl(
     dbus_event_loop.enqueue([this] { dbus_query_active_outputs(); }).get();
 }
 
-void repowerd::UnityDisplayPowerControl::turn_on()
+void repowerd::UnityDisplay::turn_on()
 {
     log->log(log_tag, "turn_on()");
 
@@ -78,7 +78,7 @@ void repowerd::UnityDisplayPowerControl::turn_on()
         nullptr);
 }
 
-void repowerd::UnityDisplayPowerControl::turn_off()
+void repowerd::UnityDisplay::turn_off()
 {
     log->log(log_tag, "turn_off()");
 
@@ -97,12 +97,12 @@ void repowerd::UnityDisplayPowerControl::turn_off()
         nullptr);
 }
 
-bool repowerd::UnityDisplayPowerControl::has_active_external_displays()
+bool repowerd::UnityDisplay::has_active_external_displays()
 {
     return has_active_external_displays_;
 }
 
-void repowerd::UnityDisplayPowerControl::handle_dbus_signal(
+void repowerd::UnityDisplay::handle_dbus_signal(
     GDBusConnection* /*connection*/,
     gchar const* /*sender*/,
     gchar const* /*object_path*/,
@@ -128,7 +128,7 @@ void repowerd::UnityDisplayPowerControl::handle_dbus_signal(
     }
 }
 
-void repowerd::UnityDisplayPowerControl::dbus_PropertiesChanged(
+void repowerd::UnityDisplay::dbus_PropertiesChanged(
     GVariantIter* properties_iter)
 {
     char const* key_cstr{""};
@@ -152,7 +152,7 @@ void repowerd::UnityDisplayPowerControl::dbus_PropertiesChanged(
     }
 }
 
-void repowerd::UnityDisplayPowerControl::dbus_ActiveOutputs(
+void repowerd::UnityDisplay::dbus_ActiveOutputs(
     int32_t internal, int32_t external)
 {
     log->log(log_tag, "dbus_ActiveOutputs(internal=%d, external=%d)", internal, external);
@@ -160,7 +160,7 @@ void repowerd::UnityDisplayPowerControl::dbus_ActiveOutputs(
     has_active_external_displays_ = (external > 0);
 }
 
-void repowerd::UnityDisplayPowerControl::dbus_query_active_outputs()
+void repowerd::UnityDisplay::dbus_query_active_outputs()
 {
     log->log(log_tag, "dbus_query_active_outputs()");
 

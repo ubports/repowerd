@@ -41,7 +41,7 @@
 #include "adapters/ubuntu_light_sensor.h"
 #include "adapters/ubuntu_performance_booster.h"
 #include "adapters/ubuntu_proximity_sensor.h"
-#include "adapters/unity_display_power_control.h"
+#include "adapters/unity_display.h"
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
@@ -147,7 +147,7 @@ struct NullWakeupService : repowerd::WakeupService
 std::shared_ptr<repowerd::DisplayInformation>
 repowerd::DefaultDaemonConfig::the_display_information()
 {
-    return the_unity_display_power_control();
+    return the_unity_display();
 }
 
 std::shared_ptr<repowerd::BrightnessControl>
@@ -177,7 +177,7 @@ repowerd::DefaultDaemonConfig::the_client_requests()
 std::shared_ptr<repowerd::DisplayPowerControl>
 repowerd::DefaultDaemonConfig::the_display_power_control()
 {
-    return the_unity_display_power_control();
+    return the_unity_display();
 }
 
 std::shared_ptr<repowerd::DisplayPowerEventSink>
@@ -542,16 +542,16 @@ repowerd::DefaultDaemonConfig::the_log()
     return log;
 }
 
-std::shared_ptr<repowerd::UnityDisplayPowerControl>
-repowerd::DefaultDaemonConfig::the_unity_display_power_control()
+std::shared_ptr<repowerd::UnityDisplay>
+repowerd::DefaultDaemonConfig::the_unity_display()
 {
-    if (!unity_display_power_control)
+    if (!unity_display)
     {
-        unity_display_power_control = std::make_shared<UnityDisplayPowerControl>(
+        unity_display = std::make_shared<UnityDisplay>(
             the_log(),
             the_dbus_bus_address());
     }
-    return unity_display_power_control;
+    return unity_display;
 }
 
 std::shared_ptr<repowerd::UnityScreenService>

@@ -20,7 +20,7 @@
 
 #include "src/adapters/dbus_connection_handle.h"
 #include "src/adapters/dbus_event_loop.h"
-#include "src/adapters/unity_display_power_control.h"
+#include "src/adapters/unity_display.h"
 
 #include "fake_log.h"
 #include "fake_shared.h"
@@ -137,12 +137,12 @@ private:
     std::atomic<int> external{0};
 };
 
-struct AUnityDisplayPowerControl : testing::Test
+struct AUnityDisplay : testing::Test
 {
-    void wait_for_have_external(repowerd::UnityDisplayPowerControl& control, bool value)
+    void wait_for_have_external(repowerd::UnityDisplay& unity_display, bool value)
     {
         auto const result = rt::spin_wait_for_condition_or_timeout(
-            [&] { return control.has_active_external_displays() == value; },
+            [&] { return unity_display.has_active_external_displays() == value; },
             default_timeout);
         if (!result)
         {
@@ -154,7 +154,7 @@ struct AUnityDisplayPowerControl : testing::Test
     rt::DBusBus bus;
     rt::FakeLog fake_log;
     FakeUnityDisplayDBusService service{bus.address()};
-    repowerd::UnityDisplayPowerControl control{
+    repowerd::UnityDisplay unity_display{
         rt::fake_shared(fake_log),
         bus.address()};
 
@@ -163,75 +163,74 @@ struct AUnityDisplayPowerControl : testing::Test
 
 }
 
-TEST_F(AUnityDisplayPowerControl, turn_on_request_contacts_dbus_service)
+TEST_F(AUnityDisplay, turn_on_request_contacts_dbus_service)
 {
     rt::WaitCondition called;
 
     EXPECT_CALL(service.mock_dbus_calls, turn_on())
         .WillOnce(WakeUp(&called));
 
-    control.turn_on();
+    unity_display.turn_on();
 
     called.wait_for(default_timeout);
     EXPECT_TRUE(called.woken());
 }
 
-TEST_F(AUnityDisplayPowerControl, turn_off_request_contacts_dbus_service)
+TEST_F(AUnityDisplay, turn_off_request_contacts_dbus_service)
 {
     rt::WaitCondition called;
 
     EXPECT_CALL(service.mock_dbus_calls, turn_off())
         .WillOnce(WakeUp(&called));
 
-    control.turn_off();
+    unity_display.turn_off();
 
     called.wait_for(default_timeout);
     EXPECT_TRUE(called.woken());
 }
 
-TEST_F(AUnityDisplayPowerControl, handles_display_information_updates)
+TEST_F(AUnityDisplay, handles_display_information_updates)
 {
-    EXPECT_FALSE(control.has_active_external_displays());
+    EXPECT_FALSE(unity_display.has_active_external_displays());
 
     service.emit_active_outputs(1, 1);
-
-    wait_for_have_external(control, true);
+    wait_for_have_external(unity_display, true);
 
     service.emit_active_outputs(1, 0);
-    wait_for_have_external(control, false);
+    wait_for_have_external(unity_display, false);
 }
 
-TEST_F(AUnityDisplayPowerControl, queries_initial_display_information)
+TEST_F(AUnityDisplay, queries_initial_display_information)
 {
     service.emit_active_outputs(1, 1);
 
-    repowerd::UnityDisplayPowerControl local_control{
+    repowerd::UnityDisplay local_unity_display{
         rt::fake_shared(fake_log),
         bus.address()};
 
-    wait_for_have_external(local_control, true);
+    wait_for_have_external(local_unity_display, true);
 }
 
-TEST_F(AUnityDisplayPowerControl,
+TEST_F(AUnityDisplay,
        does_not_hang_waiting_for_initial_display_information_if_unity_display_is_down)
 {
     rt::DBusBus empty_bus;
 
-    repowerd::UnityDisplayPowerControl local_control{
+    repowerd::UnityDisplay local_unity_display{
         rt::fake_shared(fake_log),
         empty_bus.address()};
 }
 
-TEST_F(AUnityDisplayPowerControl, logs_turn_on_request)
+TEST_F(AUnityDisplay, logs_turn_on_request)
 {
-    control.turn_on();
+    unity_display.turn_on();
 
     EXPECT_TRUE(fake_log.contains_line({"turn_on"}));
 }
 
-TEST_F(AUnityDisplayPowerControl, logs_turn_off_request)
+TEST_F(AUnityDisplay, logs_turn_off_request)
 {
-    control.turn_off();
+    unity_display.turn_off();
 
     EXPECT_TRUE(fake_log.contains_line({"turn_off"}));
 }

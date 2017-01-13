@@ -33,10 +33,10 @@ namespace repowerd
 {
 class Log;
 
-class UnityDisplayPowerControl : public DisplayPowerControl, public DisplayInformation
+class UnityDisplay : public DisplayPowerControl, public DisplayInformation
 {
 public:
-    UnityDisplayPowerControl(
+    UnityDisplay(
         std::shared_ptr<Log> const& log,
         std::string const& dbus_bus_address);
 
@@ -68,4 +68,3 @@ private:
 };
 
 }
-
