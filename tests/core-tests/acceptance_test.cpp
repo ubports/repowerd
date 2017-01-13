@@ -104,12 +104,12 @@ void rt::AcceptanceTestBase::expect_autobrightness_enabled()
 void rt::AcceptanceTestBase::expect_display_turns_off()
 {
     EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness());
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off(DisplayPowerControlFilter::all));
 }
 
 void rt::AcceptanceTestBase::expect_display_turns_on()
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on(DisplayPowerControlFilter::all));
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
 }
 
@@ -144,8 +144,8 @@ void rt::AcceptanceTestBase::expect_no_display_brightness_change()
 
 void rt::AcceptanceTestBase::expect_no_display_power_change()
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on()).Times(0);
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off()).Times(0);
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on(_)).Times(0);
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off(_)).Times(0);
 }
 
 void rt::AcceptanceTestBase::expect_no_long_press_notification()
@@ -387,7 +387,7 @@ void rt::AcceptanceTestBase::remove_session(std::string const& session_id)
 
 void rt::AcceptanceTestBase::turn_off_display()
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_off(DisplayPowerControlFilter::all));
     EXPECT_CALL(*config.the_mock_brightness_control(), set_off_brightness());
     press_power_button();
     release_power_button();
@@ -398,7 +398,7 @@ void rt::AcceptanceTestBase::turn_off_display()
 
 void rt::AcceptanceTestBase::turn_on_display()
 {
-    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on());
+    EXPECT_CALL(*config.the_mock_display_power_control(), turn_on(DisplayPowerControlFilter::all));
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
     press_power_button();
     release_power_button();

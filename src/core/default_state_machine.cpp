@@ -585,7 +585,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
     if (paused) return;
 
     brightness_control->set_off_brightness();
-    display_power_control->turn_off();
+    display_power_control->turn_off(DisplayPowerControlFilter::all);
     if (reason != DisplayPowerChangeReason::proximity)
         modem_power_control->set_low_power_mode();
     display_power_mode = DisplayPowerMode::off;
@@ -604,7 +604,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
 
     system_power_control->disallow_suspend(suspend_id, SuspendType::automatic);
     performance_booster->enable_interactive_mode();
-    display_power_control->turn_on();
+    display_power_control->turn_on(DisplayPowerControlFilter::all);
     display_power_mode = DisplayPowerMode::on;
     display_power_mode_reason = reason;
     brighten_display();

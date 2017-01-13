@@ -34,14 +34,20 @@
 
 namespace rt = repowerd::test;
 
+using namespace testing;
+
 namespace
 {
 
 char const* const unity_display_service_introspection = R"(
 <node>
   <interface name='com.canonical.Unity.Display'>
-    <method name='TurnOn'></method>
-    <method name='TurnOff'></method>
+    <method name='TurnOn'>
+      <arg type='s' name='filter' direction='in'/>
+    </method>
+    <method name='TurnOff'>
+      <arg type='s' name='filter' direction='in'/>
+    </method>
     <property name='ActiveOutputs' type='(ii)' access='read'/>
   </interface>
 </node>)";
@@ -95,8 +101,8 @@ public:
 
     struct MockDBusCalls
     {
-        MOCK_METHOD0(turn_on, void());
-        MOCK_METHOD0(turn_off, void());
+        MOCK_METHOD1(turn_on, void(std::string const&));
+        MOCK_METHOD1(turn_off, void(std::string const&));
     };
 
     testing::NiceMock<MockDBusCalls> mock_dbus_calls;
@@ -108,7 +114,7 @@ private:
         gchar const* /*object_path*/,
         gchar const* /*interface_name*/,
         gchar const* method_name_cstr,
-        GVariant* /*parameters*/,
+        GVariant* parameters,
         GDBusMethodInvocation* invocation)
     {
         std::string const method_name{method_name_cstr ? method_name_cstr : ""};
@@ -116,11 +122,17 @@ private:
 
         if (method_name == "TurnOn")
         {
-            mock_dbus_calls.turn_on();
+            char const* filter{""};
+            g_variant_get(parameters, "(&s)", &filter);
+
+            mock_dbus_calls.turn_on(filter);
         }
         else if (method_name == "TurnOff")
         {
-            mock_dbus_calls.turn_off();
+            char const* filter{""};
+            g_variant_get(parameters, "(&s)", &filter);
+
+            mock_dbus_calls.turn_off(filter);
         }
         else if (method_name == "Get")
         {
@@ -167,10 +179,15 @@ TEST_F(AUnityDisplay, turn_on_request_contacts_dbus_service)
 {
     rt::WaitCondition called;
 
-    EXPECT_CALL(service.mock_dbus_calls, turn_on())
+    InSequence s;
+    EXPECT_CALL(service.mock_dbus_calls, turn_on("all"));
+    EXPECT_CALL(service.mock_dbus_calls, turn_on("internal"));
+    EXPECT_CALL(service.mock_dbus_calls, turn_on("external"))
         .WillOnce(WakeUp(&called));
 
-    unity_display.turn_on();
+    unity_display.turn_on(repowerd::DisplayPowerControlFilter::all);
+    unity_display.turn_on(repowerd::DisplayPowerControlFilter::internal);
+    unity_display.turn_on(repowerd::DisplayPowerControlFilter::external);
 
     called.wait_for(default_timeout);
     EXPECT_TRUE(called.woken());
@@ -180,10 +197,15 @@ TEST_F(AUnityDisplay, turn_off_request_contacts_dbus_service)
 {
     rt::WaitCondition called;
 
-    EXPECT_CALL(service.mock_dbus_calls, turn_off())
+    InSequence s;
+    EXPECT_CALL(service.mock_dbus_calls, turn_off("all"));
+    EXPECT_CALL(service.mock_dbus_calls, turn_off("internal"));
+    EXPECT_CALL(service.mock_dbus_calls, turn_off("external"))
         .WillOnce(WakeUp(&called));
 
-    unity_display.turn_off();
+    unity_display.turn_off(repowerd::DisplayPowerControlFilter::all);
+    unity_display.turn_off(repowerd::DisplayPowerControlFilter::internal);
+    unity_display.turn_off(repowerd::DisplayPowerControlFilter::external);
 
     called.wait_for(default_timeout);
     EXPECT_TRUE(called.woken());
@@ -223,14 +245,14 @@ TEST_F(AUnityDisplay,
 
 TEST_F(AUnityDisplay, logs_turn_on_request)
 {
-    unity_display.turn_on();
+    unity_display.turn_on(repowerd::DisplayPowerControlFilter::all);
 
     EXPECT_TRUE(fake_log.contains_line({"turn_on"}));
 }
 
 TEST_F(AUnityDisplay, logs_turn_off_request)
 {
-    unity_display.turn_off();
+    unity_display.turn_off(repowerd::DisplayPowerControlFilter::all);
 
     EXPECT_TRUE(fake_log.contains_line({"turn_off"}));
 }

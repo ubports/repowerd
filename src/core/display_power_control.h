@@ -21,13 +21,15 @@
 namespace repowerd
 {
 
+enum class DisplayPowerControlFilter { all, internal, external };
+
 class DisplayPowerControl
 {
 public:
     virtual ~DisplayPowerControl() = default;
 
-    virtual void turn_on() = 0;
-    virtual void turn_off() = 0;
+    virtual void turn_on(DisplayPowerControlFilter filter) = 0;
+    virtual void turn_off(DisplayPowerControlFilter filter) = 0;
 
 protected:
     DisplayPowerControl() = default;

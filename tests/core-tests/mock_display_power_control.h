@@ -30,8 +30,8 @@ namespace test
 class MockDisplayPowerControl : public DisplayPowerControl
 {
 public:
-    MOCK_METHOD0(turn_on, void());
-    MOCK_METHOD0(turn_off, void());
+    MOCK_METHOD1(turn_on, void(DisplayPowerControlFilter));
+    MOCK_METHOD1(turn_off, void(DisplayPowerControlFilter));
 };
 
 }

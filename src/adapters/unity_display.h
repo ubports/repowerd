@@ -41,8 +41,8 @@ public:
         std::string const& dbus_bus_address);
 
     // From DisplayPowerControl
-    void turn_on() override;
-    void turn_off() override;
+    void turn_on(DisplayPowerControlFilter filter) override;
+    void turn_off(DisplayPowerControlFilter filter) override;
 
     // From DisplayInformation
     bool has_active_external_displays() override;

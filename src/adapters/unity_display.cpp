@@ -27,6 +27,23 @@ char const* const unity_display_bus_name = "com.canonical.Unity.Display";
 char const* const unity_display_object_path = "/com/canonical/Unity/Display";
 char const* const unity_display_interface_name = "com.canonical.Unity.Display";
 char const* const log_tag = "UnityDisplay";
+
+std::string filter_to_str(repowerd::DisplayPowerControlFilter filter)
+{
+    std::string filter_str;
+
+    if (filter == repowerd::DisplayPowerControlFilter::all)
+        filter_str = "all";
+    else if (filter == repowerd::DisplayPowerControlFilter::internal)
+        filter_str = "internal";
+    else if (filter == repowerd::DisplayPowerControlFilter::external)
+        filter_str = "external";
+    else
+        filter_str = "(unknown)";
+
+    return filter_str;
+}
+
 }
 
 repowerd::UnityDisplay::UnityDisplay(
@@ -59,9 +76,11 @@ repowerd::UnityDisplay::UnityDisplay(
     dbus_event_loop.enqueue([this] { dbus_query_active_outputs(); }).get();
 }
 
-void repowerd::UnityDisplay::turn_on()
+void repowerd::UnityDisplay::turn_on(DisplayPowerControlFilter filter)
 {
-    log->log(log_tag, "turn_on()");
+    auto const filter_str = filter_to_str(filter);
+
+    log->log(log_tag, "turn_on(%s)", filter_str.c_str());
 
     g_dbus_connection_call(
         dbus_connection,
@@ -69,7 +88,7 @@ void repowerd::UnityDisplay::turn_on()
         unity_display_object_path,
         unity_display_interface_name,
         "TurnOn",
-        nullptr,
+        g_variant_new("(s)", filter_str.c_str()),
         nullptr,
         G_DBUS_CALL_FLAGS_NONE,
         -1,
@@ -78,9 +97,11 @@ void repowerd::UnityDisplay::turn_on()
         nullptr);
 }
 
-void repowerd::UnityDisplay::turn_off()
+void repowerd::UnityDisplay::turn_off(DisplayPowerControlFilter filter)
 {
-    log->log(log_tag, "turn_off()");
+    auto const filter_str = filter_to_str(filter);
+
+    log->log(log_tag, "turn_off(%s)", filter_str.c_str());
 
     g_dbus_connection_call(
         dbus_connection,
@@ -88,7 +109,7 @@ void repowerd::UnityDisplay::turn_off()
         unity_display_object_path,
         unity_display_interface_name,
         "TurnOff",
-        nullptr,
+        g_variant_new("(s)", filter_str.c_str()),
         nullptr,
         G_DBUS_CALL_FLAGS_NONE,
         -1,
