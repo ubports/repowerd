@@ -35,6 +35,7 @@ class OfonoVoiceCallService;
 class TemporarySuspendInhibition;
 class UnityScreenService;
 class UnityPowerButton;
+class UnityDisplayPowerControl;
 class UPowerPowerSourceAndLid;
 class WakeupService;
 
@@ -74,6 +75,7 @@ public:
     std::shared_ptr<LightSensor> the_light_sensor();
     std::shared_ptr<OfonoVoiceCallService> the_ofono_voice_call_service();
     std::shared_ptr<TemporarySuspendInhibition> the_temporary_suspend_inhibition();
+    std::shared_ptr<UnityDisplayPowerControl> the_unity_display_power_control();
     std::shared_ptr<UnityScreenService> the_unity_screen_service();
     std::shared_ptr<UnityPowerButton> the_unity_power_button();
     std::shared_ptr<UPowerPowerSourceAndLid> the_upower_power_source_and_lid();
@@ -88,7 +90,6 @@ private:
     std::shared_ptr<Chrono> chrono;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DeviceQuirks> device_quirks;
-    std::shared_ptr<DisplayPowerControl> display_power_control;
     std::shared_ptr<Filesystem> filesystem;
     std::shared_ptr<LightSensor> light_sensor;
     std::shared_ptr<Log> log;
@@ -102,6 +103,7 @@ private:
     std::shared_ptr<SystemPowerControl> system_power_control;
     std::shared_ptr<Timer> timer;
     std::shared_ptr<TemporarySuspendInhibition> temporary_suspend_inhibition;
+    std::shared_ptr<UnityDisplayPowerControl> unity_display_power_control;
     std::shared_ptr<UnityPowerButton> unity_power_button;
     std::shared_ptr<UnityScreenService> unity_screen_service;
     std::shared_ptr<UPowerPowerSourceAndLid> upower_power_source_and_lid;
