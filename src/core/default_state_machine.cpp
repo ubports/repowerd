@@ -77,7 +77,8 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       scheduled_timeout_type{ScheduledTimeoutType::none},
       paused{false},
       autobrightness_enabled{false},
-      normal_brightness_value{0.5}
+      normal_brightness_value{0.5},
+      lid_closed{false}
 {
       inactivity_timeout_allowances.fill(true);
       proximity_enablements.fill(false);
@@ -208,6 +209,8 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
 {
     log->log(log_tag, "handle_lid_closed()");
 
+    lid_closed = true;
+
     if (!display_information->has_active_external_displays())
     {
         if (display_power_mode == DisplayPowerMode::on)
@@ -215,15 +218,32 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
 
         system_power_control->suspend_when_allowed("DefaultStateMachine::Lid");
     }
+    else
+    {
+        display_power_control->turn_off(DisplayPowerControlFilter::internal);
+    }
 }
 
 void repowerd::DefaultStateMachine::handle_lid_open()
 {
     log->log(log_tag, "handle_lid_open()");
 
+    lid_closed = false;
+
     system_power_control->cancel_suspend_when_allowed("DefaultStateMachine::Lid");
 
-    turn_on_display_with_normal_timeout(DisplayPowerChangeReason::unknown);
+    if (display_power_mode == DisplayPowerMode::on)
+    {
+        display_power_control->turn_on(DisplayPowerControlFilter::internal);
+        brighten_display();
+        schedule_normal_user_inactivity_alarm();
+        display_power_mode_reason = DisplayPowerChangeReason::activity;
+    }
+    else
+    {
+        turn_on_display_with_normal_timeout(DisplayPowerChangeReason::activity);
+    }
+
 }
 
 void repowerd::DefaultStateMachine::handle_no_notification()
@@ -604,10 +624,14 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
 
     system_power_control->disallow_suspend(suspend_id, SuspendType::automatic);
     performance_booster->enable_interactive_mode();
-    display_power_control->turn_on(DisplayPowerControlFilter::all);
+    if (lid_closed)
+        display_power_control->turn_on(DisplayPowerControlFilter::external);
+    else
+        display_power_control->turn_on(DisplayPowerControlFilter::all);
     display_power_mode = DisplayPowerMode::on;
     display_power_mode_reason = reason;
-    brighten_display();
+    if (!lid_closed)
+        brighten_display();
     modem_power_control->set_normal_power_mode();
     display_power_event_sink->notify_display_power_on(reason);
 }

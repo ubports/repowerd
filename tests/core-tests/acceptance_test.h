@@ -47,6 +47,9 @@ struct AcceptanceTestBase
     void expect_display_turns_on();
     void expect_display_dims();
     void expect_display_brightens();
+    void expect_external_display_turns_on();
+    void expect_internal_display_turns_off();
+    void expect_internal_display_turns_on();
     void expect_long_press_notification();
     void expect_no_autobrightness_change();
     void expect_no_display_power_change();

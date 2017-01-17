@@ -146,6 +146,7 @@ private:
     bool paused;
     bool autobrightness_enabled;
     double normal_brightness_value;
+    bool lid_closed;
 };
 
 }

@@ -123,6 +123,24 @@ void rt::AcceptanceTestBase::expect_display_brightens()
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness());
 }
 
+void rt::AcceptanceTestBase::expect_internal_display_turns_off()
+{
+    EXPECT_CALL(*config.the_mock_display_power_control(),
+                turn_off(DisplayPowerControlFilter::internal));
+}
+
+void rt::AcceptanceTestBase::expect_internal_display_turns_on()
+{
+    EXPECT_CALL(*config.the_mock_display_power_control(),
+                turn_on(DisplayPowerControlFilter::internal));
+}
+
+void rt::AcceptanceTestBase::expect_external_display_turns_on()
+{
+    EXPECT_CALL(*config.the_mock_display_power_control(),
+                turn_on(DisplayPowerControlFilter::external));
+}
+
 void rt::AcceptanceTestBase::expect_long_press_notification()
 {
     EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press());

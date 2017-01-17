@@ -93,13 +93,41 @@ TEST_F(ALid, opened_is_logged)
     EXPECT_TRUE(log_contains_line({"lid_open"}));
 }
 
-TEST_F(ALid, closed_does_not_turns_off_display_nor_suspend_if_external_displays_active)
+TEST_F(ALid, closed_turns_off_internal_display_but_does_not_suspend_if_external_displays_active)
 {
     activate_external_display();
     turn_on_display();
 
-    expect_no_display_power_change();
+    expect_internal_display_turns_off();
     expect_no_suspend_when_allowed();
 
     close_lid();
+}
+
+TEST_F(ALid, opened_turns_on_internal_display_if_not_suspended)
+{
+    activate_external_display();
+    turn_on_display();
+
+    close_lid();
+
+    expect_display_brightens();
+    expect_internal_display_turns_on();
+
+    open_lid();
+}
+
+TEST_F(ALid, while_closed_prevents_internal_display_from_turning_on)
+{
+    activate_external_display();
+    turn_on_display();
+
+    close_lid();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+    verify_expectations();
+
+    expect_external_display_turns_on();
+    perform_user_activity_changing_power_state();
 }
