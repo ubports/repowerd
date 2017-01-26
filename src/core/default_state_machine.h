@@ -40,7 +40,10 @@ public:
 
     void handle_enable_inactivity_timeout() override;
     void handle_disable_inactivity_timeout() override;
-    void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) override;
+    void handle_set_inactivity_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
+        std::chrono::milliseconds timeout) override;
 
     void handle_lid_closed() override;
     void handle_lid_open() override;
@@ -83,6 +86,20 @@ private:
     };
     using ProximityEnablement = ProximityEnablementEnum::Enablement;
     enum class ScheduledTimeoutType {none, normal, post_notification, reduced};
+    struct ConfigurableTimeout
+    {
+        std::chrono::milliseconds get() const
+        {
+            if (is_on_battery)
+                return on_battery;
+            else
+                return on_line_power;
+        }
+
+        std::chrono::milliseconds on_battery;
+        std::chrono::milliseconds on_line_power;
+        bool is_on_battery{true};
+    };
 
     void cancel_user_inactivity_alarm();
     void cancel_notification_expiration_alarm();
@@ -135,7 +152,7 @@ private:
     AlarmId notification_expiration_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
-    std::chrono::milliseconds user_inactivity_normal_display_off_timeout;
+    ConfigurableTimeout user_inactivity_normal_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const notification_expiration_timeout;

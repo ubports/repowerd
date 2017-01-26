@@ -177,7 +177,17 @@ repowerd::Daemon::register_event_handlers()
             {
                 enqueue_action_to_sessions(
                     sessions_for_pid(pid),
-                    [this,timeout] (Session* s) { s->state_machine->handle_set_inactivity_timeout(timeout); });
+                    [this, timeout] (Session* s)
+                    {
+                        s->state_machine->handle_set_inactivity_behavior(
+                            PowerAction::display_off,
+                            PowerSupply::battery,
+                            timeout);
+                        s->state_machine->handle_set_inactivity_behavior(
+                            PowerAction::display_off,
+                            PowerSupply::line_power,
+                            timeout);
+                    });
             }));
 
     registrations.push_back(

@@ -19,6 +19,8 @@
 #pragma once
 
 #include "alarm_id.h"
+#include "power_action.h"
+#include "power_supply.h"
 
 #include <chrono>
 
@@ -37,7 +39,10 @@ public:
 
     virtual void handle_enable_inactivity_timeout() = 0;
     virtual void handle_disable_inactivity_timeout() = 0;
-    virtual void handle_set_inactivity_timeout(std::chrono::milliseconds timeout) = 0;
+    virtual void handle_set_inactivity_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
+        std::chrono::milliseconds timeout) = 0;
 
     virtual void handle_lid_closed() = 0;
     virtual void handle_lid_open() = 0;

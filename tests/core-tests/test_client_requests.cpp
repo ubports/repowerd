@@ -272,7 +272,8 @@ TEST_F(AClientRequest, to_set_inactivity_timeout_is_logged)
 {
     client_request_set_inactivity_timeout(15000ms);
 
-    EXPECT_TRUE(log_contains_line({"set_inactivity_timeout", "15000"}));
+    EXPECT_TRUE(log_contains_line({"set_inactivity_behavior", "display_off", "battery", "15000"}));
+    EXPECT_TRUE(log_contains_line({"set_inactivity_behavior", "display_off", "line_power", "15000"}));
 }
 
 TEST_F(AClientRequest, to_disable_autobrightness_is_logged)

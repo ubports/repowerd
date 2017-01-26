@@ -35,6 +35,25 @@
 namespace
 {
 char const* const suspend_id = "DefaultStateMachine";
+
+std::string power_action_to_str(repowerd::PowerAction power_action)
+{
+    if (power_action == repowerd::PowerAction::display_off)
+        return "display_off";
+
+    return "unknown";
+}
+
+std::string power_supply_to_str(repowerd::PowerSupply power_supply)
+{
+    if (power_supply == repowerd::PowerSupply::battery)
+        return "battery";
+    else if (power_supply == repowerd::PowerSupply::line_power)
+        return "line_power";
+
+    return "unknown";
+}
+
 }
 
 repowerd::DefaultStateMachine::DefaultStateMachine(
@@ -63,7 +82,9 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       user_inactivity_normal_display_dim_duration{
           config.the_state_machine_options()->user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_off_timeout{
-          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout()},
+          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout(),
+          config.the_state_machine_options()->user_inactivity_normal_display_off_timeout(),
+          true},
       user_inactivity_reduced_display_off_timeout{
           config.the_state_machine_options()->user_inactivity_reduced_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
@@ -191,15 +212,23 @@ void repowerd::DefaultStateMachine::handle_disable_inactivity_timeout()
     }
 }
 
-void repowerd::DefaultStateMachine::handle_set_inactivity_timeout(
+void repowerd::DefaultStateMachine::handle_set_inactivity_behavior(
+    PowerAction power_action,
+    PowerSupply power_supply,
     std::chrono::milliseconds timeout)
 {
-    log->log(log_tag, "handle_set_inactivity_timeout(%d)",
-             static_cast<int>(timeout.count()));
+    log->log(log_tag, "handle_set_inactivity_behavior(%s,%s,%ld)",
+             power_action_to_str(power_action).c_str(),
+             power_supply_to_str(power_supply).c_str(),
+             static_cast<long>(timeout.count()));
 
-    if (timeout <= std::chrono::milliseconds::zero()) return;
+    if (timeout <= std::chrono::milliseconds::zero())
+        return;
 
-    user_inactivity_normal_display_off_timeout = timeout;
+    if (power_supply == PowerSupply::battery)
+        user_inactivity_normal_display_off_timeout.on_battery = timeout;
+    else
+        user_inactivity_normal_display_off_timeout.on_line_power = timeout;
 
     if (scheduled_timeout_type == ScheduledTimeoutType::normal)
         schedule_normal_user_inactivity_alarm();
@@ -518,24 +547,24 @@ void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
     cancel_user_inactivity_alarm();
     scheduled_timeout_type = ScheduledTimeoutType::normal;
 
-    if (user_inactivity_normal_display_off_timeout == repowerd::infinite_timeout)
+    if (user_inactivity_normal_display_off_timeout.get() == repowerd::infinite_timeout)
     {
         user_inactivity_display_off_time_point = std::chrono::steady_clock::time_point::max();
         return;
     }
 
     user_inactivity_display_off_time_point =
-        timer->now() + user_inactivity_normal_display_off_timeout;
-    if (user_inactivity_normal_display_off_timeout > user_inactivity_normal_display_dim_duration)
+        timer->now() + user_inactivity_normal_display_off_timeout.get();
+    if (user_inactivity_normal_display_off_timeout.get() > user_inactivity_normal_display_dim_duration)
     {
         user_inactivity_display_dim_alarm_id =
             timer->schedule_alarm_in(
-                user_inactivity_normal_display_off_timeout -
+                user_inactivity_normal_display_off_timeout.get() -
                 user_inactivity_normal_display_dim_duration);
     }
 
     user_inactivity_display_off_alarm_id =
-        timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout);
+        timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout.get());
 }
 
 void repowerd::DefaultStateMachine::schedule_post_notification_user_inactivity_alarm()
@@ -579,7 +608,7 @@ void repowerd::DefaultStateMachine::schedule_notification_expiration_alarm()
 
     auto const timeout =
         std::min(
-            user_inactivity_normal_display_off_timeout,
+            user_inactivity_normal_display_off_timeout.get(),
             notification_expiration_timeout);
 
     notification_expiration_alarm_id =

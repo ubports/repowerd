@@ -33,7 +33,10 @@ public:
 
     void handle_enable_inactivity_timeout() override {}
     void handle_disable_inactivity_timeout() override {}
-    void handle_set_inactivity_timeout(std::chrono::milliseconds) override {}
+    void handle_set_inactivity_behavior(
+        PowerAction, PowerSupply, std::chrono::milliseconds) override
+    {
+    }
 
     void handle_lid_closed() override {}
     void handle_lid_open() override {}

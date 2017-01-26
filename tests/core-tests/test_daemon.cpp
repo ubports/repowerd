@@ -77,7 +77,10 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_enable_inactivity_timeout, void());
     MOCK_METHOD0(handle_disable_inactivity_timeout, void());
-    MOCK_METHOD1(handle_set_inactivity_timeout, void(std::chrono::milliseconds));
+    MOCK_METHOD3(handle_set_inactivity_behavior,
+                 void(repowerd::PowerAction power_action,
+                      repowerd::PowerSupply power_supply,
+                      std::chrono::milliseconds timeout));
 
     MOCK_METHOD0(handle_user_activity_extending_power_state, void());
     MOCK_METHOD0(handle_user_activity_changing_power_state, void());
@@ -434,7 +437,16 @@ TEST_F(ADaemon, notifies_state_machine_of_set_inactivity_timeout)
     start_daemon();
 
     auto const timeout = 10000ms;
-    EXPECT_CALL(*config.the_mock_state_machine(), handle_set_inactivity_timeout(timeout));
+    EXPECT_CALL(*config.the_mock_state_machine(),
+                handle_set_inactivity_behavior(
+                    repowerd::PowerAction::display_off,
+                    repowerd::PowerSupply::battery,
+                    timeout));
+    EXPECT_CALL(*config.the_mock_state_machine(),
+                handle_set_inactivity_behavior(
+                    repowerd::PowerAction::display_off,
+                    repowerd::PowerSupply::line_power,
+                    timeout));
 
     config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
 }
@@ -444,8 +456,13 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_timeout)
     start_daemon_with_second_session_active();
 
     auto const timeout = 10000ms;
-    EXPECT_CALL(*config.the_mock_state_machine(0), handle_set_inactivity_timeout(timeout));
-    EXPECT_CALL(*config.the_mock_state_machine(1), handle_set_inactivity_timeout(_)).Times(0);
+    EXPECT_CALL(*config.the_mock_state_machine(0),
+                handle_set_inactivity_behavior(
+                    repowerd::PowerAction::display_off,
+                    _,
+                    timeout)).Times(2);
+    EXPECT_CALL(*config.the_mock_state_machine(1),
+                handle_set_inactivity_behavior(_, _, _)).Times(0);
     config.the_fake_client_requests()->emit_set_inactivity_timeout(timeout);
 }
 
