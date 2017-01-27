@@ -20,6 +20,7 @@
 
 #include "brightness_control.h"
 #include "client_requests.h"
+#include "client_settings.h"
 #include "display_power_control.h"
 #include "lid.h"
 #include "notification_service.h"
@@ -47,6 +48,7 @@ repowerd::Daemon::Session::Session(
 repowerd::Daemon::Daemon(DaemonConfig& config)
     : brightness_control{config.the_brightness_control()},
       client_requests{config.the_client_requests()},
+      client_settings{config.the_client_settings()},
       lid{config.the_lid()},
       notification_service{config.the_notification_service()},
       power_button{config.the_power_button()},
@@ -310,6 +312,20 @@ repowerd::Daemon::register_event_handlers()
                 }
             }));
 
+    registrations.push_back(
+        client_settings->register_set_inactivity_behavior_handler(
+            [this] (PowerAction power_action, PowerSupply power_supply,
+                    std::chrono::milliseconds timeout, pid_t pid)
+            {
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this, power_action, power_supply, timeout] (Session* s)
+                    {
+                        s->state_machine->handle_set_inactivity_behavior(
+                            power_action, power_supply, timeout);
+                    });
+            }));
+
     return registrations;
 }
 
@@ -321,6 +337,7 @@ void repowerd::Daemon::start_event_processing()
     session_tracker->start_processing();
 
     client_requests->start_processing();
+    client_settings->start_processing();
     lid->start_processing();
     notification_service->start_processing();
     power_button->start_processing();

@@ -18,6 +18,7 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
+#include "core/client_settings.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -127,6 +128,16 @@ struct NullSystemPowerControl : repowerd::SystemPowerControl
     void disallow_default_system_handlers() override {}
 };
 
+struct NullClientSettings : repowerd::ClientSettings
+{
+    void start_processing() override {}
+    repowerd::HandlerRegistration register_set_inactivity_behavior_handler(
+        repowerd::SetInactivityBehaviorHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
+};
+
 }
 
 std::shared_ptr<repowerd::DisplayInformation>
@@ -157,6 +168,15 @@ std::shared_ptr<repowerd::ClientRequests>
 repowerd::DefaultDaemonConfig::the_client_requests()
 {
     return the_unity_screen_service();
+}
+
+std::shared_ptr<repowerd::ClientSettings>
+repowerd::DefaultDaemonConfig::the_client_settings()
+{
+    if (!client_settings)
+        client_settings = std::make_shared<NullClientSettings>();
+
+    return client_settings;
 }
 
 std::shared_ptr<repowerd::DisplayPowerControl>

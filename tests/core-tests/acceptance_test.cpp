@@ -25,6 +25,7 @@
 #include "mock_display_power_event_sink.h"
 #include "mock_power_button_event_sink.h"
 #include "fake_client_requests.h"
+#include "fake_client_settings.h"
 #include "fake_lid.h"
 #include "fake_log.h"
 #include "fake_notification_service.h"
@@ -252,6 +253,17 @@ void rt::AcceptanceTestBase::client_request_enable_autobrightness(pid_t pid)
 void rt::AcceptanceTestBase::client_request_set_normal_brightness_value(double value, pid_t pid)
 {
     config.the_fake_client_requests()->emit_set_normal_brightness_value(value, pid);
+    daemon.flush();
+}
+
+void rt::AcceptanceTestBase::client_setting_set_inactivity_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
+        std::chrono::milliseconds timeout,
+        pid_t pid)
+{
+    config.the_fake_client_settings()->emit_set_inactivity_behavior(
+        power_action, power_supply, timeout, pid);
     daemon.flush();
 }
 

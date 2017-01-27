@@ -22,6 +22,7 @@
 #include "fake_display_information.h"
 #include "mock_brightness_control.h"
 #include "fake_client_requests.h"
+#include "fake_client_settings.h"
 #include "mock_display_power_control.h"
 #include "mock_display_power_event_sink.h"
 #include "fake_lid.h"
@@ -57,6 +58,11 @@ std::shared_ptr<repowerd::BrightnessControl> rt::DaemonConfig::the_brightness_co
 std::shared_ptr<repowerd::ClientRequests> rt::DaemonConfig::the_client_requests()
 {
     return the_fake_client_requests();
+}
+
+std::shared_ptr<repowerd::ClientSettings> rt::DaemonConfig::the_client_settings()
+{
+    return the_fake_client_settings();
 }
 
 std::shared_ptr<repowerd::DisplayPowerControl> rt::DaemonConfig::the_display_power_control()
@@ -176,6 +182,14 @@ std::shared_ptr<rt::FakeClientRequests> rt::DaemonConfig::the_fake_client_reques
         fake_client_requests = std::make_shared<rt::FakeClientRequests>();
 
     return fake_client_requests;
+}
+
+std::shared_ptr<rt::FakeClientSettings> rt::DaemonConfig::the_fake_client_settings()
+{
+    if (!fake_client_settings)
+        fake_client_settings = std::make_shared<rt::FakeClientSettings>();
+
+    return fake_client_settings;
 }
 
 std::shared_ptr<NiceMock<rt::MockDisplayPowerControl>>

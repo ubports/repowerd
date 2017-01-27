@@ -21,6 +21,7 @@ add_executable(
     daemon_config.cpp
     fake_display_information.cpp
     fake_client_requests.cpp
+    fake_client_settings.cpp
     fake_lid.cpp
     fake_notification_service.cpp
     fake_power_button.cpp
@@ -35,6 +36,7 @@ add_executable(
     run_daemon.cpp
 
     test_client_requests.cpp
+    test_client_settings.cpp
     test_treat_power_button_as_user_activity.cpp
     test_daemon.cpp
     test_fake_timer.cpp

@@ -19,6 +19,7 @@
 #include "daemon_config.h"
 #include "run_daemon.h"
 #include "fake_client_requests.h"
+#include "fake_client_settings.h"
 #include "fake_lid.h"
 #include "fake_notification_service.h"
 #include "fake_power_button.h"
@@ -873,4 +874,49 @@ TEST_F(ADaemon, notifies_state_machine_of_lid_open)
 
     EXPECT_CALL(*config.the_mock_state_machine(), handle_lid_open());
     config.the_fake_lid()->open();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_set_inactivity_behavior_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_client_settings()->mock, register_set_inactivity_behavior_handler(_));
+    EXPECT_CALL(config.the_fake_client_settings()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_settings().get());
+
+    EXPECT_CALL(config.the_fake_client_settings()->mock, unregister_set_inactivity_behavior_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_settings().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_set_inactivity_behavior)
+{
+    start_daemon();
+
+    auto const power_action = repowerd::PowerAction::display_off;
+    auto const power_supply = repowerd::PowerSupply::line_power;
+    auto const timeout = 10000ms;
+
+    EXPECT_CALL(*config.the_mock_state_machine(),
+                handle_set_inactivity_behavior(power_action, power_supply, timeout));
+
+    config.the_fake_client_settings()->emit_set_inactivity_behavior(
+        power_action, power_supply, timeout);
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_behavior)
+{
+    start_daemon_with_second_session_active();
+
+    auto const power_action = repowerd::PowerAction::display_off;
+    auto const power_supply = repowerd::PowerSupply::line_power;
+    auto const timeout = 10000ms;
+
+    EXPECT_CALL(*config.the_mock_state_machine(0),
+                handle_set_inactivity_behavior(power_action, power_supply, timeout));
+    EXPECT_CALL(*config.the_mock_state_machine(1),
+                handle_set_inactivity_behavior(_, _, _)).Times(0);
+
+    config.the_fake_client_settings()->emit_set_inactivity_behavior(
+        power_action, power_supply, timeout);
 }

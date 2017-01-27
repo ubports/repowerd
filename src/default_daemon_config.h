@@ -45,6 +45,7 @@ public:
     std::shared_ptr<DisplayInformation> the_display_information() override;
     std::shared_ptr<BrightnessControl> the_brightness_control() override;
     std::shared_ptr<ClientRequests> the_client_requests() override;
+    std::shared_ptr<ClientSettings> the_client_settings() override;
     std::shared_ptr<DisplayPowerControl> the_display_power_control() override;
     std::shared_ptr<DisplayPowerEventSink> the_display_power_event_sink() override;
     std::shared_ptr<Lid> the_lid() override;
@@ -88,6 +89,7 @@ private:
     std::shared_ptr<BrightnessControl> brightness_control;
     std::shared_ptr<BrightnessNotification> brightness_notification;
     std::shared_ptr<Chrono> chrono;
+    std::shared_ptr<ClientSettings> client_settings;
     std::shared_ptr<DeviceConfig> device_config;
     std::shared_ptr<DeviceQuirks> device_quirks;
     std::shared_ptr<Filesystem> filesystem;

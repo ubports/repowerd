@@ -20,6 +20,8 @@
 
 #include "src/core/daemon.h"
 #include "src/core/display_power_change_reason.h"
+#include "src/core/power_action.h"
+#include "src/core/power_supply.h"
 #include "daemon_config.h"
 #include "default_pid.h"
 
@@ -71,6 +73,11 @@ struct AcceptanceTestBase
     void client_request_disable_autobrightness(pid_t pid = default_pid);
     void client_request_enable_autobrightness(pid_t pid = default_pid);
     void client_request_set_normal_brightness_value(double value, pid_t pid = default_pid);
+    void client_setting_set_inactivity_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
+        std::chrono::milliseconds timeout,
+        pid_t pid = default_pid);
     void close_lid();
     void emit_notification(std::string const& id);
     void emit_notification_done(std::string const& id);

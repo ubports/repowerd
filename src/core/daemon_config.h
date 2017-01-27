@@ -27,6 +27,7 @@ namespace repowerd
 class DisplayInformation;
 class BrightnessControl;
 class ClientRequests;
+class ClientSettings;
 class DisplayPowerControl;
 class DisplayPowerEventSink;
 class Lid;
@@ -54,6 +55,7 @@ public:
     virtual std::shared_ptr<DisplayInformation> the_display_information() = 0;
     virtual std::shared_ptr<BrightnessControl> the_brightness_control() = 0;
     virtual std::shared_ptr<ClientRequests> the_client_requests() = 0;
+    virtual std::shared_ptr<ClientSettings> the_client_settings() = 0;
     virtual std::shared_ptr<DisplayPowerControl> the_display_power_control() = 0;
     virtual std::shared_ptr<DisplayPowerEventSink> the_display_power_event_sink() = 0;
     virtual std::shared_ptr<Lid> the_lid() = 0;
