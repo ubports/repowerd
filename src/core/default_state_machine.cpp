@@ -27,6 +27,7 @@
 #include "modem_power_control.h"
 #include "performance_booster.h"
 #include "power_button_event_sink.h"
+#include "power_source.h"
 #include "proximity_sensor.h"
 #include "state_machine_options.h"
 #include "system_power_control.h"
@@ -69,6 +70,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       modem_power_control{config.the_modem_power_control()},
       performance_booster{config.the_performance_booster()},
       power_button_event_sink{config.the_power_button_event_sink()},
+      power_source{config.the_power_source()},
       proximity_sensor{config.the_proximity_sensor()},
       system_power_control{config.the_system_power_control()},
       timer{config.the_timer()},
@@ -225,12 +227,22 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_behavior(
     if (timeout <= std::chrono::milliseconds::zero())
         return;
 
-    if (power_supply == PowerSupply::battery)
-        user_inactivity_normal_display_off_timeout.on_battery = timeout;
-    else
-        user_inactivity_normal_display_off_timeout.on_line_power = timeout;
+    bool power_supply_is_active{false};
 
-    if (scheduled_timeout_type == ScheduledTimeoutType::normal)
+    if (power_supply == PowerSupply::battery)
+    {
+        user_inactivity_normal_display_off_timeout.on_battery = timeout;
+        power_supply_is_active = user_inactivity_normal_display_off_timeout.is_on_battery;
+
+    }
+    else
+    {
+        user_inactivity_normal_display_off_timeout.on_line_power = timeout;
+        power_supply_is_active = !user_inactivity_normal_display_off_timeout.is_on_battery;
+    }
+
+
+    if (scheduled_timeout_type == ScheduledTimeoutType::normal && power_supply_is_active)
         schedule_normal_user_inactivity_alarm();
 }
 
@@ -358,6 +370,9 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
 {
     log->log(log_tag, "handle_power_source_change");
 
+    user_inactivity_normal_display_off_timeout.is_on_battery =
+        power_source->is_using_battery_power();
+
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
@@ -470,6 +485,9 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
 void repowerd::DefaultStateMachine::start()
 {
     log->log(log_tag, "start");
+
+    user_inactivity_normal_display_off_timeout.is_on_battery =
+        power_source->is_using_battery_power();
 
     system_power_control->disallow_default_system_handlers();
 

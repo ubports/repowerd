@@ -38,8 +38,11 @@ public:
     HandlerRegistration register_power_source_critical_handler(
         PowerSourceChangeHandler const& handler) override;
 
+    bool is_using_battery_power() override;
+
     void emit_power_source_change();
     void emit_power_source_critical();
+    void set_is_using_battery_power(bool b);
 
     struct Mock
     {
@@ -54,6 +57,7 @@ public:
 private:
     PowerSourceChangeHandler power_source_change_handler;
     PowerSourceCriticalHandler power_source_critical_handler;
+    bool is_using_battery_power_{true};
 };
 
 }

@@ -51,6 +51,11 @@ repowerd::HandlerRegistration rt::FakePowerSource::register_power_source_critica
         }};
 }
 
+bool rt::FakePowerSource::is_using_battery_power()
+{
+    return is_using_battery_power_;
+}
+
 void rt::FakePowerSource::emit_power_source_change()
 {
     power_source_change_handler();
@@ -59,4 +64,9 @@ void rt::FakePowerSource::emit_power_source_change()
 void rt::FakePowerSource::emit_power_source_critical()
 {
     power_source_critical_handler();
+}
+
+void rt::FakePowerSource::set_is_using_battery_power(bool b)
+{
+    is_using_battery_power_ = b;
 }

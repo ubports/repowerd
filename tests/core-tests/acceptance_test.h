@@ -104,6 +104,8 @@ struct AcceptanceTestBase
     void remove_session(std::string const& session_id);
     void turn_off_display();
     void turn_on_display();
+    void use_battery_power();
+    void use_line_power();
 
     bool log_contains_line(std::vector<std::string> const& words);
     bool are_proximity_events_enabled();

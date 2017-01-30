@@ -437,6 +437,16 @@ void rt::AcceptanceTestBase::turn_on_display()
     testing::Mock::VerifyAndClearExpectations(config.the_mock_brightness_control().get());
 }
 
+void rt::AcceptanceTestBase::use_battery_power()
+{
+    config.the_fake_power_source()->set_is_using_battery_power(true);
+}
+
+void rt::AcceptanceTestBase::use_line_power()
+{
+    config.the_fake_power_source()->set_is_using_battery_power(false);
+}
+
 bool rt::AcceptanceTestBase::are_proximity_events_enabled()
 {
     return config.the_fake_proximity_sensor()->are_proximity_events_enabled();

@@ -41,6 +41,8 @@ public:
     virtual HandlerRegistration register_power_source_critical_handler(
         PowerSourceCriticalHandler const& handler) = 0;
 
+    virtual bool is_using_battery_power() = 0;
+
 protected:
     PowerSource() = default;
     PowerSource (PowerSource const&) = default;

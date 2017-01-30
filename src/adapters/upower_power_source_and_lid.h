@@ -53,6 +53,8 @@ public:
     HandlerRegistration register_lid_handler(
         LidHandler const& handler) override;
 
+    bool is_using_battery_power() override;
+
     std::unordered_set<std::string> tracked_batteries();
 
 private:
@@ -69,7 +71,6 @@ private:
     void remove_device(std::string const& device);
     void change_device(std::string const& device, GVariantIter* properties_iter);
     GVariant* get_device_properties(std::string const& device);
-    bool is_using_battery_power();
     void change_upower(GVariantIter* properties_iter);
 
     struct BatteryInfo
