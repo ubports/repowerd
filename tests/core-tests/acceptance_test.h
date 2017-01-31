@@ -124,6 +124,7 @@ struct AcceptanceTestBase
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_timeout;
     std::chrono::milliseconds const user_inactivity_normal_display_off_timeout;
+    std::chrono::milliseconds const user_inactivity_normal_suspend_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const infinite_timeout;

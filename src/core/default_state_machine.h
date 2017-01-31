@@ -101,9 +101,12 @@ private:
         bool is_on_battery{true};
     };
 
-    void cancel_user_inactivity_alarm();
+    void cancel_user_inactivity_display_off_alarm();
+    void cancel_user_inactivity_suspend_alarm();
     void cancel_notification_expiration_alarm();
     void schedule_normal_user_inactivity_alarm();
+    void schedule_normal_user_inactivity_display_off_alarm();
+    void schedule_normal_user_inactivity_suspend_alarm();
     void schedule_post_notification_user_inactivity_alarm();
     void schedule_reduced_user_inactivity_alarm();
     void schedule_proximity_disable_alarm();
@@ -149,11 +152,13 @@ private:
     std::chrono::milliseconds power_button_long_press_timeout;
     AlarmId user_inactivity_display_dim_alarm_id;
     AlarmId user_inactivity_display_off_alarm_id;
+    AlarmId user_inactivity_suspend_alarm_id;
     AlarmId proximity_disable_alarm_id;
     AlarmId notification_expiration_alarm_id;
     std::chrono::steady_clock::time_point user_inactivity_display_off_time_point;
     std::chrono::milliseconds const user_inactivity_normal_display_dim_duration;
     ConfigurableTimeout user_inactivity_normal_display_off_timeout;
+    ConfigurableTimeout user_inactivity_normal_suspend_timeout;
     std::chrono::milliseconds const user_inactivity_reduced_display_off_timeout;
     std::chrono::milliseconds const user_inactivity_post_notification_display_off_timeout;
     std::chrono::milliseconds const notification_expiration_timeout;

@@ -69,6 +69,8 @@ rt::AcceptanceTestBase::AcceptanceTestBase(
           config.the_state_machine_options()->user_inactivity_normal_display_dim_duration()},
       user_inactivity_normal_display_off_timeout{
           config.the_state_machine_options()->user_inactivity_normal_display_off_timeout()},
+      user_inactivity_normal_suspend_timeout{
+          config.the_state_machine_options()->user_inactivity_normal_suspend_timeout()},
       user_inactivity_post_notification_display_off_timeout{
           config.the_state_machine_options()->user_inactivity_post_notification_display_off_timeout()},
       user_inactivity_reduced_display_off_timeout{

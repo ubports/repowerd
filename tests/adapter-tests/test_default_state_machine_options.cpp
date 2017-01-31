@@ -99,6 +99,12 @@ TEST_F(ADefaultStateMachineOptions, logs_options)
 
     EXPECT_TRUE(fake_log.contains_line(
         {
+            "user_inactivity_normal_suspend_timeout",
+            ms_to_str(options.user_inactivity_normal_suspend_timeout())
+        }));
+
+    EXPECT_TRUE(fake_log.contains_line(
+        {
             "user_inactivity_post_notification_display_off_timeout",
             ms_to_str(options.user_inactivity_post_notification_display_off_timeout())
         }));

@@ -41,6 +41,8 @@ std::string power_action_to_str(repowerd::PowerAction power_action)
 {
     if (power_action == repowerd::PowerAction::display_off)
         return "display_off";
+    else if (power_action == repowerd::PowerAction::suspend)
+        return "suspend";
 
     return "unknown";
 }
@@ -87,6 +89,10 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
           config.the_state_machine_options()->user_inactivity_normal_display_off_timeout(),
           config.the_state_machine_options()->user_inactivity_normal_display_off_timeout(),
           true},
+      user_inactivity_normal_suspend_timeout{
+          config.the_state_machine_options()->user_inactivity_normal_suspend_timeout(),
+          config.the_state_machine_options()->user_inactivity_normal_suspend_timeout(),
+          true},
       user_inactivity_reduced_display_off_timeout{
           config.the_state_machine_options()->user_inactivity_reduced_display_off_timeout()},
       user_inactivity_post_notification_display_off_timeout{
@@ -130,6 +136,13 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
         if (is_inactivity_timeout_application_allowed())
             turn_off_display(DisplayPowerChangeReason::activity);
         scheduled_timeout_type = ScheduledTimeoutType::none;
+    }
+    else if (id == user_inactivity_suspend_alarm_id)
+    {
+        log->log(log_tag, "handle_alarm(suspend)");
+        user_inactivity_suspend_alarm_id = AlarmId::invalid;
+        if (is_inactivity_timeout_application_allowed() && !paused)
+            system_power_control->suspend_when_allowed("DefaultStateMachine::inactivity");
     }
     else if (id == proximity_disable_alarm_id)
     {
@@ -227,20 +240,28 @@ void repowerd::DefaultStateMachine::handle_set_inactivity_behavior(
     if (timeout <= std::chrono::milliseconds::zero())
         return;
 
+    if (power_action != PowerAction::display_off &&
+        power_action != PowerAction::suspend)
+    {
+        return;
+    }
+
     bool power_supply_is_active{false};
+    auto& inactivity_timeout =
+        power_action == PowerAction::display_off ?
+        user_inactivity_normal_display_off_timeout :
+        user_inactivity_normal_suspend_timeout;
 
     if (power_supply == PowerSupply::battery)
     {
-        user_inactivity_normal_display_off_timeout.on_battery = timeout;
+        inactivity_timeout.on_battery = timeout;
         power_supply_is_active = user_inactivity_normal_display_off_timeout.is_on_battery;
-
     }
     else
     {
-        user_inactivity_normal_display_off_timeout.on_line_power = timeout;
+        inactivity_timeout.on_line_power = timeout;
         power_supply_is_active = !user_inactivity_normal_display_off_timeout.is_on_battery;
     }
-
 
     if (scheduled_timeout_type == ScheduledTimeoutType::normal && power_supply_is_active)
         schedule_normal_user_inactivity_alarm();
@@ -370,8 +391,10 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
 {
     log->log(log_tag, "handle_power_source_change");
 
-    user_inactivity_normal_display_off_timeout.is_on_battery =
-        power_source->is_using_battery_power();
+    auto const is_on_battery = power_source->is_using_battery_power();
+
+    user_inactivity_normal_display_off_timeout.is_on_battery = is_on_battery;
+    user_inactivity_normal_suspend_timeout.is_on_battery = is_on_battery;
 
     if (display_power_mode == DisplayPowerMode::on)
     {
@@ -382,6 +405,8 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
     {
         turn_on_display_with_reduced_timeout(DisplayPowerChangeReason::notification);
     }
+
+    schedule_normal_user_inactivity_suspend_alarm();
 }
 
 void repowerd::DefaultStateMachine::handle_power_source_critical()
@@ -486,8 +511,10 @@ void repowerd::DefaultStateMachine::start()
 {
     log->log(log_tag, "start");
 
-    user_inactivity_normal_display_off_timeout.is_on_battery =
-        power_source->is_using_battery_power();
+    auto const is_on_battery = power_source->is_using_battery_power();
+
+    user_inactivity_normal_display_off_timeout.is_on_battery = is_on_battery;
+    user_inactivity_normal_suspend_timeout.is_on_battery = is_on_battery;
 
     system_power_control->disallow_default_system_handlers();
 
@@ -533,7 +560,7 @@ void repowerd::DefaultStateMachine::resume()
         proximity_sensor->enable_proximity_events();
 }
 
-void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
+void repowerd::DefaultStateMachine::cancel_user_inactivity_display_off_alarm()
 {
     if (user_inactivity_display_dim_alarm_id != AlarmId::invalid)
     {
@@ -551,6 +578,15 @@ void repowerd::DefaultStateMachine::cancel_user_inactivity_alarm()
     scheduled_timeout_type = ScheduledTimeoutType::none;
 }
 
+void repowerd::DefaultStateMachine::cancel_user_inactivity_suspend_alarm()
+{
+    if (user_inactivity_suspend_alarm_id != AlarmId::invalid)
+    {
+        timer->cancel_alarm(user_inactivity_suspend_alarm_id);
+        user_inactivity_suspend_alarm_id = AlarmId::invalid;
+    }
+}
+
 void repowerd::DefaultStateMachine::cancel_notification_expiration_alarm()
 {
     if (notification_expiration_alarm_id != AlarmId::invalid)
@@ -562,27 +598,46 @@ void repowerd::DefaultStateMachine::cancel_notification_expiration_alarm()
 
 void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_alarm()
 {
-    cancel_user_inactivity_alarm();
+    schedule_normal_user_inactivity_display_off_alarm();
+    schedule_normal_user_inactivity_suspend_alarm();
+}
+
+void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_display_off_alarm()
+{
+    cancel_user_inactivity_display_off_alarm();
     scheduled_timeout_type = ScheduledTimeoutType::normal;
 
     if (user_inactivity_normal_display_off_timeout.get() == repowerd::infinite_timeout)
     {
         user_inactivity_display_off_time_point = std::chrono::steady_clock::time_point::max();
-        return;
     }
-
-    user_inactivity_display_off_time_point =
-        timer->now() + user_inactivity_normal_display_off_timeout.get();
-    if (user_inactivity_normal_display_off_timeout.get() > user_inactivity_normal_display_dim_duration)
+    else
     {
-        user_inactivity_display_dim_alarm_id =
-            timer->schedule_alarm_in(
-                user_inactivity_normal_display_off_timeout.get() -
-                user_inactivity_normal_display_dim_duration);
-    }
+        user_inactivity_display_off_time_point =
+            timer->now() + user_inactivity_normal_display_off_timeout.get();
+        if (user_inactivity_normal_display_off_timeout.get() > user_inactivity_normal_display_dim_duration)
+        {
+            user_inactivity_display_dim_alarm_id =
+                timer->schedule_alarm_in(
+                    user_inactivity_normal_display_off_timeout.get() -
+                    user_inactivity_normal_display_dim_duration);
+        }
 
-    user_inactivity_display_off_alarm_id =
-        timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout.get());
+        user_inactivity_display_off_alarm_id =
+            timer->schedule_alarm_in(user_inactivity_normal_display_off_timeout.get());
+    }
+}
+
+void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_suspend_alarm()
+{
+    cancel_user_inactivity_suspend_alarm();
+    system_power_control->cancel_suspend_when_allowed("DefaultStateMachine::inactivity");
+
+    if (user_inactivity_normal_suspend_timeout.get() != repowerd::infinite_timeout)
+    {
+        user_inactivity_suspend_alarm_id =
+            timer->schedule_alarm_in(user_inactivity_normal_suspend_timeout.get());
+    }
 }
 
 void repowerd::DefaultStateMachine::schedule_post_notification_user_inactivity_alarm()
@@ -590,7 +645,7 @@ void repowerd::DefaultStateMachine::schedule_post_notification_user_inactivity_a
     auto const tp = timer->now() + user_inactivity_post_notification_display_off_timeout;
     if (tp > user_inactivity_display_off_time_point)
     {
-        cancel_user_inactivity_alarm();
+        cancel_user_inactivity_display_off_alarm();
         user_inactivity_display_off_alarm_id =
             timer->schedule_alarm_in(user_inactivity_post_notification_display_off_timeout);
         user_inactivity_display_off_time_point = tp;
@@ -603,7 +658,7 @@ void repowerd::DefaultStateMachine::schedule_reduced_user_inactivity_alarm()
     auto const tp = timer->now() + user_inactivity_reduced_display_off_timeout;
     if (tp > user_inactivity_display_off_time_point)
     {
-        cancel_user_inactivity_alarm();
+        cancel_user_inactivity_display_off_alarm();
         user_inactivity_display_off_alarm_id =
             timer->schedule_alarm_in(user_inactivity_reduced_display_off_timeout);
         user_inactivity_display_off_time_point = tp;
@@ -638,7 +693,7 @@ void repowerd::DefaultStateMachine::schedule_immediate_user_inactivity_alarm()
     auto const tp = timer->now();
     if (tp > user_inactivity_display_off_time_point)
     {
-        cancel_user_inactivity_alarm();
+        cancel_user_inactivity_display_off_alarm();
         user_inactivity_display_off_alarm_id =
             timer->schedule_alarm_in(std::chrono::milliseconds{0});
         user_inactivity_display_off_time_point = tp;
@@ -657,7 +712,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
         modem_power_control->set_low_power_mode();
     display_power_mode = DisplayPowerMode::off;
     display_power_mode_reason = reason;
-    cancel_user_inactivity_alarm();
+    cancel_user_inactivity_display_off_alarm();
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
     if (reason != DisplayPowerChangeReason::proximity)

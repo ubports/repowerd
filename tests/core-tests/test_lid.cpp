@@ -64,6 +64,7 @@ TEST_F(ALid, opened_turns_on_display)
 
 TEST_F(ALid, opened_cancels_suspend_when_allowed)
 {
+    expect_system_cancel_suspend_when_allowed("inactivity");
     expect_system_cancel_suspend_when_allowed("lid");
     open_lid();
 }

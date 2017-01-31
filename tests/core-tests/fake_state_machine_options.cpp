@@ -17,6 +17,7 @@
  */
 
 #include "fake_state_machine_options.h"
+#include "src/core/infinite_timeout.h"
 
 using namespace std::chrono_literals;
 namespace rt = repowerd::test;
@@ -43,6 +44,12 @@ std::chrono::milliseconds
 rt::FakeStateMachineOptions::user_inactivity_normal_display_off_timeout() const
 {
     return 60s;
+}
+
+std::chrono::milliseconds
+rt::FakeStateMachineOptions::user_inactivity_normal_suspend_timeout() const
+{
+    return 120s;
 }
 
 std::chrono::milliseconds

@@ -21,6 +21,6 @@
 namespace repowerd
 {
 
-enum class PowerAction { display_off };
+enum class PowerAction { display_off, suspend };
 
 }

@@ -18,6 +18,7 @@
 
 #include "default_state_machine_options.h"
 #include "src/core/log.h"
+#include "src/core/infinite_timeout.h"
 
 #include <hybris/properties/properties.h>
 
@@ -53,22 +54,24 @@ repowerd::DefaultStateMachineOptions::DefaultStateMachineOptions(
         treat_power_button_as_user_activity_for(determine_device_name())}
 {
     log.log(log_tag, "DeviceName: %s", device_name_.c_str());
-    log.log(log_tag, "Option: notification_expiration_timeout=%d",
-            static_cast<int>(notification_expiration_timeout().count()));
-    log.log(log_tag, "Option: power_button_long_press_timeout=%d",
-            static_cast<int>(power_button_long_press_timeout().count()));
+    log.log(log_tag, "Option: notification_expiration_timeout=%lld",
+            static_cast<long long>(notification_expiration_timeout().count()));
+    log.log(log_tag, "Option: power_button_long_press_timeout=%lld",
+            static_cast<long long>(power_button_long_press_timeout().count()));
     log.log(log_tag, "Option: treat_power_button_as_user_activity=%s",
             treat_power_button_as_user_activity() ? "true" : "false");
     log.log(log_tag, "Option: turn_on_display_at_startup=%s",
             turn_on_display_at_startup() ? "true" : "false");
-    log.log(log_tag, "Option: user_inactivity_normal_display_dim_duration=%d",
-            static_cast<int>(user_inactivity_normal_display_dim_duration().count()));
-    log.log(log_tag, "Option: user_inactivity_normal_display_off_timeout=%d",
-            static_cast<int>(user_inactivity_normal_display_off_timeout().count()));
-    log.log(log_tag, "Option: user_inactivity_post_notification_display_off_timeout=%d",
-            static_cast<int>(user_inactivity_post_notification_display_off_timeout().count()));
-    log.log(log_tag, "Option: user_inactivity_reduced_display_off_timeout=%d",
-            static_cast<int>(user_inactivity_reduced_display_off_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_normal_display_dim_duration=%lld",
+            static_cast<long long>(user_inactivity_normal_display_dim_duration().count()));
+    log.log(log_tag, "Option: user_inactivity_normal_display_off_timeout=%lld",
+            static_cast<long long>(user_inactivity_normal_display_off_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_normal_suspend_timeout=%lld",
+            static_cast<long long>(user_inactivity_normal_suspend_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_post_notification_display_off_timeout=%lld",
+            static_cast<long long>(user_inactivity_post_notification_display_off_timeout().count()));
+    log.log(log_tag, "Option: user_inactivity_reduced_display_off_timeout=%lld",
+            static_cast<long long>(user_inactivity_reduced_display_off_timeout().count()));
 }
 
 std::chrono::milliseconds
@@ -93,6 +96,12 @@ std::chrono::milliseconds
 repowerd::DefaultStateMachineOptions::user_inactivity_normal_display_off_timeout() const
 {
     return 60s;
+}
+
+std::chrono::milliseconds
+repowerd::DefaultStateMachineOptions::user_inactivity_normal_suspend_timeout() const
+{
+    return repowerd::infinite_timeout;
 }
 
 std::chrono::milliseconds
