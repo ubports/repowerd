@@ -30,24 +30,6 @@ namespace
 
 struct ALid : rt::AcceptanceTest
 {
-    void expect_suspend_when_allowed()
-    {
-        EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                    suspend_when_allowed(_));
-    }
-
-    void expect_cancel_suspend_when_allowed()
-    {
-        EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                    cancel_suspend_when_allowed(_));
-    }
-
-    void expect_no_suspend_when_allowed()
-    {
-        EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                    suspend_when_allowed(_)).Times(0);
-    }
-
     void activate_external_display()
     {
         config.the_fake_display_information()->set_has_active_external_displays(true);
@@ -62,7 +44,7 @@ TEST_F(ALid, closed_turns_off_display_beforing_suspending_when_allowed)
 
     InSequence s;
     expect_display_turns_off();
-    expect_suspend_when_allowed();
+    expect_system_suspends_when_allowed("lid");
 
     close_lid();
 }
@@ -82,7 +64,7 @@ TEST_F(ALid, opened_turns_on_display)
 
 TEST_F(ALid, opened_cancels_suspend_when_allowed)
 {
-    expect_cancel_suspend_when_allowed();
+    expect_system_cancel_suspend_when_allowed("lid");
     open_lid();
 }
 
@@ -99,7 +81,7 @@ TEST_F(ALid, closed_turns_off_internal_display_but_does_not_suspend_if_external_
     turn_on_display();
 
     expect_internal_display_turns_off();
-    expect_no_suspend_when_allowed();
+    expect_no_system_power_change();
 
     close_lid();
 }

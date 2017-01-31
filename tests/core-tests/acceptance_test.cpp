@@ -172,6 +172,13 @@ void rt::AcceptanceTestBase::expect_no_long_press_notification()
     EXPECT_CALL(*config.the_mock_power_button_event_sink(), notify_long_press()).Times(0);
 }
 
+void rt::AcceptanceTestBase::expect_no_system_power_change()
+{
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, power_off()).Times(0);
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_if_allowed()).Times(0);
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_when_allowed(_)).Times(0);
+}
+
 void rt::AcceptanceTestBase::expect_normal_brightness_value_set_to(double value)
 {
     EXPECT_CALL(*config.the_mock_brightness_control(), set_normal_brightness_value(value));
@@ -195,6 +202,20 @@ void rt::AcceptanceTestBase::expect_display_power_on_notification(
 void rt::AcceptanceTestBase::expect_system_powers_off()
 {
     EXPECT_CALL(config.the_fake_system_power_control()->mock, power_off());
+}
+
+void rt::AcceptanceTestBase::expect_system_suspends_when_allowed(
+    std::string const& substr)
+{
+    EXPECT_CALL(config.the_fake_system_power_control()->mock,
+                suspend_when_allowed(HasSubstr(substr)));
+}
+
+void rt::AcceptanceTestBase::expect_system_cancel_suspend_when_allowed(
+    std::string const& substr)
+{
+    EXPECT_CALL(config.the_fake_system_power_control()->mock,
+                cancel_suspend_when_allowed(HasSubstr(substr)));
 }
 
 bool rt::AcceptanceTestBase::log_contains_line(std::vector<std::string> const& words)
