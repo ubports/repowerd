@@ -45,6 +45,18 @@ void ioctl_or_throw(
     if (retval < 0)
         throw std::system_error{errno, std::system_category(), error_msg};
 }
+
+timespec to_timespec(std::chrono::system_clock::time_point const& tp)
+{
+    auto d = tp.time_since_epoch();
+    auto const sec = std::chrono::duration_cast<std::chrono::seconds>(d);
+
+    timespec ts;
+    ts.tv_sec = sec.count();
+    ts.tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(d - sec).count();
+
+    return ts;
+}
 }
 
 repowerd::DevAlarmWakeupService::DevAlarmWakeupService(
@@ -135,18 +147,6 @@ repowerd::HandlerRegistration repowerd::DevAlarmWakeupService::register_wakeup_h
             std::lock_guard<std::mutex> lock{wakeup_mutex};
             wakeup_handler = null_handler;
         }};
-}
-
-timespec to_timespec(std::chrono::system_clock::time_point const& tp)
-{
-    auto d = tp.time_since_epoch();
-    auto const sec = std::chrono::duration_cast<std::chrono::seconds>(d);
-
-    timespec ts;
-    ts.tv_sec = sec.count();
-    ts.tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(d - sec).count();
-
-    return ts;
 }
 
 void repowerd::DevAlarmWakeupService::reset_hardware_alarm()

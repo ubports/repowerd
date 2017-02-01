@@ -18,6 +18,7 @@
 
 #include "event_loop.h"
 
+#include <glib-unix.h>
 #include <pthread.h>
 
 namespace
@@ -55,6 +56,29 @@ struct GSourceContext
     static void static_destroy(GSourceContext* ctx) { delete ctx; }
     std::function<void()> const callback;
     std::promise<void> done;
+};
+
+struct GSourceFdContext
+{
+    GSourceFdContext(std::function<void()> const& callback)
+        : callback{callback}
+    {
+    }
+
+    static gboolean static_call(int, GIOCondition, GSourceFdContext* ctx)
+    {
+        try
+        {
+            ctx->callback();
+        }
+        catch (...)
+        {
+        }
+        return G_SOURCE_CONTINUE;
+    }
+
+    static void static_destroy(GSourceFdContext* ctx) { delete ctx; }
+    std::function<void()> const callback;
 };
 
 }
@@ -163,4 +187,19 @@ void repowerd::EventLoop::schedule_with_cancellation_in(
         });
 
     g_source_attach(gsource, main_context);
+}
+
+void repowerd::EventLoop::watch_fd(
+    int fd, std::function<void()> const& callback)
+{
+    auto const gsource = g_unix_fd_source_new(fd, G_IO_IN);
+    auto const ctx = new GSourceFdContext{callback};
+    g_source_set_callback(
+            gsource,
+            reinterpret_cast<GSourceFunc>(&GSourceFdContext::static_call),
+            ctx,
+            reinterpret_cast<GDestroyNotify>(&GSourceFdContext::static_destroy));
+
+    g_source_attach(gsource, main_context);
+    g_source_unref(gsource);
 }

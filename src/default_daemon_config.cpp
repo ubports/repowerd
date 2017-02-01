@@ -38,6 +38,7 @@
 #include "adapters/real_temporary_suspend_inhibition.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
+#include "adapters/timerfd_wakeup_service.h"
 #include "adapters/ubuntu_light_sensor.h"
 #include "adapters/ubuntu_performance_booster.h"
 #include "adapters/ubuntu_proximity_sensor.h"
@@ -124,22 +125,6 @@ struct NullSystemPowerControl : repowerd::SystemPowerControl
     void cancel_suspend_when_allowed(std::string const&) override {}
     void allow_default_system_handlers() override {}
     void disallow_default_system_handlers() override {}
-};
-
-struct NullWakeupService : repowerd::WakeupService
-{
-    std::string schedule_wakeup_at(std::chrono::system_clock::time_point) override
-    {
-        return {};
-    }
-
-    void cancel_wakeup(std::string const&) override {}
-
-    repowerd::HandlerRegistration register_wakeup_handler(
-        repowerd::WakeupHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
 };
 
 }
@@ -606,9 +591,11 @@ repowerd::DefaultDaemonConfig::the_wakeup_service()
     catch (std::exception const& e)
     {
         the_log()->log(log_tag, "Failed to create DevAlarmWakeupService: %s", e.what());
-        the_log()->log(log_tag, "Falling back to NullWakeupService");
-        wakeup_service = std::make_shared<NullWakeupService>();
+        the_log()->log(log_tag, "Trying TimerfdWakeupService");
     }
+
+    if (!wakeup_service)
+        wakeup_service = std::make_shared<TimerfdWakeupService>();
 
     return wakeup_service;
 }

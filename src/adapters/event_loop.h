@@ -47,6 +47,8 @@ public:
         std::function<void()> const& callback,
         std::function<void(EventLoopCancellation const&)> const& cancellation_ready);
 
+    void watch_fd(int fd, std::function<void()> const& callback);
+
 protected:
     std::thread loop_thread;
     GMainContext* main_context;

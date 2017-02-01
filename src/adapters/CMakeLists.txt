@@ -46,6 +46,7 @@ set(
     real_temporary_suspend_inhibition.cpp
     syslog_log.cpp
     sysfs_backlight.cpp
+    timerfd_wakeup_service.cpp
     ubuntu_light_sensor.cpp
     ubuntu_performance_booster.cpp
     ubuntu_proximity_sensor.cpp
