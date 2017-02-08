@@ -66,6 +66,8 @@ public:
     virtual void handle_enable_autobrightness() = 0;
     virtual void handle_disable_autobrightness() = 0;
 
+    virtual void handle_system_resume() = 0;
+
     virtual void start() = 0;
     virtual void pause() = 0;
     virtual void resume() = 0;

@@ -26,6 +26,7 @@
 #include "fake_power_source.h"
 #include "fake_proximity_sensor.h"
 #include "fake_session_tracker.h"
+#include "fake_system_power_control.h"
 #include "fake_timer.h"
 #include "fake_user_activity.h"
 #include "fake_voice_call_service.h"
@@ -90,6 +91,7 @@ struct MockStateMachine : public repowerd::StateMachine
     MOCK_METHOD0(handle_enable_autobrightness, void());
     MOCK_METHOD0(handle_disable_autobrightness, void());
 
+    MOCK_METHOD0(handle_system_resume, void());
 
     void start()
     {
@@ -919,4 +921,26 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_inactivity_behavior)
 
     config.the_fake_client_settings()->emit_set_inactivity_behavior(
         power_action, power_supply, timeout);
+}
+
+TEST_F(ADaemon, registers_and_unregisters_system_resume_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, register_system_resume_handler(_));
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, unregister_system_resume_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_system_resume)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_system_resume());
+
+    config.the_fake_system_power_control()->emit_system_resume();
 }

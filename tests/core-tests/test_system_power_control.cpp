@@ -46,6 +46,12 @@ struct ASystemPowerControl : rt::AcceptanceTest
         EXPECT_CALL(config.the_fake_system_power_control()->mock,
                     disallow_suspend(_, repowerd::SuspendType::automatic));
     }
+
+    void emit_system_resume()
+    {
+        config.the_fake_system_power_control()->emit_system_resume();
+        daemon.flush();
+    }
 };
 
 }
@@ -84,4 +90,18 @@ TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_before_display_is_tu
 
     press_power_button();
     release_power_button();
+}
+
+TEST_F(ASystemPowerControl, resume_turns_on_screen)
+{
+    expect_display_turns_on();
+
+    emit_system_resume();
+}
+
+TEST_F(ASystemPowerControl, resume_is_logged)
+{
+    emit_system_resume();
+
+    EXPECT_TRUE(log_contains_line({"system_resume"}));
 }

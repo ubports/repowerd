@@ -85,6 +85,7 @@ private:
     std::shared_ptr<ProximitySensor> const proximity_sensor;
     std::shared_ptr<SessionTracker> const session_tracker;
     std::shared_ptr<StateMachineFactory> const state_machine_factory;
+    std::shared_ptr<SystemPowerControl> const system_power_control;
     std::shared_ptr<Timer> const timer;
     std::shared_ptr<UserActivity> const user_activity;
     std::shared_ptr<VoiceCallService> const voice_call_service;

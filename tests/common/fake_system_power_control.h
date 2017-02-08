@@ -35,6 +35,10 @@ class FakeSystemPowerControl : public SystemPowerControl
 public:
     FakeSystemPowerControl();
 
+    void start_processing() override;
+    HandlerRegistration register_system_resume_handler(
+        SystemResumeHandler const& systemd_resume_handler) override;
+
     void allow_suspend(std::string const& id, SuspendType suspend_type) override;
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 
@@ -49,8 +53,13 @@ public:
     bool is_suspend_allowed(SuspendType suspend_type);
     bool are_default_system_handlers_allowed();
 
+    void emit_system_resume();
+
     struct MockMethods
     {
+        MOCK_METHOD0(start_processing, void());
+        MOCK_METHOD1(register_system_resume_handler, void(SystemResumeHandler const&));
+        MOCK_METHOD0(unregister_system_resume_handler, void());
         MOCK_METHOD2(allow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD0(power_off, void());
@@ -67,6 +76,7 @@ private:
     std::unordered_set<std::string> automatic_suspend_disallowances;
     std::unordered_set<std::string> any_suspend_disallowances;
     bool are_default_system_handlers_allowed_;
+    SystemResumeHandler system_resume_handler;
 };
 
 }

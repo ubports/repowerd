@@ -118,6 +118,12 @@ struct NullProximitySensor : repowerd::ProximitySensor
 
 struct NullSystemPowerControl : repowerd::SystemPowerControl
 {
+    void start_processing() override {}
+    repowerd::HandlerRegistration register_system_resume_handler(
+        repowerd::SystemResumeHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
     void allow_suspend(std::string const&, repowerd::SuspendType) override {}
     void disallow_suspend(std::string const&, repowerd::SuspendType) override {}
     void power_off() override {}

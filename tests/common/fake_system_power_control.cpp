@@ -21,8 +21,29 @@
 namespace rt = repowerd::test;
 
 rt::FakeSystemPowerControl::FakeSystemPowerControl()
-    : are_default_system_handlers_allowed_{true}
+    : are_default_system_handlers_allowed_{true},
+      system_resume_handler{[]{}}
 {
+}
+
+void rt::FakeSystemPowerControl::start_processing()
+{
+    mock.start_processing();
+}
+
+repowerd::HandlerRegistration rt::FakeSystemPowerControl::register_system_resume_handler(
+    SystemResumeHandler const& handler)
+{
+    mock.register_system_resume_handler(handler);
+    this->system_resume_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_system_resume_handler();
+
+            std::lock_guard<std::mutex> lock{mutex};
+            this->system_resume_handler = []{};
+        }};
 }
 
 void rt::FakeSystemPowerControl::allow_suspend(
@@ -104,4 +125,16 @@ bool rt::FakeSystemPowerControl::are_default_system_handlers_allowed()
     std::lock_guard<std::mutex> lock{mutex};
 
     return are_default_system_handlers_allowed_;
+}
+
+void rt::FakeSystemPowerControl::emit_system_resume()
+{
+    SystemResumeHandler handler;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        handler = system_resume_handler;
+    }
+
+    handler();
 }

@@ -31,6 +31,7 @@
 #include "session_tracker.h"
 #include "state_machine.h"
 #include "state_machine_factory.h"
+#include "system_power_control.h"
 #include "timer.h"
 #include "user_activity.h"
 #include "voice_call_service.h"
@@ -56,6 +57,7 @@ repowerd::Daemon::Daemon(DaemonConfig& config)
       proximity_sensor{config.the_proximity_sensor()},
       session_tracker{config.the_session_tracker()},
       state_machine_factory{config.the_state_machine_factory()},
+      system_power_control{config.the_system_power_control()},
       timer{config.the_timer()},
       user_activity{config.the_user_activity()},
       voice_call_service{config.the_voice_call_service()},
@@ -326,6 +328,14 @@ repowerd::Daemon::register_event_handlers()
                     });
             }));
 
+    registrations.push_back(
+        system_power_control->register_system_resume_handler(
+            [this]
+            {
+                enqueue_action_to_active_session(
+                    [this] (Session* s) { s->state_machine->handle_system_resume(); });
+            }));
+
     return registrations;
 }
 
@@ -342,6 +352,7 @@ void repowerd::Daemon::start_event_processing()
     notification_service->start_processing();
     power_button->start_processing();
     power_source->start_processing();
+    system_power_control->start_processing();
     user_activity->start_processing();
     voice_call_service->start_processing();
 }

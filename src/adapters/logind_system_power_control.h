@@ -39,6 +39,10 @@ public:
         std::shared_ptr<Log> const& log,
         std::string const& dbus_bus_address);
 
+    void start_processing() override;
+    HandlerRegistration register_system_resume_handler(
+        SystemResumeHandler const& system_resume_handler) override;
+
     void allow_suspend(std::string const& id, SuspendType suspend_type) override;
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 

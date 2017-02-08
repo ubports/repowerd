@@ -18,17 +18,27 @@
 
 #pragma once
 
+#include "handler_registration.h"
+
 #include <string>
+#include <functional>
 
 namespace repowerd
 {
 
 enum class SuspendType { automatic, any };
 
+using SystemResumeHandler = std::function<void()>;
+
 class SystemPowerControl
 {
 public:
     virtual ~SystemPowerControl() = default;
+
+    virtual void start_processing() = 0;
+
+    virtual HandlerRegistration register_system_resume_handler(
+        SystemResumeHandler const& system_resume_handler) = 0;
 
     virtual void allow_suspend(std::string const& id, SuspendType suspend_type) = 0;
     virtual void disallow_suspend(std::string const& id, SuspendType suspend_type) = 0;

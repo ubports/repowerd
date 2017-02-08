@@ -507,6 +507,13 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
     brightness_control->disable_autobrightness();
 }
 
+void repowerd::DefaultStateMachine::handle_system_resume()
+{
+    log->log(log_tag, "handle_system_resume");
+
+    turn_on_display_with_normal_timeout(DisplayPowerChangeReason::activity);
+}
+
 void repowerd::DefaultStateMachine::start()
 {
     log->log(log_tag, "start");

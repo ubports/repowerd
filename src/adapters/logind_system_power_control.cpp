@@ -42,6 +42,17 @@ repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
 {
 }
 
+void repowerd::LogindSystemPowerControl::start_processing()
+{
+}
+
+repowerd::HandlerRegistration
+repowerd::LogindSystemPowerControl::register_system_resume_handler(
+    SystemResumeHandler const&)
+{
+    return HandlerRegistration{};
+}
+
 void repowerd::LogindSystemPowerControl::allow_suspend(
     std::string const& id, SuspendType suspend_type)
 {
