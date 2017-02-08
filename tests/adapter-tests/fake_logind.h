@@ -50,6 +50,8 @@ public:
     std::unordered_set<std::string> active_inhibitions();
     std::string power_requests();
 
+    void emit_prepare_for_sleep(bool start);
+
 private:
     void dbus_method_call(
         GDBusConnection* connection,

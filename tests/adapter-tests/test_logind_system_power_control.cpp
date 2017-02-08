@@ -45,6 +45,11 @@ struct ALogindSystemPowerControl : testing::Test
     repowerd::LogindSystemPowerControl system_power_control{
         rt::fake_shared(fake_log), bus.address()};
 
+    ALogindSystemPowerControl()
+    {
+        system_power_control.start_processing();
+    }
+
     void expect_inhibitions(std::unordered_set<std::string> const& inhibitions)
     {
         rt::spin_wait_for_condition_or_timeout(
@@ -221,6 +226,24 @@ TEST_F(ALogindSystemPowerControl, allow_default_system_handlers_removes_inhibiti
     system_power_control.allow_default_system_handlers();
 
     expect_no_inhibitions();
+}
+
+TEST_F(ALogindSystemPowerControl, notifies_of_system_resume)
+{
+    std::atomic<bool> system_resume{false};
+
+    auto const system_resume_registration =
+        system_power_control.register_system_resume_handler(
+            [&] { system_resume = true; });
+
+    fake_logind.emit_prepare_for_sleep(false);
+
+    rt::spin_wait_for_condition_or_timeout(
+        [&] { return system_resume.load(); },
+        default_timeout);
+
+    EXPECT_THAT(system_resume, Eq(true));
+    EXPECT_TRUE(fake_log.contains_line({"PrepareForSleep", "false"}));
 }
 
 TEST_F(ALogindSystemPowerControl, disallow_any_suspend_logs_inhibition)

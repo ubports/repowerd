@@ -56,6 +56,9 @@ char const* const logind_introspection = R"(<!DOCTYPE node PUBLIC '-//freedeskto
             <arg name='name' type='s'/>
             <arg name='path' type='o'/>
         </signal>
+        <signal name='PrepareForSleep'>
+            <arg name='start' type='b'/>
+        </signal>
     </interface>
 </node>)";
 
@@ -263,6 +266,17 @@ std::string rt::FakeLogind::power_requests()
     std::lock_guard<std::mutex> lock{sessions_mutex};
 
     return power_requests_;
+}
+
+void rt::FakeLogind::emit_prepare_for_sleep(bool start)
+{
+    gboolean const value{start ? TRUE : FALSE};
+    auto const params = g_variant_new_parsed("(%b,)", value);
+
+    emit_signal_full(
+        "/org/freedesktop/login1",
+        "org.freedesktop.login1.Manager",
+        "PrepareForSleep", params);
 }
 
 void rt::FakeLogind::dbus_method_call(

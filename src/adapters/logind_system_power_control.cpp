@@ -18,6 +18,7 @@
 
 #include "logind_system_power_control.h"
 #include "scoped_g_error.h"
+#include "event_loop_handler_registration.h"
 
 #include "src/core/log.h"
 
@@ -38,19 +39,42 @@ repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
     std::string const& dbus_bus_address)
     : log{log},
       dbus_connection{dbus_bus_address},
+      dbus_event_loop{"SystemPower"},
+      system_resume_handler{[]{}},
       idle_and_lid_inhibition_fd{-1}
 {
 }
 
 void repowerd::LogindSystemPowerControl::start_processing()
 {
+    dbus_manager_signal_handler_registration = dbus_event_loop.register_signal_handler(
+        dbus_connection,
+        dbus_logind_name,
+        dbus_manager_interface,
+        "PrepareForSleep",
+        dbus_manager_path,
+        [this] (
+            GDBusConnection* connection,
+            gchar const* sender,
+            gchar const* object_path,
+            gchar const* interface_name,
+            gchar const* signal_name,
+            GVariant* parameters)
+        {
+            handle_dbus_signal(
+                connection, sender, object_path, interface_name,
+                signal_name, parameters);
+        });
 }
 
 repowerd::HandlerRegistration
 repowerd::LogindSystemPowerControl::register_system_resume_handler(
-    SystemResumeHandler const&)
+    SystemResumeHandler const& handler)
 {
-    return HandlerRegistration{};
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { this->system_resume_handler = handler; },
+        [this] { this->system_resume_handler = []{}; }};
 }
 
 void repowerd::LogindSystemPowerControl::allow_suspend(
@@ -135,6 +159,29 @@ void repowerd::LogindSystemPowerControl::disallow_default_system_handlers()
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
     idle_and_lid_inhibition_fd = std::move(inhibition_fd);
 }
+
+void repowerd::LogindSystemPowerControl::handle_dbus_signal(
+    GDBusConnection* /*connection*/,
+    gchar const* /*sender*/,
+    gchar const* /*object_path*/,
+    gchar const* /*interface_name*/,
+    gchar const* signal_name_cstr,
+    GVariant* parameters)
+{
+    std::string const signal_name{signal_name_cstr ? signal_name_cstr : ""};
+
+    if (signal_name == "PrepareForSleep")
+    {
+        gboolean start{FALSE};
+        g_variant_get(parameters, "(b)", &start);
+
+        log->log(log_tag, "dbus_PrepareForSleep(%s)", start ? "true" : "false");
+
+        if (start == FALSE)
+            system_resume_handler();
+    }
+}
+
 
 repowerd::Fd repowerd::LogindSystemPowerControl::dbus_inhibit(
     char const* what, char const* why)

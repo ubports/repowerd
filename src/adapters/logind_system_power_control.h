@@ -21,6 +21,7 @@
 #include "src/core/system_power_control.h"
 
 #include "dbus_connection_handle.h"
+#include "dbus_event_loop.h"
 #include "fd.h"
 
 #include <memory>
@@ -55,12 +56,23 @@ public:
     void disallow_default_system_handlers() override;
 
 private:
-    std::shared_ptr<Log> const log;
-    DBusConnectionHandle dbus_connection;
-
+    void handle_dbus_signal(
+        GDBusConnection* connection,
+        gchar const* sender,
+        gchar const* object_path,
+        gchar const* interface_name,
+        gchar const* signal_name,
+        GVariant* parameters);
     Fd dbus_inhibit(char const* what, char const* who);
     void dbus_power_off();
     void dbus_suspend();
+
+    std::shared_ptr<Log> const log;
+    DBusConnectionHandle dbus_connection;
+    DBusEventLoop dbus_event_loop;
+
+    HandlerRegistration dbus_manager_signal_handler_registration;
+    SystemResumeHandler system_resume_handler;
 
     std::mutex inhibitions_mutex;
     std::unordered_map<std::string, Fd> suspend_disallowances;
