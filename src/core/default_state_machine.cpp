@@ -39,7 +39,9 @@ char const* const suspend_id = "DefaultStateMachine";
 
 std::string power_action_to_str(repowerd::PowerAction power_action)
 {
-    if (power_action == repowerd::PowerAction::display_off)
+    if (power_action == repowerd::PowerAction::none)
+        return "none";
+    else if (power_action == repowerd::PowerAction::display_off)
         return "display_off";
     else if (power_action == repowerd::PowerAction::suspend)
         return "suspend";
@@ -104,6 +106,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       turn_on_display_at_startup{
           config.the_state_machine_options()->turn_on_display_at_startup()},
       scheduled_timeout_type{ScheduledTimeoutType::none},
+      lid_power_action{PowerAction::suspend, PowerAction::suspend, true},
       paused{false},
       autobrightness_enabled{false},
       normal_brightness_value{0.5},
@@ -278,7 +281,8 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
         if (display_power_mode == DisplayPowerMode::on)
             turn_off_display(DisplayPowerChangeReason::unknown);
 
-        system_power_control->suspend_when_allowed("DefaultStateMachine::lid");
+        if (lid_power_action.get() == PowerAction::suspend)
+            system_power_control->suspend_when_allowed("DefaultStateMachine::lid");
     }
     else
     {
@@ -309,8 +313,23 @@ void repowerd::DefaultStateMachine::handle_lid_open()
 }
 
 void repowerd::DefaultStateMachine::handle_set_lid_behavior(
-    PowerAction, PowerSupply)
+    PowerAction power_action, PowerSupply power_supply)
 {
+    log->log(log_tag, "handle_set_lid_behavior(%s,%s)",
+             power_action_to_str(power_action).c_str(),
+             power_supply_to_str(power_supply).c_str());
+
+    if (power_action != PowerAction::none &&
+        power_action != PowerAction::display_off &&
+        power_action != PowerAction::suspend)
+    {
+        return;
+    }
+
+    if (power_supply == PowerSupply::battery)
+        lid_power_action.on_battery = power_action;
+    else
+        lid_power_action.on_line_power = power_action;
 }
 
 void repowerd::DefaultStateMachine::handle_no_notification()
@@ -400,6 +419,7 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
 
     user_inactivity_normal_display_off_timeout.is_on_battery = is_on_battery;
     user_inactivity_normal_suspend_timeout.is_on_battery = is_on_battery;
+    lid_power_action.is_on_battery = is_on_battery;
 
     if (display_power_mode == DisplayPowerMode::on)
     {
@@ -527,6 +547,7 @@ void repowerd::DefaultStateMachine::start()
 
     user_inactivity_normal_display_off_timeout.is_on_battery = is_on_battery;
     user_inactivity_normal_suspend_timeout.is_on_battery = is_on_battery;
+    lid_power_action.is_on_battery = is_on_battery;
 
     system_power_control->disallow_default_system_handlers();
 

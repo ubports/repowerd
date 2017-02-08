@@ -362,6 +362,25 @@ TEST_P(AClientSetting,
     advance_time_by(1ms);
 }
 
+TEST_P(AClientSetting, for_unsupported_action_in_inactivity_behavior_is_ignored)
+{
+    auto const timeout = 10s;
+
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::none,
+        power_supply,
+        timeout);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_no_display_power_change();
+    advance_time_by(timeout);
+}
+
 TEST_P(AClientSetting, for_suspend_inactivity_behavior_is_logged)
 {
     client_setting_set_inactivity_behavior(
@@ -377,6 +396,179 @@ TEST_P(AClientSetting, for_suspend_inactivity_behavior_is_logged)
             "suspend",
             power_supply_to_str(power_supply),
             timeout_str}));
+}
+
+TEST_P(AClientSetting,
+       for_suspend_lid_behavior_is_used_on_matching_power_supply)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::suspend,
+        power_supply);
+
+    turn_on_display();
+
+    expect_system_suspends_when_allowed("lid");
+    close_lid();
+}
+
+TEST_P(AClientSetting, for_suspend_lid_behavior_is_logged)
+{
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::suspend,
+        power_supply);
+
+    EXPECT_TRUE(
+        log_contains_line({
+            "set_lid_behavior",
+            "suspend",
+            power_supply_to_str(power_supply)}));
+}
+
+TEST_P(AClientSetting,
+       for_none_lid_behavior_is_used_on_matching_power_supply)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::none,
+        power_supply);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_display_turns_off();
+    close_lid();
+}
+
+TEST_P(AClientSetting,
+       for_none_lid_behavior_is_not_used_on_non_matching_power_supply)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::none,
+        power_supply);
+
+    apply_power_supply(other(power_supply));
+    turn_off_display();
+
+    turn_on_display();
+
+    expect_system_suspends_when_allowed("lid");
+    close_lid();
+}
+
+TEST_P(AClientSetting,
+       for_none_lid_behavior_is_used_on_matching_power_supply_when_session_starts)
+{
+    auto const pid = rt::default_pid + 100;
+
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    add_compatible_session("c0", pid);
+    switch_to_session("c0");
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::none,
+        power_supply,
+        pid);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_display_turns_off();
+    close_lid();
+}
+
+TEST_P(AClientSetting, for_none_lid_behavior_is_logged)
+{
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::none,
+        power_supply);
+
+    EXPECT_TRUE(
+        log_contains_line({
+            "set_lid_behavior",
+            "none",
+            power_supply_to_str(power_supply)}));
+}
+
+TEST_P(AClientSetting,
+       for_display_off_lid_behavior_is_used_on_matching_power_supply)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::display_off,
+        power_supply);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_display_turns_off();
+    close_lid();
+}
+
+TEST_P(AClientSetting,
+       for_display_off_lid_behavior_is_not_used_on_non_matching_power_supply)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::display_off,
+        power_supply);
+
+    apply_power_supply(other(power_supply));
+    turn_off_display();
+
+    turn_on_display();
+
+    expect_system_suspends_when_allowed("lid");
+    close_lid();
+}
+
+TEST_P(AClientSetting,
+       for_display_off_lid_behavior_is_used_on_matching_power_supply_when_session_starts)
+{
+    auto const pid = rt::default_pid + 100;
+
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    add_compatible_session("c0", pid);
+    switch_to_session("c0");
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::display_off,
+        power_supply,
+        pid);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_display_turns_off();
+    close_lid();
+}
+
+TEST_P(AClientSetting, for_display_off_lid_behavior_is_logged)
+{
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::display_off,
+        power_supply);
+
+    EXPECT_TRUE(
+        log_contains_line({
+            "set_lid_behavior",
+            "display_off",
+            power_supply_to_str(power_supply)}));
 }
 
 INSTANTIATE_TEST_CASE_P(WithPowerSupply,

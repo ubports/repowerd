@@ -290,6 +290,16 @@ void rt::AcceptanceTestBase::client_setting_set_inactivity_behavior(
     daemon.flush();
 }
 
+void rt::AcceptanceTestBase::client_setting_set_lid_behavior(
+    PowerAction power_action,
+    PowerSupply power_supply,
+    pid_t pid)
+{
+    config.the_fake_client_settings()->emit_set_lid_behavior(
+        power_action, power_supply, pid);
+    daemon.flush();
+}
+
 void rt::AcceptanceTestBase::close_lid()
 {
     config.the_fake_lid()->close();

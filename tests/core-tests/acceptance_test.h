@@ -81,6 +81,10 @@ struct AcceptanceTestBase
         PowerSupply power_supply,
         std::chrono::milliseconds timeout,
         pid_t pid = default_pid);
+    void client_setting_set_lid_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
+        pid_t pid = default_pid);
     void close_lid();
     void emit_notification(std::string const& id);
     void emit_notification_done(std::string const& id);

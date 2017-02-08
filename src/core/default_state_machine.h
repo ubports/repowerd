@@ -91,20 +91,19 @@ private:
     };
     using ProximityEnablement = ProximityEnablementEnum::Enablement;
     enum class ScheduledTimeoutType {none, normal, post_notification, reduced};
-    struct ConfigurableTimeout
+    template <typename T> struct ConfigurableValue
     {
-        std::chrono::milliseconds get() const
+        T get() const
         {
-            if (is_on_battery)
-                return on_battery;
-            else
-                return on_line_power;
+            return is_on_battery ? on_battery : on_line_power;
         }
 
-        std::chrono::milliseconds on_battery;
-        std::chrono::milliseconds on_line_power;
+        T on_battery;
+        T on_line_power;
         bool is_on_battery{true};
     };
+    using ConfigurableTimeout = ConfigurableValue<std::chrono::milliseconds>;
+    using ConfigurablePowerAction = ConfigurableValue<PowerAction>;
 
     void cancel_user_inactivity_display_off_alarm();
     void cancel_user_inactivity_suspend_alarm();
@@ -170,6 +169,7 @@ private:
     bool const treat_power_button_as_user_activity;
     bool const turn_on_display_at_startup;
     ScheduledTimeoutType scheduled_timeout_type;
+    ConfigurablePowerAction lid_power_action;
 
     bool paused;
     bool autobrightness_enabled;
