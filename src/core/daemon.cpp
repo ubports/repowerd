@@ -329,6 +329,19 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
+        client_settings->register_set_lid_behavior_handler(
+            [this] (PowerAction power_action, PowerSupply power_supply, pid_t pid)
+            {
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this, power_action, power_supply] (Session* s)
+                    {
+                        s->state_machine->handle_set_lid_behavior(
+                            power_action, power_supply);
+                    });
+            }));
+
+    registrations.push_back(
         system_power_control->register_system_resume_handler(
             [this]
             {

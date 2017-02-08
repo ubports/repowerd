@@ -22,11 +22,13 @@ namespace rt = repowerd::test;
 
 namespace
 {
+auto null_arg3_handler = [](auto,auto,auto){};
 auto null_arg4_handler = [](auto,auto,auto,auto){};
 }
 
 rt::FakeClientSettings::FakeClientSettings()
-    : set_inactivity_behavior_handler{null_arg4_handler}
+    : set_inactivity_behavior_handler{null_arg4_handler},
+      set_lid_behavior_handler{null_arg3_handler}
 {
 }
 
@@ -48,6 +50,19 @@ repowerd::HandlerRegistration rt::FakeClientSettings::register_set_inactivity_be
         }};
 }
 
+repowerd::HandlerRegistration rt::FakeClientSettings::register_set_lid_behavior_handler(
+    SetLidBehaviorHandler const& handler)
+{
+    mock.register_set_lid_behavior_handler(handler);
+    set_lid_behavior_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_set_lid_behavior_handler();
+            set_lid_behavior_handler = null_arg3_handler;
+        }};
+}
+
 void rt::FakeClientSettings::emit_set_inactivity_behavior(
     PowerAction power_action,
     PowerSupply power_supply,
@@ -55,4 +70,12 @@ void rt::FakeClientSettings::emit_set_inactivity_behavior(
     pid_t pid)
 {
     set_inactivity_behavior_handler(power_action, power_supply, timeout, pid);
+}
+
+void rt::FakeClientSettings::emit_set_lid_behavior(
+    PowerAction power_action,
+    PowerSupply power_supply,
+    pid_t pid)
+{
+    set_lid_behavior_handler(power_action, power_supply, pid);
 }

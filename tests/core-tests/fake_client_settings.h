@@ -37,11 +37,17 @@ public:
 
     HandlerRegistration register_set_inactivity_behavior_handler(
         SetInactivityBehaviorHandler const& handler) override;
+    HandlerRegistration register_set_lid_behavior_handler(
+        SetLidBehaviorHandler const& handler) override;
 
     void emit_set_inactivity_behavior(
         PowerAction power_action,
         PowerSupply power_supply,
         std::chrono::milliseconds timeout,
+        pid_t pid = default_pid);
+    void emit_set_lid_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply,
         pid_t pid = default_pid);
 
     struct Mock
@@ -50,11 +56,15 @@ public:
         MOCK_METHOD1(register_set_inactivity_behavior_handler,
                      void(SetInactivityBehaviorHandler const&));
         MOCK_METHOD0(unregister_set_inactivity_behavior_handler, void());
+        MOCK_METHOD1(register_set_lid_behavior_handler,
+                     void(SetLidBehaviorHandler const&));
+        MOCK_METHOD0(unregister_set_lid_behavior_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
 private:
     SetInactivityBehaviorHandler set_inactivity_behavior_handler;
+    SetLidBehaviorHandler set_lid_behavior_handler;
 };
 
 }

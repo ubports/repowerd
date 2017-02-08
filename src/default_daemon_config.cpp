@@ -142,6 +142,11 @@ struct NullClientSettings : repowerd::ClientSettings
     {
         return NullHandlerRegistration{};
     }
+    repowerd::HandlerRegistration register_set_lid_behavior_handler(
+        repowerd::SetLidBehaviorHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 }

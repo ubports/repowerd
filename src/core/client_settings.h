@@ -31,6 +31,7 @@ namespace repowerd
 {
 
 using SetInactivityBehaviorHandler = std::function<void(PowerAction, PowerSupply, std::chrono::milliseconds, pid_t)>;
+using SetLidBehaviorHandler = std::function<void(PowerAction, PowerSupply, pid_t)>;
 
 class ClientSettings
 {
@@ -41,6 +42,9 @@ public:
 
     virtual HandlerRegistration register_set_inactivity_behavior_handler(
         SetInactivityBehaviorHandler const& handler) = 0;
+
+    virtual HandlerRegistration register_set_lid_behavior_handler(
+        SetLidBehaviorHandler const& handler) = 0;
 
 protected:
     ClientSettings() = default;

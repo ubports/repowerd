@@ -40,6 +40,7 @@ public:
 
     void handle_lid_closed() override {}
     void handle_lid_open() override {}
+    void handle_set_lid_behavior(PowerAction, PowerSupply) override {}
 
     void handle_no_notification() override {}
     void handle_notification() override {}

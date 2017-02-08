@@ -46,6 +46,9 @@ public:
 
     virtual void handle_lid_closed() = 0;
     virtual void handle_lid_open() = 0;
+    virtual void handle_set_lid_behavior(
+        PowerAction power_action,
+        PowerSupply power_supply) = 0;
 
     virtual void handle_no_notification() = 0;
     virtual void handle_notification() = 0;

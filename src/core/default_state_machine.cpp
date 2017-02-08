@@ -308,6 +308,11 @@ void repowerd::DefaultStateMachine::handle_lid_open()
 
 }
 
+void repowerd::DefaultStateMachine::handle_set_lid_behavior(
+    PowerAction, PowerSupply)
+{
+}
+
 void repowerd::DefaultStateMachine::handle_no_notification()
 {
     log->log(log_tag, "handle_no_notification");
