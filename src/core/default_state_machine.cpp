@@ -332,6 +332,11 @@ void repowerd::DefaultStateMachine::handle_set_lid_behavior(
         lid_power_action.on_line_power = power_action;
 }
 
+void repowerd::DefaultStateMachine::handle_set_critical_power_behavior(
+    PowerAction)
+{
+}
+
 void repowerd::DefaultStateMachine::handle_no_notification()
 {
     log->log(log_tag, "handle_no_notification");

@@ -147,6 +147,11 @@ struct NullClientSettings : repowerd::ClientSettings
     {
         return NullHandlerRegistration{};
     }
+    repowerd::HandlerRegistration register_set_critical_power_behavior_handler(
+        repowerd::SetCriticalPowerBehaviorHandler const&) override
+    {
+        return NullHandlerRegistration{};
+    }
 };
 
 }

@@ -76,6 +76,8 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_power_source_change, void());
     MOCK_METHOD0(handle_power_source_critical, void());
+    MOCK_METHOD1(handle_set_critical_power_behavior,
+                 void(repowerd::PowerAction power_action));
 
     MOCK_METHOD0(handle_proximity_far, void());
     MOCK_METHOD0(handle_proximity_near, void());
@@ -967,6 +969,49 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_lid_behavior)
 
     config.the_fake_client_settings()->emit_set_lid_behavior(
         power_action, power_supply);
+}
+
+TEST_F(ADaemon, registers_and_unregisters_set_critical_power_behavior_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_client_settings()->mock,
+                register_set_critical_power_behavior_handler(_));
+    EXPECT_CALL(config.the_fake_client_settings()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_settings().get());
+
+    EXPECT_CALL(config.the_fake_client_settings()->mock,
+                unregister_set_critical_power_behavior_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_settings().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_set_critical_power_behavior)
+{
+    start_daemon();
+
+    auto const power_action = repowerd::PowerAction::suspend;
+
+    EXPECT_CALL(*config.the_mock_state_machine(),
+                handle_set_critical_power_behavior(power_action));
+
+    config.the_fake_client_settings()->emit_set_critical_power_behavior(
+        power_action);
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_set_critical_power_behavior)
+{
+    start_daemon_with_second_session_active();
+
+    auto const power_action = repowerd::PowerAction::suspend;
+
+    EXPECT_CALL(*config.the_mock_state_machine(0),
+                handle_set_critical_power_behavior(power_action));
+    EXPECT_CALL(*config.the_mock_state_machine(1),
+                handle_set_critical_power_behavior(_)).Times(0);
+
+    config.the_fake_client_settings()->emit_set_critical_power_behavior(
+        power_action);
 }
 
 TEST_F(ADaemon, registers_and_unregisters_system_resume_handler)

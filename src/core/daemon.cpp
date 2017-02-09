@@ -342,6 +342,19 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
+        client_settings->register_set_critical_power_behavior_handler(
+            [this] (PowerAction power_action, pid_t pid)
+            {
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this, power_action] (Session* s)
+                    {
+                        s->state_machine->handle_set_critical_power_behavior(
+                            power_action);
+                    });
+            }));
+
+    registrations.push_back(
         system_power_control->register_system_resume_handler(
             [this]
             {

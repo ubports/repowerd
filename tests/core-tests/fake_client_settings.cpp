@@ -22,13 +22,15 @@ namespace rt = repowerd::test;
 
 namespace
 {
+auto null_arg2_handler = [](auto,auto){};
 auto null_arg3_handler = [](auto,auto,auto){};
 auto null_arg4_handler = [](auto,auto,auto,auto){};
 }
 
 rt::FakeClientSettings::FakeClientSettings()
     : set_inactivity_behavior_handler{null_arg4_handler},
-      set_lid_behavior_handler{null_arg3_handler}
+      set_lid_behavior_handler{null_arg3_handler},
+      set_critical_power_behavior_handler{null_arg2_handler}
 {
 }
 
@@ -63,6 +65,20 @@ repowerd::HandlerRegistration rt::FakeClientSettings::register_set_lid_behavior_
         }};
 }
 
+repowerd::HandlerRegistration
+rt::FakeClientSettings::register_set_critical_power_behavior_handler(
+    SetCriticalPowerBehaviorHandler const& handler)
+{
+    mock.register_set_critical_power_behavior_handler(handler);
+    set_critical_power_behavior_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_set_critical_power_behavior_handler();
+            set_critical_power_behavior_handler = null_arg2_handler;
+        }};
+}
+
 void rt::FakeClientSettings::emit_set_inactivity_behavior(
     PowerAction power_action,
     PowerSupply power_supply,
@@ -78,4 +94,11 @@ void rt::FakeClientSettings::emit_set_lid_behavior(
     pid_t pid)
 {
     set_lid_behavior_handler(power_action, power_supply, pid);
+}
+
+void rt::FakeClientSettings::emit_set_critical_power_behavior(
+    PowerAction power_action,
+    pid_t pid)
+{
+    set_critical_power_behavior_handler(power_action, pid);
 }

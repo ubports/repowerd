@@ -59,6 +59,8 @@ public:
 
     void handle_power_source_change() override;
     void handle_power_source_critical() override;
+    void handle_set_critical_power_behavior(
+        PowerAction power_action) override;
 
     void handle_proximity_far() override;
     void handle_proximity_near() override;

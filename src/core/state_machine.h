@@ -58,6 +58,8 @@ public:
 
     virtual void handle_power_source_change() = 0;
     virtual void handle_power_source_critical() = 0;
+    virtual void handle_set_critical_power_behavior(
+        PowerAction power_action) = 0;
 
     virtual void handle_proximity_far() = 0;
     virtual void handle_proximity_near() = 0;
