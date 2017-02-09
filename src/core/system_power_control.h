@@ -44,6 +44,7 @@ public:
     virtual void disallow_suspend(std::string const& id, SuspendType suspend_type) = 0;
 
     virtual void power_off() = 0;
+    virtual void suspend() = 0;
     virtual void suspend_if_allowed() = 0;
     virtual void suspend_when_allowed(std::string const& id) = 0;
     virtual void cancel_suspend_when_allowed(std::string const& id) = 0;

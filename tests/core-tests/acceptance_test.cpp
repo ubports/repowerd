@@ -177,6 +177,7 @@ void rt::AcceptanceTestBase::expect_no_long_press_notification()
 void rt::AcceptanceTestBase::expect_no_system_power_change()
 {
     EXPECT_CALL(config.the_fake_system_power_control()->mock, power_off()).Times(0);
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend()).Times(0);
     EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_if_allowed()).Times(0);
     EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_when_allowed(_)).Times(0);
 }
@@ -204,6 +205,11 @@ void rt::AcceptanceTestBase::expect_display_power_on_notification(
 void rt::AcceptanceTestBase::expect_system_powers_off()
 {
     EXPECT_CALL(config.the_fake_system_power_control()->mock, power_off());
+}
+
+void rt::AcceptanceTestBase::expect_system_suspends()
+{
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend());
 }
 
 void rt::AcceptanceTestBase::expect_system_suspends_when_allowed(
@@ -297,6 +303,15 @@ void rt::AcceptanceTestBase::client_setting_set_lid_behavior(
 {
     config.the_fake_client_settings()->emit_set_lid_behavior(
         power_action, power_supply, pid);
+    daemon.flush();
+}
+
+void rt::AcceptanceTestBase::client_setting_set_critical_power_behavior(
+    PowerAction power_action,
+    pid_t pid)
+{
+    config.the_fake_client_settings()->emit_set_critical_power_behavior(
+        power_action, pid);
     daemon.flush();
 }
 

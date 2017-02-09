@@ -143,6 +143,17 @@ TEST_F(ALogindSystemPowerControl, powers_off_system)
     expect_power_requests("[power-off:f]");
 }
 
+TEST_F(ALogindSystemPowerControl, suspends_system_regardless_of_disallowances)
+{
+    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
+
+    expect_power_requests("");
+
+    system_power_control.suspend();
+
+    expect_power_requests("[suspend:f]");
+}
+
 TEST_F(ALogindSystemPowerControl, suspend_if_allowed_suspends_if_no_disallowances)
 {
     expect_power_requests("");

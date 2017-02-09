@@ -43,6 +43,7 @@ public:
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 
     void power_off() override;
+    void suspend() override;
     void suspend_if_allowed() override;
     void suspend_when_allowed(std::string const& id) override;
     void cancel_suspend_when_allowed(std::string const& id) override;
@@ -63,6 +64,7 @@ public:
         MOCK_METHOD2(allow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
         MOCK_METHOD0(power_off, void());
+        MOCK_METHOD0(suspend, void());
         MOCK_METHOD0(suspend_if_allowed, void());
         MOCK_METHOD1(suspend_when_allowed, void(std::string const&));
         MOCK_METHOD1(cancel_suspend_when_allowed, void(std::string const&));

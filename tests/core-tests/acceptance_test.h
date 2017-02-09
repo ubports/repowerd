@@ -62,6 +62,7 @@ struct AcceptanceTestBase
     void expect_display_power_off_notification(DisplayPowerChangeReason);
     void expect_display_power_on_notification(DisplayPowerChangeReason);
     void expect_system_powers_off();
+    void expect_system_suspends();
     void expect_system_suspends_when_allowed(std::string const&);
     void expect_system_cancel_suspend_when_allowed(std::string const&);
     void verify_expectations();
@@ -84,6 +85,9 @@ struct AcceptanceTestBase
     void client_setting_set_lid_behavior(
         PowerAction power_action,
         PowerSupply power_supply,
+        pid_t pid = default_pid);
+    void client_setting_set_critical_power_behavior(
+        PowerAction power_action,
         pid_t pid = default_pid);
     void close_lid();
     void emit_notification(std::string const& id);

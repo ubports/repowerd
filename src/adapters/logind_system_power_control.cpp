@@ -113,6 +113,11 @@ void repowerd::LogindSystemPowerControl::power_off()
     dbus_power_off();
 }
 
+void repowerd::LogindSystemPowerControl::suspend()
+{
+    dbus_suspend();
+}
+
 void repowerd::LogindSystemPowerControl::suspend_if_allowed()
 {
     auto const allowed_to_suspend =

@@ -41,6 +41,7 @@ public:
     void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
 
     void power_off() override;
+    void suspend() override;
     void suspend_if_allowed() override;
     void suspend_when_allowed(std::string const& id) override;
     void cancel_suspend_when_allowed(std::string const& id) override;

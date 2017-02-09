@@ -45,6 +45,8 @@ std::string power_action_to_str(repowerd::PowerAction power_action)
         return "display_off";
     else if (power_action == repowerd::PowerAction::suspend)
         return "suspend";
+    else if (power_action == repowerd::PowerAction::power_off)
+        return "power_off";
 
     return "unknown";
 }
@@ -107,6 +109,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
           config.the_state_machine_options()->turn_on_display_at_startup()},
       scheduled_timeout_type{ScheduledTimeoutType::none},
       lid_power_action{PowerAction::suspend, PowerAction::suspend, true},
+      critical_power_action{PowerAction::power_off},
       paused{false},
       autobrightness_enabled{false},
       normal_brightness_value{0.5},
@@ -333,8 +336,18 @@ void repowerd::DefaultStateMachine::handle_set_lid_behavior(
 }
 
 void repowerd::DefaultStateMachine::handle_set_critical_power_behavior(
-    PowerAction)
+    PowerAction power_action)
 {
+    log->log(log_tag, "handle_set_critical_power_behavior(%s)",
+             power_action_to_str(power_action).c_str());
+
+    if (power_action != PowerAction::suspend &&
+        power_action != PowerAction::power_off)
+    {
+        return;
+    }
+
+    critical_power_action = power_action;
 }
 
 void repowerd::DefaultStateMachine::handle_no_notification()
@@ -443,7 +456,10 @@ void repowerd::DefaultStateMachine::handle_power_source_critical()
 {
     log->log(log_tag, "handle_power_source_critical");
 
-    system_power_control->power_off();
+    if (critical_power_action == PowerAction::power_off)
+        system_power_control->power_off();
+    else if (critical_power_action == PowerAction::suspend)
+        system_power_control->suspend();
 }
 
 void repowerd::DefaultStateMachine::handle_proximity_far()

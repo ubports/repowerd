@@ -77,6 +77,11 @@ void rt::FakeSystemPowerControl::power_off()
     mock.power_off();
 }
 
+void rt::FakeSystemPowerControl::suspend()
+{
+    mock.suspend();
+}
+
 void rt::FakeSystemPowerControl::suspend_if_allowed()
 {
     mock.suspend_if_allowed();

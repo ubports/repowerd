@@ -373,6 +373,10 @@ TEST_P(AClientSetting, for_unsupported_action_in_inactivity_behavior_is_ignored)
         repowerd::PowerAction::none,
         power_supply,
         timeout);
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::power_off,
+        power_supply,
+        timeout);
 
     turn_on_display();
 
@@ -569,6 +573,73 @@ TEST_P(AClientSetting, for_display_off_lid_behavior_is_logged)
             "set_lid_behavior",
             "display_off",
             power_supply_to_str(power_supply)}));
+}
+
+TEST_P(AClientSetting, for_power_off_lid_behavior_is_ignored)
+{
+    apply_power_supply(power_supply);
+    turn_off_display();
+
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::none,
+        power_supply);
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::power_off,
+        power_supply);
+
+    turn_on_display();
+
+    expect_no_system_power_change();
+    expect_display_turns_off();
+    close_lid();
+}
+
+TEST_P(AClientSetting, for_suspend_critical_power_behavior_is_used)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::suspend);
+
+    expect_system_suspends();
+    emit_power_source_critical();
+}
+
+TEST_P(AClientSetting, for_suspend_critical_power_behavior_is_logged)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::suspend);
+
+    EXPECT_TRUE(log_contains_line({"set_critical_power_behavior", "suspend"}));
+}
+
+TEST_P(AClientSetting, for_power_off_critical_power_behavior_is_used)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::power_off);
+
+    expect_system_powers_off();
+    emit_power_source_critical();
+}
+
+TEST_P(AClientSetting, for_power_off_critical_power_behavior_is_logged)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::power_off);
+
+    EXPECT_TRUE(log_contains_line({"set_critical_power_behavior", "power_off"}));
+}
+
+TEST_P(AClientSetting, for_none_critical_power_behavior_is_ignored)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::power_off);
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::none);
+
+    expect_system_powers_off();
+    emit_power_source_critical();
+}
+
+TEST_P(AClientSetting, for_display_off_critical_power_behavior_is_ignored)
+{
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::power_off);
+    client_setting_set_critical_power_behavior(repowerd::PowerAction::display_off);
+
+    expect_system_powers_off();
+    emit_power_source_critical();
 }
 
 INSTANTIATE_TEST_CASE_P(WithPowerSupply,

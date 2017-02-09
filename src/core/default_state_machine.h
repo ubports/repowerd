@@ -172,6 +172,7 @@ private:
     bool const turn_on_display_at_startup;
     ScheduledTimeoutType scheduled_timeout_type;
     ConfigurablePowerAction lid_power_action;
+    PowerAction critical_power_action;
 
     bool paused;
     bool autobrightness_enabled;

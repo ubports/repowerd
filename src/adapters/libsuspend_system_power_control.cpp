@@ -92,6 +92,10 @@ void repowerd::LibsuspendSystemPowerControl::power_off()
     if (system("shutdown -P now")) {}
 }
 
+void repowerd::LibsuspendSystemPowerControl::suspend()
+{
+}
+
 void repowerd::LibsuspendSystemPowerControl::suspend_if_allowed()
 {
 }
