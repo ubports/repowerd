@@ -18,7 +18,6 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
-#include "core/client_settings.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_backlight.h"
@@ -37,6 +36,7 @@
 #include "adapters/real_chrono.h"
 #include "adapters/real_filesystem.h"
 #include "adapters/real_temporary_suspend_inhibition.h"
+#include "adapters/repowerd_service.h"
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
 #include "adapters/timerfd_wakeup_service.h"
@@ -135,26 +135,6 @@ struct NullSystemPowerControl : repowerd::SystemPowerControl
     void disallow_default_system_handlers() override {}
 };
 
-struct NullClientSettings : repowerd::ClientSettings
-{
-    void start_processing() override {}
-    repowerd::HandlerRegistration register_set_inactivity_behavior_handler(
-        repowerd::SetInactivityBehaviorHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-    repowerd::HandlerRegistration register_set_lid_behavior_handler(
-        repowerd::SetLidBehaviorHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-    repowerd::HandlerRegistration register_set_critical_power_behavior_handler(
-        repowerd::SetCriticalPowerBehaviorHandler const&) override
-    {
-        return NullHandlerRegistration{};
-    }
-};
-
 }
 
 std::shared_ptr<repowerd::DisplayInformation>
@@ -191,7 +171,10 @@ std::shared_ptr<repowerd::ClientSettings>
 repowerd::DefaultDaemonConfig::the_client_settings()
 {
     if (!client_settings)
-        client_settings = std::make_shared<NullClientSettings>();
+    {
+        client_settings = std::make_shared<RepowerdService>(
+            the_log(), the_dbus_bus_address());
+    }
 
     return client_settings;
 }

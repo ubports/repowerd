@@ -44,6 +44,7 @@ set(
     real_chrono.cpp
     real_filesystem.cpp
     real_temporary_suspend_inhibition.cpp
+    repowerd_service.cpp
     syslog_log.cpp
     sysfs_backlight.cpp
     timerfd_wakeup_service.cpp

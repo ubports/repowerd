@@ -65,7 +65,12 @@ void rt::DBusAsyncReply::static_set_async_result(
 void rt::DBusAsyncReply::throw_on_error_reply(GDBusMessage* reply)
 {
     if (reply && g_dbus_message_get_error_name(reply) != nullptr)
-        throw std::runtime_error("Got an error reply");
+    {
+        ScopedGError error;
+        g_dbus_message_to_gerror(reply, error);
+
+        throw std::runtime_error("Got an error reply: " + error.message_str());
+    }
 }
 
 void rt::DBusAsyncReply::throw_on_invalid_reply(GDBusMessage* reply)

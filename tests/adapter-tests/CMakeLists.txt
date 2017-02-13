@@ -31,6 +31,7 @@ add_executable(
     fake_ofono.cpp
     fake_upower.cpp
     fake_wakeup_service.cpp
+    repowerd_dbus_client.cpp
     run_command.cpp
     temporary_environment_value.cpp
     temporary_file.cpp
@@ -57,6 +58,7 @@ add_executable(
     test_real_chrono.cpp
     test_real_filesystem.cpp
     test_real_temporary_suspend_inhibition.cpp
+    test_repowerd_service.cpp
     test_sysfs_backlight.cpp
     test_timerfd_wakeup_service.cpp
     test_ubuntu_light_sensor.cpp
