@@ -323,7 +323,6 @@ void repowerd::DefaultStateMachine::handle_set_lid_behavior(
              power_supply_to_str(power_supply).c_str());
 
     if (power_action != PowerAction::none &&
-        power_action != PowerAction::display_off &&
         power_action != PowerAction::suspend)
     {
         return;

@@ -503,62 +503,21 @@ TEST_P(AClientSetting, for_none_lid_behavior_is_logged)
             power_supply_to_str(power_supply)}));
 }
 
-TEST_P(AClientSetting,
-       for_display_off_lid_behavior_is_used_on_matching_power_supply)
+TEST_P(AClientSetting, for_display_off_lid_behavior_is_ignored)
 {
     apply_power_supply(power_supply);
     turn_off_display();
 
     client_setting_set_lid_behavior(
-        repowerd::PowerAction::display_off,
+        repowerd::PowerAction::suspend,
         power_supply);
-
-    turn_on_display();
-
-    expect_no_system_power_change();
-    expect_display_turns_off();
-    close_lid();
-}
-
-TEST_P(AClientSetting,
-       for_display_off_lid_behavior_is_not_used_on_non_matching_power_supply)
-{
-    apply_power_supply(power_supply);
-    turn_off_display();
-
     client_setting_set_lid_behavior(
         repowerd::PowerAction::display_off,
         power_supply);
-
-    apply_power_supply(other(power_supply));
-    turn_off_display();
 
     turn_on_display();
 
     expect_system_suspends_when_allowed("lid");
-    close_lid();
-}
-
-TEST_P(AClientSetting,
-       for_display_off_lid_behavior_is_used_on_matching_power_supply_when_session_starts)
-{
-    auto const pid = rt::default_pid + 100;
-
-    apply_power_supply(power_supply);
-    turn_off_display();
-
-    add_compatible_session("c0", pid);
-    switch_to_session("c0");
-
-    client_setting_set_lid_behavior(
-        repowerd::PowerAction::display_off,
-        power_supply,
-        pid);
-
-    turn_on_display();
-
-    expect_no_system_power_change();
-    expect_display_turns_off();
     close_lid();
 }
 
@@ -592,6 +551,19 @@ TEST_P(AClientSetting, for_power_off_lid_behavior_is_ignored)
     expect_no_system_power_change();
     expect_display_turns_off();
     close_lid();
+}
+
+TEST_P(AClientSetting, for_power_off_lid_behavior_is_logged)
+{
+    client_setting_set_lid_behavior(
+        repowerd::PowerAction::power_off,
+        power_supply);
+
+    EXPECT_TRUE(
+        log_contains_line({
+            "set_lid_behavior",
+            "power_off",
+            power_supply_to_str(power_supply)}));
 }
 
 TEST_P(AClientSetting, for_suspend_critical_power_behavior_is_used)
