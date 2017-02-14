@@ -48,8 +48,14 @@ void show_usage(std::string const& progname)
 {
     std::cerr << "Usage: " << progname << " <command>" << std::endl;
     std::cerr << "Available commands: " << std::endl;
-    std::cerr << "  display <on>: keep display on until program is terminated" << std::endl;
+    std::cerr << "  display [on]: keep display on until program is terminated" << std::endl;
     std::cerr << "  active: inhibit device suspend until program is terminated" << std::endl;
+    std::cerr << "  settings inactivity <power_action> <power_supply> <timeout>" << std::endl;
+    std::cerr << "  settings lid <power_action> <power-supply>" << std::endl;
+    std::cerr << "  settings critical-power <power_action>" << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "<power_action>: none, display-off, suspend, power-off" << std::endl;
+    std::cerr << "<power_supply>: battery, line-power" << std::endl;
 }
 
 std::unique_ptr<GDBusProxy,void(*)(void*)> create_unity_screen_proxy()
@@ -96,6 +102,29 @@ std::unique_ptr<GDBusProxy,void(*)(void*)> create_powerd_proxy()
     }
 
     return {powerd_proxy, g_object_unref};
+}
+
+std::unique_ptr<GDBusProxy,void(*)(void*)> create_repowerd_proxy()
+{
+    repowerd::ScopedGError error;
+
+    auto repowerd_proxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SYSTEM,
+        G_DBUS_PROXY_FLAGS_NONE,
+        NULL,
+        "com.canonical.repowerd",
+        "/com/canonical/repowerd",
+        "com.canonical.repowerd",
+        NULL,
+        error);
+
+    if (repowerd_proxy == nullptr)
+    {
+        throw std::runtime_error(
+            "Failed to connect to com.canonical.repowerd: " + error.message_str());
+    }
+
+    return {repowerd_proxy, g_object_unref};
 }
 
 int32_t keep_display_on(GDBusProxy* uscreen_proxy)
@@ -196,6 +225,80 @@ void clear_sys_state(GDBusProxy* powerd_proxy, std::string const& cookie)
     g_variant_unref(ret);
 }
 
+void set_inactivity_behavior(
+    GDBusProxy* repowerd_proxy,
+    std::string const& action,
+    std::string const& supply,
+    int32_t timeout)
+{
+    repowerd::ScopedGError error;
+
+    auto const ret = g_dbus_proxy_call_sync(
+        repowerd_proxy,
+        "SetInactivityBehavior",
+        g_variant_new("(ssi)", action.c_str(), supply.c_str(), timeout),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        error);
+
+    if (ret == nullptr)
+    {
+        throw std::runtime_error(
+            "com.canonical.repowerd.SetInactivityBehavior() failed: " + error.message_str());
+    }
+
+    g_variant_unref(ret);
+}
+
+void set_lid_behavior(
+    GDBusProxy* repowerd_proxy,
+    std::string const& action,
+    std::string const& supply)
+{
+    repowerd::ScopedGError error;
+
+    auto const ret = g_dbus_proxy_call_sync(
+        repowerd_proxy,
+        "SetLidBehavior",
+        g_variant_new("(ss)", action.c_str(), supply.c_str()),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        error);
+
+    if (ret == nullptr)
+    {
+        throw std::runtime_error(
+            "com.canonical.repowerd.SetLidBehavior() failed: " + error.message_str());
+    }
+
+    g_variant_unref(ret);
+}
+
+void set_critical_power_behavior(
+    GDBusProxy* repowerd_proxy,
+    std::string const& action)
+{
+    repowerd::ScopedGError error;
+
+    auto const ret = g_dbus_proxy_call_sync(
+        repowerd_proxy,
+        "SetCriticalPowerBehavior",
+        g_variant_new("(s)", action.c_str()),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        error);
+
+    if (ret == nullptr)
+    {
+        throw std::runtime_error(
+            "com.canonical.repowerd.SetCriticalPowerBehavior() failed: " + error.message_str());
+    }
+
+    g_variant_unref(ret);
+}
 
 void handle_display_command(GDBusProxy* uscreen_proxy)
 {
@@ -221,6 +324,49 @@ void handle_active_command(GDBusProxy* uscreen_proxy)
     clear_sys_state(uscreen_proxy, cookie);
 }
 
+void handle_settings_command(
+    GDBusProxy* repowerd_proxy,
+    std::vector<std::string> const& args)
+{
+    if (args.size() < 2)
+        throw std::invalid_argument{""};
+
+    if (args[1] == "inactivity")
+    {
+        if (args.size() != 5)
+            throw std::invalid_argument{""};
+
+        auto const& action = args[2];
+        auto const& supply = args[3];
+        auto const timeout = std::stoi(args[4]);
+
+        set_inactivity_behavior(repowerd_proxy, action, supply, timeout);
+    }
+    else if (args[1] == "lid")
+    {
+        if (args.size() != 4)
+            throw std::invalid_argument{""};
+
+        auto const& action = args[2];
+        auto const& supply = args[3];
+
+        set_lid_behavior(repowerd_proxy, action, supply);
+    }
+    else if (args[1] == "critical-power")
+    {
+        if (args.size() != 3)
+            throw std::invalid_argument{""};
+
+        auto const& action = args[2];
+
+        set_critical_power_behavior(repowerd_proxy, action);
+    }
+    else
+    {
+        throw std::invalid_argument{""};
+    }
+}
+
 void null_signal_handler(int) {}
 
 int main(int argc, char** argv)
@@ -229,17 +375,14 @@ try
     signal(SIGINT, null_signal_handler);
     signal(SIGTERM, null_signal_handler);
 
-    auto const progname = get_progname(argc, argv);
     auto const args = get_args(argc, argv);
 
     if (args.size() == 0)
-    {
-        show_usage(progname);
-        return -1;
-    }
+        throw std::invalid_argument{""};
 
     auto const uscreen_proxy = create_unity_screen_proxy();
     auto const powerd_proxy = create_powerd_proxy();
+    auto const repowerd_proxy = create_repowerd_proxy();
 
     if (args[0] == "display")
     {
@@ -249,6 +392,19 @@ try
     {
         handle_active_command(powerd_proxy.get());
     }
+    else if (args[0] == "settings")
+    {
+        handle_settings_command(repowerd_proxy.get(), args);
+    }
+    else
+    {
+        throw std::invalid_argument{""};
+    }
+}
+catch (std::invalid_argument const& e)
+{
+    show_usage(get_progname(argc, argv));
+    return -1;
 }
 catch (std::exception const& e)
 {
