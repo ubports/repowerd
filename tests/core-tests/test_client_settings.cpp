@@ -165,7 +165,7 @@ TEST_P(AClientSetting,
 }
 
 TEST_P(AClientSetting,
-       for_display_off_timeout_is_not_used_when_switching_to_matching_power_supply)
+       for_display_off_timeout_is_used_when_switching_to_matching_power_supply)
 {
     apply_power_supply(other(power_supply));
     turn_off_display();
@@ -181,8 +181,12 @@ TEST_P(AClientSetting,
 
     apply_power_supply(power_supply);
 
+    expect_no_system_power_change();
+    advance_time_by(display_off_timeout - 1ms);
+    verify_expectations();
+
     expect_display_turns_off();
-    advance_time_by(20s);
+    advance_time_by(1ms);
 }
 
 TEST_P(AClientSetting,

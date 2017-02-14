@@ -441,7 +441,8 @@ void repowerd::DefaultStateMachine::handle_power_source_change()
     if (display_power_mode == DisplayPowerMode::on)
     {
         brighten_display();
-        schedule_reduced_user_inactivity_alarm();
+        schedule_normal_user_inactivity_alarm();
+        display_power_mode_reason = DisplayPowerChangeReason::activity;
     }
     else if (proximity_sensor->proximity_state() == ProximityState::far)
     {

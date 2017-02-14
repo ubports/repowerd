@@ -62,7 +62,7 @@ TEST_F(APowerSource, change_brightens_display_if_it_is_already_on)
     emit_power_source_change();
 }
 
-TEST_F(APowerSource, change_extends_timeout_if_display_is_already_on)
+TEST_F(APowerSource, change_reschedules_timeout_if_display_is_already_on)
 {
     turn_on_display();
 
@@ -72,7 +72,7 @@ TEST_F(APowerSource, change_extends_timeout_if_display_is_already_on)
     verify_expectations();
 
     expect_no_display_power_change();
-    advance_time_by(user_inactivity_reduced_display_off_timeout - 1ms);
+    advance_time_by(user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
     expect_display_turns_off();
