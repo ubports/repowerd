@@ -52,6 +52,8 @@ char const* const upower_device_introspection = R"(<!DOCTYPE node PUBLIC '-//fre
     </interface>
 </node>)";
 
+char const* const display_device_path = "/org/freedesktop/UPower/devices/DisplayDevice";
+
 }
 
 rt::FakeUPower::DeviceInfo rt::FakeUPower::DeviceInfo::for_battery(DeviceState state)
@@ -266,6 +268,9 @@ void rt::FakeUPower::dbus_method_call(
         int count = 0;
         for (auto const& device : devices)
         {
+            // DisplayDevice is not included in the enumerated devices
+            if (device.first == display_device_path) continue;
+
             if (count++ > 0) devices_str += ", ";
             devices_str += "@o '" + device.first + "'";
         }

@@ -32,9 +32,10 @@ auto const null_arg_handler = [](auto){};
 char const* const dbus_upower_name = "org.freedesktop.UPower";
 char const* const dbus_upower_path = "/org/freedesktop/UPower";
 char const* const dbus_upower_interface = "org.freedesktop.UPower";
+char const* const display_device_path = "/org/freedesktop/UPower/devices/DisplayDevice";
 
 enum class DeviceState
-{ 
+{
     unknown = 0,
     charging,
     discharging,
@@ -45,11 +46,46 @@ enum class DeviceState
 };
 
 enum class DeviceType
-{ 
+{
     unknown = 0,
     line_power,
-    battery
+    battery,
+    ups
 };
+
+std::string device_type_to_str(uint32_t type)
+{
+    if (type == static_cast<uint32_t>(DeviceType::unknown))
+        return "unknown";
+    else if (type == static_cast<uint32_t>(DeviceType::line_power))
+        return "line_power";
+    else if (type == static_cast<uint32_t>(DeviceType::battery))
+        return "battery";
+    else if (type == static_cast<uint32_t>(DeviceType::ups))
+        return "ups";
+    else
+        return "unsupported(" + std::to_string(type) + ")";
+}
+
+std::string device_state_to_str(uint32_t state)
+{
+    if (state == static_cast<uint32_t>(DeviceState::unknown))
+        return "unknown";
+    else if (state == static_cast<uint32_t>(DeviceState::charging))
+        return "charging";
+    else if (state == static_cast<uint32_t>(DeviceState::discharging))
+        return "discharging";
+    else if (state == static_cast<uint32_t>(DeviceState::empty))
+        return "empty";
+    else if (state == static_cast<uint32_t>(DeviceState::fully_charged))
+        return "fully_charged";
+    else if (state == static_cast<uint32_t>(DeviceState::pending_charge))
+        return "pending_charge";
+    else if (state == static_cast<uint32_t>(DeviceState::pending_discharge))
+        return "pending_discharge";
+    else
+        return "unsupported(" + std::to_string(state) + ")";
+}
 
 double get_critical_temperature(repowerd::DeviceConfig const& device_config)
 try
@@ -77,7 +113,8 @@ repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
       power_source_change_handler{null_handler},
       power_source_critical_handler{null_handler},
       lid_handler{null_arg_handler},
-      started{false}
+      started{false},
+      display_device{}
 {
 }
 
@@ -104,7 +141,12 @@ void repowerd::UPowerPowerSourceAndLid::start_processing()
                 signal_name, parameters);
         });
 
-    dbus_event_loop.enqueue([this] { add_existing_batteries(); }).get();
+    dbus_event_loop.enqueue(
+        [this]
+        {
+            add_display_device();
+            add_existing_batteries();
+        }).get();
 
     started = true;
 }
@@ -134,6 +176,45 @@ repowerd::HandlerRegistration repowerd::UPowerPowerSourceAndLid::register_lid_ha
         dbus_event_loop,
             [this, &handler] { this->lid_handler = handler; },
             [this] { this->lid_handler = null_arg_handler; }};
+}
+
+bool repowerd::UPowerPowerSourceAndLid::is_using_battery_power()
+{
+    int constexpr timeout = 1000;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        dbus_upower_name,
+        "/org/freedesktop/UPower",
+        "org.freedesktop.DBus.Properties",
+        "Get",
+        g_variant_new("(ss)", "org.freedesktop.UPower", "OnBattery"),
+        G_VARIANT_TYPE("(v)"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout,
+        null_cancellable,
+        error);
+
+    if (!result)
+    {
+        log->log(log_tag, "is_using_battery_power() failed, assuming true, more info: %s",
+                 error.message_str().c_str());
+        return true;
+    }
+
+    GVariant* on_battery;
+    g_variant_get(result, "(v)", &on_battery);
+
+    auto const ret = g_variant_get_boolean(on_battery);
+
+    g_variant_unref(on_battery);
+    g_variant_unref(result);
+
+    log->log(log_tag, "is_using_battery_power() => %s", ret ? "true" : "false");
+
+    return ret;
 }
 
 std::unordered_set<std::string> repowerd::UPowerPowerSourceAndLid::tracked_batteries()
@@ -191,6 +272,12 @@ void repowerd::UPowerPowerSourceAndLid::handle_dbus_signal(
     }
 }
 
+void repowerd::UPowerPowerSourceAndLid::add_display_device()
+{
+    display_device = create_device(display_device_path);
+    log_device("add_display_device", display_device);
+}
+
 void repowerd::UPowerPowerSourceAndLid::add_existing_batteries()
 {
     int constexpr timeout_default = -1;
@@ -229,140 +316,86 @@ void repowerd::UPowerPowerSourceAndLid::add_existing_batteries()
     g_variant_unref(result);
 }
 
-void repowerd::UPowerPowerSourceAndLid::add_device_if_battery(std::string const& device)
+void repowerd::UPowerPowerSourceAndLid::add_device_if_battery(
+    std::string const& device_path)
 {
-    auto properties = get_device_properties(device);
+    auto const device = create_device(device_path);
 
-    if (!properties)
-        return;
-
-    char const* key_cstr{""};
-    GVariant* value{nullptr};
-    BatteryInfo battery_info;
-    uint32_t device_type{0};
-
-    GVariantIter* properties_iter;
-    g_variant_get(properties, "(a{sv})", &properties_iter);
-
-    while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
+    if (device.type == static_cast<uint32_t>(DeviceType::battery))
     {
-        auto const key_str = std::string{key_cstr};
-        if (key_str == "Type")
-            device_type = g_variant_get_uint32(value);
-        else if (key_str == "IsPresent")
-            battery_info.is_present = g_variant_get_boolean(value);
-        else if (key_str == "State")
-            battery_info.state = g_variant_get_uint32(value);
-        else if (key_str == "Percentage")
-            battery_info.percentage = g_variant_get_double(value);
-        else if (key_str == "Temperature")
-            battery_info.temperature = g_variant_get_double(value);
-
-        g_variant_unref(value);
-    }
-
-    g_variant_iter_free(properties_iter);
-    g_variant_unref(properties);
-
-    if (device_type == static_cast<uint32_t>(DeviceType::battery))
-    {
-        log->log(log_tag, "add_device_if_battery(%s), "
-                 "is_present=%d, state=%d, percentage=%.2f, temperature=%.2f",
-                 device.c_str(),
-                 battery_info.is_present,
-                 battery_info.state,
-                 battery_info.percentage,
-                 battery_info.temperature);
-
-        batteries[device] = battery_info;
+        log_device("add_device_if_battery", device);
+        batteries[device.path] = device;
     }
 }
 
-void repowerd::UPowerPowerSourceAndLid::remove_device(std::string const& device)
+void repowerd::UPowerPowerSourceAndLid::remove_device(std::string const& device_path)
 {
-    if (batteries.find(device) == batteries.end())
+    if (batteries.find(device_path) == batteries.end())
         return;
 
-    log->log(log_tag, "remove_device(%s)", device.c_str());
+    log->log(log_tag, "remove_device(%s)", device_path.c_str());
 
-    batteries.erase(device);
+    batteries.erase(device_path);
 }
 
 void repowerd::UPowerPowerSourceAndLid::change_device(
-    std::string const& device, GVariantIter* properties_iter)
+    std::string const& device_path, GVariantIter* properties_iter)
 {
-    if (batteries.find(device) == batteries.end())
+    bool const is_display_device = device_path == display_device_path;
+
+    if (!is_display_device && batteries.find(device_path) == batteries.end())
         return;
 
-    auto const old_info = batteries[device];
+    auto& device = is_display_device ? display_device : batteries[device_path];
+    auto const old_info = device;
+    update_device(device, properties_iter);
+    auto new_info = device;
 
-    char const* key_cstr{""};
-    GVariant* value{nullptr};
-    auto new_info = old_info;
-
-    while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
-    {
-        auto const key_str = std::string{key_cstr};
-
-        if (key_str == "State")
-            new_info.state = g_variant_get_uint32(value);
-        else if (key_str == "Percentage")
-            new_info.percentage = g_variant_get_double(value);
-        else if (key_str == "Temperature")
-            new_info.temperature = g_variant_get_double(value);
-        else if (key_str == "IsPresent")
-            new_info.is_present = g_variant_get_boolean(value);
-
-        g_variant_unref(value);
-    }
-
-    log->log(log_tag, "change_device(%s), "
-             "is_present=%d, state=%d, percentage=%.2f, temperature=%.2f",
-             device.c_str(),
-             new_info.is_present,
-             new_info.state,
-             new_info.percentage,
-             new_info.temperature);
-
-    batteries[device] = new_info;
+    log_device("change_device", new_info);
 
     bool critical{false};
     bool change{false};
 
-    if (old_info.is_present != new_info.is_present)
+    if (is_display_device)
     {
-        change = true;
-    }
-
-    if (new_info.is_present && old_info.state != new_info.state)
-    {
-        if (new_info.state == static_cast<uint32_t>(DeviceState::discharging) ||
-            (old_info.state == static_cast<uint32_t>(DeviceState::discharging) &&
-             (new_info.state == static_cast<uint32_t>(DeviceState::charging) ||
-              new_info.state == static_cast<uint32_t>(DeviceState::fully_charged) ||
-              new_info.state == static_cast<uint32_t>(DeviceState::pending_charge))))
+        if (old_info.is_present != new_info.is_present ||
+            old_info.type != new_info.type)
         {
             change = true;
         }
-    }
 
-    if (new_info.is_present && old_info.percentage != new_info.percentage)
-    {
-        if (new_info.percentage <= 1.0 && is_using_battery_power())
+        if (new_info.is_present && old_info.state != new_info.state)
         {
-            log->log(log_tag, "Battery energy percentage is at critical level %.1f%%\n",
-                     new_info.percentage);
-            critical = true;
+            if (new_info.state == static_cast<uint32_t>(DeviceState::discharging) ||
+                (old_info.state == static_cast<uint32_t>(DeviceState::discharging) &&
+                 (new_info.state == static_cast<uint32_t>(DeviceState::charging) ||
+                  new_info.state == static_cast<uint32_t>(DeviceState::fully_charged) ||
+                  new_info.state == static_cast<uint32_t>(DeviceState::pending_charge))))
+            {
+                change = true;
+            }
+        }
+
+        if (new_info.is_present && old_info.percentage != new_info.percentage)
+        {
+            if (new_info.percentage <= 1.0 && is_using_battery_power())
+            {
+                log->log(log_tag, "Battery energy percentage is at critical level %.1f%%\n",
+                         new_info.percentage);
+                critical = true;
+            }
         }
     }
-
-    if (new_info.is_present && old_info.temperature != new_info.temperature)
+    else
     {
-        if (new_info.temperature >= critical_temperature)
+        if (new_info.is_present && old_info.temperature != new_info.temperature)
         {
-            log->log(log_tag, "Battery temperature is at critical level %.1f (limit is %.1f)\n",
-                     new_info.temperature, critical_temperature);
-            critical = true;
+            if (new_info.temperature >= critical_temperature)
+            {
+                log->log(log_tag, "Battery temperature is at critical level %.1f (limit is %.1f)\n",
+                         new_info.temperature, critical_temperature);
+                critical = true;
+            }
         }
     }
 
@@ -377,6 +410,31 @@ void repowerd::UPowerPowerSourceAndLid::change_device(
 
     if (change)
         power_source_change_handler();
+}
+
+void repowerd::UPowerPowerSourceAndLid::change_upower(
+    GVariantIter* properties_iter)
+{
+    char const* key_cstr{""};
+    GVariant* value{nullptr};
+
+    while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
+    {
+        auto const key_str = std::string{key_cstr};
+
+        if (key_str == "LidIsClosed")
+        {
+            auto const lid_is_closed = g_variant_get_boolean(value);
+            log->log(log_tag, "change_upower(), lid_is_closed=%s",
+                     lid_is_closed ? "true" : "false");
+            if (lid_is_closed)
+                lid_handler(LidState::closed);
+            else
+                lid_handler(LidState::open);
+        }
+
+        g_variant_unref(value);
+    }
 }
 
 GVariant* repowerd::UPowerPowerSourceAndLid::get_device_properties(std::string const& device)
@@ -407,47 +465,32 @@ GVariant* repowerd::UPowerPowerSourceAndLid::get_device_properties(std::string c
     return result;
 }
 
-bool repowerd::UPowerPowerSourceAndLid::is_using_battery_power()
+
+repowerd::UPowerPowerSourceAndLid::Device
+repowerd::UPowerPowerSourceAndLid::create_device(std::string const& device_path)
 {
-    int constexpr timeout = 1000;
-    auto constexpr null_cancellable = nullptr;
-    ScopedGError error;
+    auto properties = get_device_properties(device_path);
 
-    auto const result = g_dbus_connection_call_sync(
-        dbus_connection,
-        dbus_upower_name,
-        "/org/freedesktop/UPower",
-        "org.freedesktop.DBus.Properties",
-        "Get",
-        g_variant_new("(ss)", "org.freedesktop.UPower", "OnBattery"),
-        G_VARIANT_TYPE("(v)"),
-        G_DBUS_CALL_FLAGS_NONE,
-        timeout,
-        null_cancellable,
-        error);
+    if (!properties)
+        return Device{};
 
-    if (!result)
-    {
-        log->log(log_tag, "is_using_battery_power() failed, assuming true, more info: %s",
-                 error.message_str().c_str());
-        return true;
-    }
+    Device device{};
+    device.path = device_path;
 
-    GVariant* on_battery;
-    g_variant_get(result, "(v)", &on_battery);
+    GVariantIter* properties_iter;
+    g_variant_get(properties, "(a{sv})", &properties_iter);
 
-    auto const ret = g_variant_get_boolean(on_battery);
+    update_device(device, properties_iter);
 
-    g_variant_unref(on_battery);
-    g_variant_unref(result);
+    g_variant_iter_free(properties_iter);
+    g_variant_unref(properties);
 
-    log->log(log_tag, "is_using_battery_power() => %s", ret ? "true" : "false");
-
-    return ret;
+    return device;
 }
 
-void repowerd::UPowerPowerSourceAndLid::change_upower(
-    GVariantIter* properties_iter)
+
+void repowerd::UPowerPowerSourceAndLid::update_device(
+    Device& device, GVariantIter* properties_iter)
 {
     char const* key_cstr{""};
     GVariant* value{nullptr};
@@ -455,18 +498,32 @@ void repowerd::UPowerPowerSourceAndLid::change_upower(
     while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
     {
         auto const key_str = std::string{key_cstr};
-
-        if (key_str == "LidIsClosed")
-        {
-            auto const lid_is_closed = g_variant_get_boolean(value);
-            log->log(log_tag, "change_upower(), lid_is_closed=%s", 
-                     lid_is_closed ? "true" : "false");
-            if (lid_is_closed)
-                lid_handler(LidState::closed);
-            else
-                lid_handler(LidState::open);
-        }
+        if (key_str == "Type")
+            device.type = g_variant_get_uint32(value);
+        else if (key_str == "IsPresent")
+            device.is_present = g_variant_get_boolean(value);
+        else if (key_str == "State")
+            device.state = g_variant_get_uint32(value);
+        else if (key_str == "Percentage")
+            device.percentage = g_variant_get_double(value);
+        else if (key_str == "Temperature")
+            device.temperature = g_variant_get_double(value);
 
         g_variant_unref(value);
     }
+}
+
+void repowerd::UPowerPowerSourceAndLid::log_device(
+    std::string const& method, Device const& device)
+{
+    auto const msg =
+        method + "(%s), type=%s, is_present=%d, state=%s, percentage=%.2f, temperature=%.2f";
+
+    log->log(log_tag, msg.c_str(),
+             device.path.c_str(),
+             device_type_to_str(device.type).c_str(),
+             device.is_present,
+             device_state_to_str(device.state).c_str(),
+             device.percentage,
+             device.temperature);
 }

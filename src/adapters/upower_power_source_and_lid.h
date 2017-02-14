@@ -58,6 +58,16 @@ public:
     std::unordered_set<std::string> tracked_batteries();
 
 private:
+    struct Device
+    {
+        std::string path;
+        uint32_t type;
+        bool is_present;
+        uint32_t state;
+        double percentage;
+        double temperature;
+    };
+
     void handle_dbus_signal(
         GDBusConnection* connection,
         gchar const* sender,
@@ -66,20 +76,16 @@ private:
         gchar const* signal_name,
         GVariant* parameters);
 
+    void add_display_device();
     void add_existing_batteries();
-    void add_device_if_battery(std::string const& device);
-    void remove_device(std::string const& device);
-    void change_device(std::string const& device, GVariantIter* properties_iter);
-    GVariant* get_device_properties(std::string const& device);
+    void add_device_if_battery(std::string const& device_path);
+    void remove_device(std::string const& device_path);
+    void change_device(std::string const& device_path, GVariantIter* properties_iter);
     void change_upower(GVariantIter* properties_iter);
-
-    struct BatteryInfo
-    {
-        bool is_present;
-        uint32_t state;
-        double percentage;
-        double temperature;
-    };
+    GVariant* get_device_properties(std::string const& device);
+    Device create_device(std::string const& device_path);
+    void update_device(Device& device, GVariantIter* properties_iter);
+    void log_device(std::string const& method, Device const& device);
 
     std::shared_ptr<Log> const log;
     std::shared_ptr<TemporarySuspendInhibition> const temporary_suspend_inhibition;
@@ -95,7 +101,8 @@ private:
 
     bool started;
 
-    std::unordered_map<std::string,BatteryInfo> batteries;
+    Device display_device;
+    std::unordered_map<std::string,Device> batteries;
 };
 
 }
