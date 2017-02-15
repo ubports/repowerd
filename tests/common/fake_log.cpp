@@ -19,8 +19,29 @@
 #include "fake_log.h"
 
 #include <cstdarg>
+#include <cstdlib>
 
-void repowerd::test::FakeLog::log(char const* tag, char const* format, ...)
+namespace rt = repowerd::test;
+
+namespace
+{
+
+bool get_log_to_console()
+{
+    auto const test_log_cstr = getenv("REPOWERD_TEST_LOG");
+    auto const test_log = test_log_cstr ? std::string{test_log_cstr} : "";
+
+    return test_log == "console";
+}
+
+}
+
+rt::FakeLog::FakeLog()
+    : log_to_console{get_log_to_console()}
+{
+}
+
+void rt::FakeLog::log(char const* tag, char const* format, ...)
 {
     std::string const format_str = std::string{tag} + ": " + format + "\n";
 
@@ -34,9 +55,12 @@ void repowerd::test::FakeLog::log(char const* tag, char const* format, ...)
 
     std::lock_guard<std::mutex> lock{contents_mutex};
     contents.push_back(output);
+
+    if (log_to_console)
+        printf("%s", output);
 }
 
-bool repowerd::test::FakeLog::contains_line(std::vector<std::string> const& words)
+bool rt::FakeLog::contains_line(std::vector<std::string> const& words)
 {
     std::lock_guard<std::mutex> lock{contents_mutex};
 

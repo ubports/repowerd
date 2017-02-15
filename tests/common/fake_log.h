@@ -32,11 +32,14 @@ namespace test
 class FakeLog : public Log
 {
 public:
+    FakeLog();
+
     void log(char const* tag, char const* format, ...) override;
 
     bool contains_line(std::vector<std::string> const& words);
 
 private:
+    bool const log_to_console;
     std::mutex contents_mutex;
     std::vector<std::string> contents;
 };
