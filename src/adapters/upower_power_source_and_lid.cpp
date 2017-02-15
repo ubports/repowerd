@@ -23,6 +23,7 @@
 #include "temporary_suspend_inhibition.h"
 
 #include "src/core/log.h"
+#include <algorithm>
 
 namespace
 {
@@ -98,6 +99,9 @@ catch (...)
     return 68.0;
 }
 
+double constexpr critical_percentage{2.0};
+double constexpr non_critical_percentage{3.0};
+
 }
 
 repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
@@ -114,6 +118,7 @@ repowerd::UPowerPowerSourceAndLid::UPowerPowerSourceAndLid(
       power_source_critical_handler{null_handler},
       lid_handler{null_arg_handler},
       started{false},
+      highest_seen_percentage{0.0},
       display_device{}
 {
 }
@@ -275,6 +280,9 @@ void repowerd::UPowerPowerSourceAndLid::handle_dbus_signal(
 void repowerd::UPowerPowerSourceAndLid::add_display_device()
 {
     display_device = create_device(display_device_path);
+
+    highest_seen_percentage = display_device.percentage;
+
     log_device("add_display_device", display_device);
 }
 
@@ -378,7 +386,10 @@ void repowerd::UPowerPowerSourceAndLid::change_device(
 
         if (new_info.is_present && old_info.percentage != new_info.percentage)
         {
-            if (new_info.percentage <= 1.0 && is_using_battery_power())
+            highest_seen_percentage = std::max(highest_seen_percentage, new_info.percentage);
+
+            if (new_info.percentage <= critical_percentage && is_using_battery_power() &&
+                highest_seen_percentage >= non_critical_percentage)
             {
                 log->log(log_tag, "Battery energy percentage is at critical level %.1f%%\n",
                          new_info.percentage);
@@ -406,7 +417,10 @@ void repowerd::UPowerPowerSourceAndLid::change_device(
     }
 
     if (critical)
+    {
+        highest_seen_percentage = 0.0;
         power_source_critical_handler();
+    }
 
     if (change)
         power_source_change_handler();

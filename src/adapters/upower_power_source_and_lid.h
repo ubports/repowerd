@@ -100,6 +100,7 @@ private:
     LidHandler lid_handler;
 
     bool started;
+    double highest_seen_percentage;
 
     Device display_device;
     std::unordered_map<std::string,Device> batteries;

@@ -45,9 +45,9 @@ struct MockTemporarySuspendInhibition : repowerd::TemporarySuspendInhibition
     MOCK_METHOD2(inhibit_suspend_for, void(std::chrono::milliseconds,std::string const&));
 };
 
-struct AUPowerPowerSourceAndLid : testing::Test
+struct AUPowerPowerSourceAndLidBase : testing::Test
 {
-    AUPowerPowerSourceAndLid()
+    AUPowerPowerSourceAndLidBase()
     {
         registrations.push_back(
             upower_power_source_and_lid.register_power_source_change_handler(
@@ -69,12 +69,6 @@ struct AUPowerPowerSourceAndLid : testing::Test
                 {
                     mock_handlers.lid(lid_state);
                 }));
-
-        fake_upower.add_device(device_path(0), unplugged_line_power);
-        fake_upower.add_device(device_path(1), full_battery);
-        fake_upower.add_device(display_device_path, full_battery);
-
-        upower_power_source_and_lid.start_processing();
     }
 
     void wait_for_tracked_batteries(std::unordered_set<std::string> const& batteries)
@@ -114,6 +108,8 @@ struct AUPowerPowerSourceAndLid : testing::Test
     // shutdown_battery_temperature is in celcius * 10
     double const exploding_temperature =
         fake_device_config.shutdown_battery_temperature * 0.1;
+    double const critical_percentage = 2.0;
+    double const non_critical_percentage = 3.0;
 
     rt::FakeUPower::DeviceInfo const plugged_line_power =
         rt::FakeUPower::DeviceInfo::for_plugged_line_power();
@@ -131,6 +127,31 @@ struct AUPowerPowerSourceAndLid : testing::Test
     std::chrono::seconds const default_timeout{3};
     std::string const display_device_path{
         "/org/freedesktop/UPower/devices/DisplayDevice"};
+};
+
+struct AUPowerPowerSourceAndLid : AUPowerPowerSourceAndLidBase
+{
+    AUPowerPowerSourceAndLid()
+    {
+        fake_upower.add_device(device_path(0), unplugged_line_power);
+        fake_upower.add_device(device_path(1), full_battery);
+        fake_upower.add_device(display_device_path, full_battery);
+
+        upower_power_source_and_lid.start_processing();
+    }
+};
+
+struct AUPowerPowerSourceAndLidWithAlmostEmptyBattery : AUPowerPowerSourceAndLidBase
+{
+    AUPowerPowerSourceAndLidWithAlmostEmptyBattery()
+    {
+        auto almost_empty_battery = discharging_battery;
+        almost_empty_battery.percentage = critical_percentage;
+
+        fake_upower.add_device(device_path(0), unplugged_line_power);
+        fake_upower.add_device(device_path(1), almost_empty_battery);
+        fake_upower.add_device(display_device_path, almost_empty_battery);
+    }
 };
 
 }
@@ -240,13 +261,13 @@ TEST_F(AUPowerPowerSourceAndLid,
         .WillOnce(WakeUp(&request_processed));
 
     auto almost_empty_battery = discharging_battery;
-    almost_empty_battery.percentage = 1.0;
+    almost_empty_battery.percentage = critical_percentage;
     fake_upower.change_device(display_device_path, almost_empty_battery);
 
     request_processed.wait_for(default_timeout);
     EXPECT_TRUE(request_processed.woken());
 
-    EXPECT_TRUE(fake_log.contains_line({"critical", "energy", "1.0%"}));
+    EXPECT_TRUE(fake_log.contains_line({"critical", "energy", "2.0%"}));
 }
 
 TEST_F(AUPowerPowerSourceAndLid,
@@ -255,7 +276,7 @@ TEST_F(AUPowerPowerSourceAndLid,
     EXPECT_CALL(mock_handlers, power_source_critical()).Times(0);
 
     auto low_charging_battery = charging_battery;
-    low_charging_battery.percentage = 1.0;
+    low_charging_battery.percentage = critical_percentage;
     fake_upower.change_device(display_device_path, low_charging_battery);
 
     std::this_thread::sleep_for(100ms);
@@ -267,7 +288,7 @@ TEST_F(AUPowerPowerSourceAndLid,
     EXPECT_CALL(mock_handlers, power_source_critical()).Times(0);
 
     auto low_charging_battery = discharging_battery;
-    low_charging_battery.percentage = 1.0;
+    low_charging_battery.percentage = critical_percentage;
     fake_upower.change_device(device_path(1), low_charging_battery);
 
     std::this_thread::sleep_for(100ms);
@@ -369,7 +390,7 @@ TEST_F(AUPowerPowerSourceAndLid,
 
     auto removed_battery = full_battery;
     removed_battery.is_present = false;
-    removed_battery.percentage = 1.0;
+    removed_battery.percentage = critical_percentage;
     fake_upower.change_device(display_device_path, removed_battery);
 
     std::this_thread::sleep_for(100ms);
@@ -388,6 +409,85 @@ TEST_F(AUPowerPowerSourceAndLid,
     fake_upower.change_device(device_path(1), removed_battery);
 
     std::this_thread::sleep_for(100ms);
+}
+
+TEST_F(AUPowerPowerSourceAndLid,
+       does_not_notify_again_of_critical_state_for_low_energy_if_already_critical)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, power_source_critical())
+        .WillOnce(WakeUp(&request_processed));
+
+    auto low_battery = discharging_battery;
+
+    low_battery.percentage = critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    low_battery.percentage = critical_percentage / 2.0;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUPowerPowerSourceAndLid,
+       notifies_again_of_critical_state_for_low_energy_if_has_seen_non_critical_percentage)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, power_source_critical())
+        .WillOnce(Return())
+        .WillOnce(WakeUp(&request_processed));
+
+    auto low_battery = discharging_battery;
+
+    low_battery.percentage = critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    low_battery.percentage = non_critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    low_battery.percentage = critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
+}
+
+TEST_F(AUPowerPowerSourceAndLidWithAlmostEmptyBattery,
+       does_not_notify_of_critical_state_for_low_energy)
+{
+    EXPECT_CALL(mock_handlers, power_source_critical()).Times(0);
+
+    upower_power_source_and_lid.start_processing();
+
+    auto low_battery = discharging_battery;
+    low_battery.percentage = critical_percentage / 2.0;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    std::this_thread::sleep_for(100ms);
+}
+
+TEST_F(AUPowerPowerSourceAndLidWithAlmostEmptyBattery,
+       notifies_of_critical_state_for_low_energy_if_has_seen_non_critical_percentage)
+{
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, power_source_critical())
+        .WillOnce(WakeUp(&request_processed));
+
+    upower_power_source_and_lid.start_processing();
+
+    auto low_battery = discharging_battery;
+    low_battery.percentage = non_critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    low_battery.percentage = critical_percentage;
+    fake_upower.change_device(display_device_path, low_battery);
+
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
 }
 
 TEST_F(AUPowerPowerSourceAndLid, notifies_of_lid_closed)
