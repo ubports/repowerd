@@ -1,0 +1,61 @@
+Service   : com.canonical.repowerd
+Interface : com.canonical.repowerd
+ObjectPath: /com/canonical/repowerd
+
+Methods
+-------
+
+void SetInactivityBehavior(string power_action,
+                           string power_source,
+                           int timeout_sec)
+
+    <power_action>: "display-off", "suspend"
+    <power_source>: "battery", "line-power"
+    <timeout_sec> : positive timeout in seconds, non-positive to disable
+
+    Sets the inactivity behavior to <power_action> while on <power_source>
+    after <timeout_sec> seconds.
+
+    Examples:
+
+    While on battery turn off display after 30 seconds of inactivity:
+
+        SetInactivityBehavior("display-off", "battery", 30)
+
+    While plugged in never turn off display due to inactivity:
+
+        SetInactivityBehavior("display-off", "line-power", -1)
+
+    While on battery suspend after 10 minutes of inactivity:
+
+        SetInactivityBehavior("suspend", "battery", 600)
+
+void SetLidBehavior(string power_action,
+                    string power_source)
+
+    <power_action>: "none", "suspend"
+    <power_source>: "battery", "line-power"
+
+    Sets the lid behavior to <power_action> while on <power_source>.
+
+    Examples:
+
+    While on battery suspend when closing the lid:
+
+        SetLidBehavior("suspend", "battery")
+
+    While plugged in do nothing when closing the lid:
+
+        SetLidBehavior("none", "line-power")
+
+void SetCriticalPowerBehavior(string power_action)
+
+    <power_action>: "suspend", "power-off"
+
+    Sets the critical power behavior to <power_action>.
+
+    Examples:
+
+    Power off the device when power is critically low:
+
+        SetCriticalPowerBehavior("power-off")
