@@ -108,6 +108,10 @@ char const* const unity_screen_service_introspection = R"(<!DOCTYPE node PUBLIC 
     <method name='setTouchVisualizationEnabled'>
       <arg name='enabled' type='b' direction='in'/>
     </method>
+    <signal name='DisplayPowerStateChange'>
+      <arg name='state' type='i'/>
+      <arg name='reason' type='i'/>
+    </signal>
   </interface>
 </node>)";
 
