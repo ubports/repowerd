@@ -94,11 +94,15 @@ struct ATimerfdWakeupService : Test
     }
 
     repowerd::TimerfdWakeupService wakeup_service;
-    repowerd::HandlerRegistration handler_registration;
     std::mutex wakeup_mutex;
     std::condition_variable wakeup_cv;
     std::vector<std::string> wakeup_cookies;
     std::vector<std::chrono::system_clock::time_point> wakeup_time_points;
+
+    // Registration needs to be last, so that we unregister the wakeup handler
+    // before destroying the test, to avoid accessing test variables in the
+    // handler while the test is being destroyed.
+    repowerd::HandlerRegistration handler_registration;
 };
 
 }
