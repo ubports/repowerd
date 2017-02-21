@@ -1,3 +1,14 @@
+repowerd (2017.02-0ubuntu1) UNRELEASED; urgency=medium
+
+  * 2017.02 release
+    - Improve lid handling
+    - Add timerfd based wakeup service for desktop
+    - Support new power settings, exposed through com.canonical.repowerd
+    - Improve handling of critically low power scenarios
+    - Generate random cookies for wakeup requests
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 21 Feb 2017 13:08:03 +0200
+
 repowerd (2016.12+17.04.20161212.1-0ubuntu1) zesty; urgency=medium
 
   * New 2016.12 release
