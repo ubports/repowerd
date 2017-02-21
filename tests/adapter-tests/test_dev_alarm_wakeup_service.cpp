@@ -253,3 +253,25 @@ TEST_F(ADevAlarmWakeupService, throws_if_cannot_set_dev_alarm)
         wakeup_service.schedule_wakeup_at({});
     }, std::exception);
 }
+
+TEST_F(ADevAlarmWakeupService, does_not_leak_memory_when_triggering)
+{
+    auto const tp1 = fake_dev_alarm.system_now() + 100ms;
+
+    auto const cookie1 = wakeup_service.schedule_wakeup_at(tp1);
+
+    fake_dev_alarm.advance_time_by(100ms);
+    wait_for_wakeups({cookie1}, {tp1});
+
+    EXPECT_THAT(wakeup_service.num_stored_elements(), Eq(0));
+}
+
+TEST_F(ADevAlarmWakeupService, does_not_leak_memory_when_cancelling)
+{
+    auto const tp1 = fake_dev_alarm.system_now() + 50ms;
+
+    auto const cookie1 = wakeup_service.schedule_wakeup_at(tp1);
+    wakeup_service.cancel_wakeup(cookie1);
+
+    EXPECT_THAT(wakeup_service.num_stored_elements(), Eq(0));
+}

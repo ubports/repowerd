@@ -44,7 +44,7 @@ timespec to_timespec(std::chrono::system_clock::time_point const& tp)
 
 repowerd::TimerfdWakeupService::TimerfdWakeupService()
     : timerfd_fd{timerfd_create(CLOCK_REALTIME, TFD_CLOEXEC)},
-      next_cookie{1},
+      cookie_pool{1},
       wakeup_handler{null_handler},
       event_loop{"Wakeup"}
 {
@@ -56,6 +56,8 @@ repowerd::TimerfdWakeupService::TimerfdWakeupService()
         [this]
         {
             auto const wakeup = *wakeups.begin();
+
+            cookie_pool.remove(std::stoull(wakeup.second));
             wakeups.erase(wakeups.begin());
 
             reset_timerfd();
@@ -74,7 +76,7 @@ std::string repowerd::TimerfdWakeupService::schedule_wakeup_at(
     event_loop.enqueue(
         [this,tp,&cookie]
         {
-            cookie = std::to_string(next_cookie++);
+            cookie = std::to_string(cookie_pool.generate());
             wakeups.insert({tp, cookie});
 
             reset_timerfd();
@@ -92,6 +94,7 @@ void repowerd::TimerfdWakeupService::cancel_wakeup(std::string const& cookie)
             {
                 if (iter->second == cookie)
                 {
+                    cookie_pool.remove(std::stoull(cookie));
                     wakeups.erase(iter);
                     break;
                 }
@@ -108,6 +111,19 @@ repowerd::HandlerRegistration repowerd::TimerfdWakeupService::register_wakeup_ha
         event_loop,
         [this, &handler] { wakeup_handler = handler; },
         [this] { wakeup_handler = null_handler; }};
+}
+
+unsigned int repowerd::TimerfdWakeupService::num_stored_elements()
+{
+    unsigned int elements = 0;
+
+    event_loop.enqueue(
+        [this,&elements]
+        {
+            elements = cookie_pool.size() + wakeups.size();
+        }).wait();
+
+    return elements;
 }
 
 void repowerd::TimerfdWakeupService::reset_timerfd()

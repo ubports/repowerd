@@ -64,7 +64,7 @@ repowerd::DevAlarmWakeupService::DevAlarmWakeupService(
     : filesystem{filesystem},
       dev_alarm_fd{filesystem->open("/dev/alarm", O_RDWR)},
       running{true},
-      next_cookie{1},
+      cookie_pool{1},
       wakeup_handler{null_handler}
 {
     if (dev_alarm_fd == -1)
@@ -87,6 +87,7 @@ repowerd::DevAlarmWakeupService::DevAlarmWakeupService(
                 if (running && !wakeups.empty())
                 {
                     auto const wakeup = *wakeups.begin();
+                    cookie_pool.remove(std::stoull(wakeup.second));
                     wakeups.erase(wakeups.begin());
                     auto const handler = wakeup_handler;
                     lock.unlock();
@@ -113,7 +114,7 @@ std::string repowerd::DevAlarmWakeupService::schedule_wakeup_at(
 {
     std::lock_guard<std::mutex> lock{wakeup_mutex};
 
-    auto const cookie = std::to_string(next_cookie++);
+    auto const cookie = std::to_string(cookie_pool.generate());
     wakeups.insert({tp, cookie});
 
     reset_hardware_alarm();
@@ -128,6 +129,7 @@ void repowerd::DevAlarmWakeupService::cancel_wakeup(std::string const& cookie)
     {
         if (iter->second == cookie)
         {
+            cookie_pool.remove(std::stoull(cookie));
             wakeups.erase(iter);
             break;
         }
@@ -147,6 +149,12 @@ repowerd::HandlerRegistration repowerd::DevAlarmWakeupService::register_wakeup_h
             std::lock_guard<std::mutex> lock{wakeup_mutex};
             wakeup_handler = null_handler;
         }};
+}
+
+unsigned int repowerd::DevAlarmWakeupService::num_stored_elements()
+{
+    std::lock_guard<std::mutex> lock{wakeup_mutex};
+    return cookie_pool.size() + wakeups.size();
 }
 
 void repowerd::DevAlarmWakeupService::reset_hardware_alarm()

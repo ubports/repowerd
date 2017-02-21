@@ -63,6 +63,7 @@ add_executable(
     test_timerfd_wakeup_service.cpp
     test_ubuntu_light_sensor.cpp
     test_ubuntu_proximity_sensor.cpp
+    test_unique_random_pool.cpp
     test_unity_display.cpp
     test_unity_power_button.cpp
     test_unity_screen_service.cpp

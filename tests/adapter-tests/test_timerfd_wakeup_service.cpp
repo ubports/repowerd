@@ -181,3 +181,23 @@ TEST_F(ATimerfdWakeupService, schedules_and_cancels_multiple_wakeups_with_same_t
 
     wait_for_wakeups({cookie1, cookie3}, {tp1, tp3});
 }
+
+TEST_F(ATimerfdWakeupService, does_not_leak_memory_when_triggering)
+{
+    auto const tp1 = system_now() + 50ms;
+
+    auto const cookie1 = wakeup_service.schedule_wakeup_at(tp1);
+    wait_for_wakeups({cookie1}, {tp1});
+
+    EXPECT_THAT(wakeup_service.num_stored_elements(), Eq(0));
+}
+
+TEST_F(ATimerfdWakeupService, does_not_leak_memory_when_cancelling)
+{
+    auto const tp1 = system_now() + 50ms;
+
+    auto const cookie1 = wakeup_service.schedule_wakeup_at(tp1);
+    wakeup_service.cancel_wakeup(cookie1);
+
+    EXPECT_THAT(wakeup_service.num_stored_elements(), Eq(0));
+}

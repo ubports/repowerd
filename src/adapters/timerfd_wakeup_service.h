@@ -21,6 +21,7 @@
 #include "wakeup_service.h"
 #include "event_loop.h"
 #include "fd.h"
+#include "unique_random_pool.h"
 
 #include <map>
 
@@ -36,11 +37,14 @@ public:
     void cancel_wakeup(std::string const& cookie) override;
     HandlerRegistration register_wakeup_handler(WakeupHandler const& handler) override;
 
+    // For testing only
+    unsigned int num_stored_elements();
+
 private:
     void reset_timerfd();
 
     Fd timerfd_fd;
-    uint64_t next_cookie;
+    UniqueRandomPool<uint64_t> cookie_pool;
     WakeupHandler wakeup_handler;
     std::multimap<std::chrono::system_clock::time_point,std::string> wakeups;
 
