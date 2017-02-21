@@ -1,4 +1,4 @@
-repowerd (2017.02-0ubuntu1) UNRELEASED; urgency=medium
+repowerd (2017.02+17.04.20170221-0ubuntu1) zesty; urgency=medium
 
   * 2017.02 release
     - Improve lid handling
@@ -6,8 +6,9 @@ repowerd (2017.02-0ubuntu1) UNRELEASED; urgency=medium
     - Support new power settings, exposed through com.canonical.repowerd
     - Improve handling of critically low power scenarios
     - Generate random cookies for wakeup requests
+  * 2017.02 release
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 21 Feb 2017 13:08:03 +0200
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 21 Feb 2017 11:41:12 +0000
 
 repowerd (2016.12+17.04.20161212.1-0ubuntu1) zesty; urgency=medium
 
