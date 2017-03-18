@@ -82,7 +82,7 @@ void repowerd::UnityDisplay::turn_on(DisplayPowerControlFilter filter)
 
     log->log(log_tag, "turn_on(%s)", filter_str.c_str());
 
-    g_dbus_connection_call(
+    g_dbus_connection_call_sync(
         dbus_connection,
         unity_display_bus_name,
         unity_display_object_path,
@@ -91,8 +91,7 @@ void repowerd::UnityDisplay::turn_on(DisplayPowerControlFilter filter)
         g_variant_new("(s)", filter_str.c_str()),
         nullptr,
         G_DBUS_CALL_FLAGS_NONE,
-        -1,
-        nullptr,
+        /* timeout_msec */ 1000,
         nullptr,
         nullptr);
 }
