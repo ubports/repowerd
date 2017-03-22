@@ -18,14 +18,13 @@
 
 #include "src/adapters/real_temporary_suspend_inhibition.h"
 
+#include "duration_of.h"
 #include "fake_shared.h"
 #include "fake_system_power_control.h"
 #include "spin_wait.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <functional>
 
 namespace rt = repowerd::test;
 
@@ -40,14 +39,6 @@ struct ARealTemporarySuspendInhibition : Test
     rt::FakeSystemPowerControl fake_system_power_control;
     repowerd::RealTemporarySuspendInhibition real_temporary_suspend_inhbition{
         rt::fake_shared(fake_system_power_control)};
-
-    std::chrono::milliseconds duration_of(std::function<void()> const& func)
-    {
-        auto start = std::chrono::steady_clock::now();
-        func();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-    }
 
     bool is_automatic_suspend_allowed()
     {
@@ -71,7 +62,7 @@ TEST_F(ARealTemporarySuspendInhibition, disallows_suspend)
 
 TEST_F(ARealTemporarySuspendInhibition, reallows_suspend_after_timeout)
 {
-    EXPECT_THAT(duration_of(
+    EXPECT_THAT(rt::duration_of(
         [this]
         {
             real_temporary_suspend_inhbition.inhibit_suspend_for(50ms, "bla");
@@ -84,7 +75,7 @@ TEST_F(ARealTemporarySuspendInhibition, reallows_suspend_after_timeout)
 
 TEST_F(ARealTemporarySuspendInhibition, handles_concurrent_suspend_inhibitions)
 {
-    EXPECT_THAT(duration_of(
+    EXPECT_THAT(rt::duration_of(
         [this]
         {
             real_temporary_suspend_inhbition.inhibit_suspend_for(100ms, "bla");

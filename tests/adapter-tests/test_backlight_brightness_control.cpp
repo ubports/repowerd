@@ -174,7 +174,7 @@ struct ABacklightBrightnessControl : Test
         EXPECT_THAT(backlight.brightness_history.back(), Eq(brightness));
     }
 
-    std::chrono::milliseconds duration_of(std::function<void()> const& func)
+    std::chrono::milliseconds fake_chrono_duration_of(std::function<void()> const& func)
     {
         auto start = fake_chrono.steady_now();
         func();
@@ -282,9 +282,12 @@ TEST_F(ABacklightBrightnessControl,
 {
     brightness_control.set_off_brightness();
 
-    EXPECT_THAT(duration_of([&]{brightness_control.set_normal_brightness();}), IsAbout(100ms));
-    EXPECT_THAT(duration_of([&]{brightness_control.set_off_brightness();}), IsAbout(100ms));
-    EXPECT_THAT(duration_of([&]{brightness_control.set_dim_brightness();}), IsAbout(100ms));
+    EXPECT_THAT(fake_chrono_duration_of([&]{brightness_control.set_normal_brightness();}),
+                IsAbout(100ms));
+    EXPECT_THAT(fake_chrono_duration_of([&]{brightness_control.set_off_brightness();}),
+                IsAbout(100ms));
+    EXPECT_THAT(fake_chrono_duration_of([&]{brightness_control.set_dim_brightness();}),
+                IsAbout(100ms));
 }
 
 TEST_F(ABacklightBrightnessControl,

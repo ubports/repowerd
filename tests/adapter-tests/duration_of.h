@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,33 +16,21 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/adapters/real_chrono.h"
-#include "duration_of.h"
+#include <chrono>
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-namespace rt = repowerd::test;
-
-using namespace testing;
-using namespace std::chrono_literals;
-
-namespace
+namespace repowerd
+{
+namespace test
 {
 
-struct ARealChrono : Test
+template <typename T>
+std::chrono::milliseconds duration_of(T const& callable)
 {
-    repowerd::RealChrono real_chrono;
-};
-
-MATCHER_P(IsAbout, a, "")
-{
-    return arg >= a && arg <= a + 10ms;
+    auto const start = std::chrono::steady_clock::now();
+    callable();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - start);
 }
 
 }
-
-TEST_F(ARealChrono, sleeps_for_right_amount_of_time)
-{
-    EXPECT_THAT(rt::duration_of([&]{real_chrono.sleep_for(50ms);}), IsAbout(50ms));
 }
