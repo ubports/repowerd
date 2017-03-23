@@ -42,8 +42,7 @@ struct ARealTemporarySuspendInhibition : Test
 
     bool is_automatic_suspend_allowed()
     {
-        return fake_system_power_control.is_suspend_allowed(
-            repowerd::SuspendType::automatic);
+        return fake_system_power_control.is_automatic_suspend_allowed();
     }
 };
 

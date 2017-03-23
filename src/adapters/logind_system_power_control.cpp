@@ -77,29 +77,12 @@ repowerd::LogindSystemPowerControl::register_system_resume_handler(
         [this] { this->system_resume_handler = []{}; }};
 }
 
-void repowerd::LogindSystemPowerControl::allow_suspend(
-    std::string const& id, SuspendType suspend_type)
+void repowerd::LogindSystemPowerControl::allow_automatic_suspend(std::string const&)
 {
-    if (suspend_type != SuspendType::any)
-        return;
-
-    log->log(log_tag, "allow_suspend(%s, SuspendType::any)", id.c_str());
-
-    std::unique_lock<std::mutex> lock{inhibitions_mutex};
-
-    suspend_disallowances.erase(id);
 }
 
-void repowerd::LogindSystemPowerControl::disallow_suspend(
-    std::string const& id, SuspendType suspend_type)
+void repowerd::LogindSystemPowerControl::disallow_automatic_suspend(std::string const&)
 {
-    if (suspend_type != SuspendType::any)
-        return;
-
-    log->log(log_tag, "disallow_suspend(%s, any)", id.c_str());
-
-    std::lock_guard<std::mutex> lock{inhibitions_mutex};
-    suspend_disallowances.insert(id);
 }
 
 void repowerd::LogindSystemPowerControl::power_off()

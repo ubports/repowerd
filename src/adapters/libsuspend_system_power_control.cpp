@@ -51,8 +51,8 @@ repowerd::LibsuspendSystemPowerControl::register_system_resume_handler(
     return HandlerRegistration{};
 }
 
-void repowerd::LibsuspendSystemPowerControl::allow_suspend(
-    std::string const& id, SuspendType)
+void repowerd::LibsuspendSystemPowerControl::allow_automatic_suspend(
+    std::string const& id)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 
@@ -67,8 +67,8 @@ void repowerd::LibsuspendSystemPowerControl::allow_suspend(
     }
 }
 
-void repowerd::LibsuspendSystemPowerControl::disallow_suspend(
-    std::string const& id, SuspendType)
+void repowerd::LibsuspendSystemPowerControl::disallow_automatic_suspend(
+    std::string const& id)
 {
     std::lock_guard<std::mutex> lock{suspend_mutex};
 

@@ -46,30 +46,22 @@ repowerd::HandlerRegistration rt::FakeSystemPowerControl::register_system_resume
         }};
 }
 
-void rt::FakeSystemPowerControl::allow_suspend(
-    std::string const& id, SuspendType suspend_type)
+void rt::FakeSystemPowerControl::allow_automatic_suspend(std::string const& id)
 {
-    mock.allow_suspend(id, suspend_type);
+    mock.allow_automatic_suspend(id);
 
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (suspend_type == SuspendType::any)
-        any_suspend_disallowances.erase(id);
-    else
-        automatic_suspend_disallowances.erase(id);
+    automatic_suspend_disallowances.erase(id);
 }
 
-void rt::FakeSystemPowerControl::disallow_suspend(
-    std::string const& id, SuspendType suspend_type)
+void rt::FakeSystemPowerControl::disallow_automatic_suspend(std::string const& id)
 {
-    mock.disallow_suspend(id, suspend_type);
+    mock.disallow_automatic_suspend(id);
 
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (suspend_type == SuspendType::any)
-        any_suspend_disallowances.insert(id);
-    else
-        automatic_suspend_disallowances.insert(id);
+    automatic_suspend_disallowances.insert(id);
 }
 
 void rt::FakeSystemPowerControl::power_off()
@@ -100,14 +92,11 @@ void rt::FakeSystemPowerControl::disallow_default_system_handlers()
     are_default_system_handlers_allowed_ = false;
 }
 
-bool rt::FakeSystemPowerControl::is_suspend_allowed(SuspendType suspend_type)
+bool rt::FakeSystemPowerControl::is_automatic_suspend_allowed()
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (suspend_type == SuspendType::any)
-        return any_suspend_disallowances.empty();
-    else
-        return automatic_suspend_disallowances.empty();
+    return automatic_suspend_disallowances.empty();
 }
 
 bool rt::FakeSystemPowerControl::are_default_system_handlers_allowed()

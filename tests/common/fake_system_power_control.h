@@ -39,8 +39,8 @@ public:
     HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& systemd_resume_handler) override;
 
-    void allow_suspend(std::string const& id, SuspendType suspend_type) override;
-    void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
+    void allow_automatic_suspend(std::string const& id) override;
+    void disallow_automatic_suspend(std::string const& id) override;
 
     void power_off() override;
     void suspend() override;
@@ -48,7 +48,7 @@ public:
     void allow_default_system_handlers() override;
     void disallow_default_system_handlers() override;
 
-    bool is_suspend_allowed(SuspendType suspend_type);
+    bool is_automatic_suspend_allowed();
     bool are_default_system_handlers_allowed();
 
     void emit_system_resume();
@@ -58,8 +58,8 @@ public:
         MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_system_resume_handler, void(SystemResumeHandler const&));
         MOCK_METHOD0(unregister_system_resume_handler, void());
-        MOCK_METHOD2(allow_suspend, void(std::string const&, SuspendType));
-        MOCK_METHOD2(disallow_suspend, void(std::string const&, SuspendType));
+        MOCK_METHOD1(allow_automatic_suspend, void(std::string const&));
+        MOCK_METHOD1(disallow_automatic_suspend, void(std::string const&));
         MOCK_METHOD0(power_off, void());
         MOCK_METHOD0(suspend, void());
         MOCK_METHOD0(allow_default_system_handlers, void());
@@ -70,7 +70,6 @@ public:
 private:
     std::mutex mutex;
     std::unordered_set<std::string> automatic_suspend_disallowances;
-    std::unordered_set<std::string> any_suspend_disallowances;
     bool are_default_system_handlers_allowed_;
     SystemResumeHandler system_resume_handler;
 };

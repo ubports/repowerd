@@ -558,6 +558,7 @@ void repowerd::DefaultStateMachine::handle_allow_suspend()
     log->log(log_tag, "allow_suspend");
 
     suspend_allowed = true;
+
     if (suspend_pending)
         suspend_when_allowed();
 }
@@ -786,7 +787,7 @@ void repowerd::DefaultStateMachine::turn_off_display(
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
     if (reason != DisplayPowerChangeReason::proximity)
-        system_power_control->allow_suspend(suspend_id, SuspendType::automatic);
+        system_power_control->allow_automatic_suspend(suspend_id);
 }
 
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
@@ -794,7 +795,7 @@ void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
 {
     if (paused) return;
 
-    system_power_control->disallow_suspend(suspend_id, SuspendType::automatic);
+    system_power_control->disallow_automatic_suspend(suspend_id);
     performance_booster->enable_interactive_mode();
     if (lid_closed)
         display_power_control->turn_on(DisplayPowerControlFilter::external);

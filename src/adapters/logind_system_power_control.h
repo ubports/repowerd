@@ -43,8 +43,8 @@ public:
     HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& system_resume_handler) override;
 
-    void allow_suspend(std::string const& id, SuspendType suspend_type) override;
-    void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
+    void allow_automatic_suspend(std::string const& id) override;
+    void disallow_automatic_suspend(std::string const& id) override;
 
     void power_off() override;
     void suspend() override;
@@ -72,7 +72,6 @@ private:
     SystemResumeHandler system_resume_handler;
 
     std::mutex inhibitions_mutex;
-    std::unordered_set<std::string> suspend_disallowances;
     Fd idle_and_lid_inhibition_fd;
 };
 

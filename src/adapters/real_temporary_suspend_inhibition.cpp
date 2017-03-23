@@ -34,12 +34,12 @@ void repowerd::RealTemporarySuspendInhibition::inhibit_suspend_for(
     auto const cur_id = id++;
     auto const suspend_id = name + "_" + std::to_string(cur_id);
 
-    system_power_control->disallow_suspend(suspend_id, SuspendType::automatic);
+    system_power_control->disallow_automatic_suspend(suspend_id);
 
     event_loop.schedule_in(
         timeout,
         [this, suspend_id]
         {
-            system_power_control->allow_suspend(suspend_id, SuspendType::automatic);
+            system_power_control->allow_automatic_suspend(suspend_id);
         });
 }

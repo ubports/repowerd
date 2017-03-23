@@ -29,22 +29,20 @@ namespace
 
 struct ASystemPowerControl : rt::AcceptanceTest
 {
-    void expect_suspend_is_allowed()
+    void expect_automatic_suspend_is_allowed()
     {
-        EXPECT_TRUE(config.the_fake_system_power_control()->is_suspend_allowed(
-                    repowerd::SuspendType::automatic));
+        EXPECT_TRUE(config.the_fake_system_power_control()->is_automatic_suspend_allowed());
     }
 
-    void expect_suspend_is_disallowed()
+    void expect_automatic_suspend_is_disallowed()
     {
-        EXPECT_FALSE(config.the_fake_system_power_control()->is_suspend_allowed(
-                     repowerd::SuspendType::automatic));
+        EXPECT_FALSE(config.the_fake_system_power_control()->is_automatic_suspend_allowed());
     }
 
-    void expect_suspend_disallow()
+    void expect_automatic_suspend_disallow()
     {
         EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                    disallow_suspend(_, repowerd::SuspendType::automatic));
+                    disallow_automatic_suspend(_));
     }
 
     void emit_system_resume()
@@ -58,11 +56,11 @@ struct ASystemPowerControl : rt::AcceptanceTest
 
 TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_when_display_turns_on)
 {
-    expect_suspend_is_allowed();
+    expect_automatic_suspend_is_allowed();
 
     turn_on_display();
 
-    expect_suspend_is_disallowed();
+    expect_automatic_suspend_is_disallowed();
 }
 
 TEST_F(ASystemPowerControl, automatic_suspend_is_allowed_when_display_turns_off)
@@ -70,7 +68,7 @@ TEST_F(ASystemPowerControl, automatic_suspend_is_allowed_when_display_turns_off)
     turn_on_display();
     turn_off_display();
 
-    expect_suspend_is_allowed();
+    expect_automatic_suspend_is_allowed();
 }
 
 TEST_F(ASystemPowerControl,
@@ -79,13 +77,13 @@ TEST_F(ASystemPowerControl,
     turn_on_display();
     emit_proximity_state_near();
 
-    expect_suspend_is_disallowed();
+    expect_automatic_suspend_is_disallowed();
 }
 
 TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_before_display_is_turned_on)
 {
     testing::InSequence s;
-    expect_suspend_disallow();
+    expect_automatic_suspend_disallow();
     expect_display_turns_on();
 
     press_power_button();

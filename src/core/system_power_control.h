@@ -26,8 +26,6 @@
 namespace repowerd
 {
 
-enum class SuspendType { automatic, any };
-
 using SystemResumeHandler = std::function<void()>;
 
 class SystemPowerControl
@@ -40,8 +38,8 @@ public:
     virtual HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& system_resume_handler) = 0;
 
-    virtual void allow_suspend(std::string const& id, SuspendType suspend_type) = 0;
-    virtual void disallow_suspend(std::string const& id, SuspendType suspend_type) = 0;
+    virtual void allow_automatic_suspend(std::string const& id) = 0;
+    virtual void disallow_automatic_suspend(std::string const& id) = 0;
 
     virtual void power_off() = 0;
     virtual void suspend() = 0;

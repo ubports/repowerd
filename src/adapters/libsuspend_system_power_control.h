@@ -37,8 +37,8 @@ public:
     HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& system_resume_handler) override;
 
-    void allow_suspend(std::string const& id, SuspendType suspend_type) override;
-    void disallow_suspend(std::string const& id, SuspendType suspend_type) override;
+    void allow_automatic_suspend(std::string const& id) override;
+    void disallow_automatic_suspend(std::string const& id) override;
 
     void power_off() override;
     void suspend() override;
