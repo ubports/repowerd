@@ -38,13 +38,13 @@ struct ALid : rt::AcceptanceTest
 
 }
 
-TEST_F(ALid, closed_turns_off_display_beforing_suspending_when_allowed)
+TEST_F(ALid, closed_turns_off_display_beforing_suspending)
 {
     turn_on_display();
 
     InSequence s;
     expect_display_turns_off();
-    expect_system_suspends_when_allowed("lid");
+    expect_system_suspends();
 
     close_lid();
 }
@@ -59,13 +59,6 @@ TEST_F(ALid, closed_is_logged)
 TEST_F(ALid, opened_turns_on_display)
 {
     expect_display_turns_on();
-    open_lid();
-}
-
-TEST_F(ALid, opened_cancels_suspend_when_allowed)
-{
-    expect_system_cancel_suspend_when_allowed("inactivity");
-    expect_system_cancel_suspend_when_allowed("lid");
     open_lid();
 }
 

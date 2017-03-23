@@ -418,7 +418,7 @@ TEST_P(AClientSetting,
 
     turn_on_display();
 
-    expect_system_suspends_when_allowed("lid");
+    expect_system_suspends();
     close_lid();
 }
 
@@ -467,7 +467,7 @@ TEST_P(AClientSetting,
 
     turn_on_display();
 
-    expect_system_suspends_when_allowed("lid");
+    expect_system_suspends();
     close_lid();
 }
 
@@ -521,7 +521,7 @@ TEST_P(AClientSetting, for_display_off_lid_behavior_is_ignored)
 
     turn_on_display();
 
-    expect_system_suspends_when_allowed("lid");
+    expect_system_suspends();
     close_lid();
 }
 

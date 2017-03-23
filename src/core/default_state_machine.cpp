@@ -285,7 +285,7 @@ void repowerd::DefaultStateMachine::handle_lid_closed()
             turn_off_display(DisplayPowerChangeReason::unknown);
 
         if (lid_power_action.get() == PowerAction::suspend)
-            system_power_control->suspend_when_allowed("DefaultStateMachine::lid");
+            system_power_control->suspend();
     }
     else
     {
@@ -298,8 +298,6 @@ void repowerd::DefaultStateMachine::handle_lid_open()
     log->log(log_tag, "handle_lid_open()");
 
     lid_closed = false;
-
-    system_power_control->cancel_suspend_when_allowed("DefaultStateMachine::lid");
 
     if (display_power_mode == DisplayPowerMode::on)
     {
