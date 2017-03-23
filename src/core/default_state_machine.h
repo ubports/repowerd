@@ -135,6 +135,8 @@ private:
     void disable_proximity(ProximityEnablement enablement);
     bool is_proximity_enabled();
     bool is_proximity_enabled_only_until_far_event_or_notification_expiration();
+    void suspend_when_allowed();
+    void cancel_suspend_when_allowed();
 
     std::string const log_tag_str;
     char const* const log_tag;
@@ -181,6 +183,8 @@ private:
     bool autobrightness_enabled;
     double normal_brightness_value;
     bool lid_closed;
+    bool suspend_allowed;
+    bool suspend_pending;
 };
 
 }

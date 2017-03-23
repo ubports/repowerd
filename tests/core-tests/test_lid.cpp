@@ -49,6 +49,19 @@ TEST_F(ALid, closed_turns_off_display_beforing_suspending)
     close_lid();
 }
 
+TEST_F(ALid, closed_suspends_regardless_of_suspend_disallowances)
+{
+    turn_on_display();
+
+    client_request_disallow_suspend();
+
+    InSequence s;
+    expect_display_turns_off();
+    expect_system_suspends();
+
+    close_lid();
+}
+
 TEST_F(ALid, closed_is_logged)
 {
     close_lid();

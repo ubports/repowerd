@@ -113,7 +113,9 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       paused{false},
       autobrightness_enabled{false},
       normal_brightness_value{0.5},
-      lid_closed{false}
+      lid_closed{false},
+      suspend_allowed{true},
+      suspend_pending{false}
 {
       inactivity_timeout_allowances.fill(true);
       proximity_enablements.fill(false);
@@ -148,7 +150,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
         log->log(log_tag, "handle_alarm(suspend)");
         user_inactivity_suspend_alarm_id = AlarmId::invalid;
         if (is_inactivity_timeout_application_allowed() && !paused)
-            system_power_control->suspend_when_allowed("DefaultStateMachine::inactivity");
+            suspend_when_allowed();
     }
     else if (id == proximity_disable_alarm_id)
     {
@@ -553,10 +555,18 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
 
 void repowerd::DefaultStateMachine::handle_allow_suspend()
 {
+    log->log(log_tag, "allow_suspend");
+
+    suspend_allowed = true;
+    if (suspend_pending)
+        suspend_when_allowed();
 }
 
 void repowerd::DefaultStateMachine::handle_disallow_suspend()
 {
+    log->log(log_tag, "disallow_suspend");
+
+    suspend_allowed = false;
 }
 
 void repowerd::DefaultStateMachine::handle_system_resume()
@@ -691,7 +701,7 @@ void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_display_off_
 void repowerd::DefaultStateMachine::schedule_normal_user_inactivity_suspend_alarm()
 {
     cancel_user_inactivity_suspend_alarm();
-    system_power_control->cancel_suspend_when_allowed("DefaultStateMachine::inactivity");
+    cancel_suspend_when_allowed();
 
     if (user_inactivity_normal_suspend_timeout.get() != repowerd::infinite_timeout)
     {
@@ -917,4 +927,22 @@ bool repowerd::DefaultStateMachine::is_proximity_enabled_only_until_far_event_or
         if (enabled) ++num_enabled;
 
     return num_enabled == 1 && proximity_enablements[ProximityEnablement::until_far_event_or_notification_expiration];
+}
+
+void repowerd::DefaultStateMachine::suspend_when_allowed()
+{
+    if (suspend_allowed)
+    {
+        suspend_pending = false;
+        system_power_control->suspend();
+    }
+    else
+    {
+        suspend_pending = true;
+    }
+}
+
+void repowerd::DefaultStateMachine::cancel_suspend_when_allowed()
+{
+    suspend_pending = false;
 }

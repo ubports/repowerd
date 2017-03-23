@@ -282,7 +282,7 @@ TEST_P(AClientSetting,
         suspend_timeout - user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
-    expect_system_suspends_when_allowed("inactivity");
+    expect_system_suspends();
     advance_time_by(1ms);
 }
 
@@ -362,7 +362,7 @@ TEST_P(AClientSetting,
         suspend_timeout - user_inactivity_normal_display_off_timeout - 1ms);
     verify_expectations();
 
-    expect_system_suspends_when_allowed("inactivity");
+    expect_system_suspends();
     advance_time_by(1ms);
 }
 

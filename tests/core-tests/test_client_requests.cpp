@@ -31,6 +31,8 @@ namespace
 
 struct AClientRequest : rt::AcceptanceTest
 {
+    std::chrono::milliseconds const suspend_timeout{
+        user_inactivity_normal_suspend_timeout + 10s};
 };
 
 }
@@ -254,6 +256,65 @@ TEST_F(AClientRequest, to_set_brightness_value_works)
     client_request_set_normal_brightness_value(0.56);
 }
 
+TEST_F(AClientRequest, to_disallow_suspend_works)
+{
+    turn_on_display();
+
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::suspend,
+        repowerd::PowerSupply::battery,
+        suspend_timeout);
+
+    client_request_disallow_suspend();
+
+    expect_display_turns_off();
+    expect_no_system_power_change();
+    advance_time_by(suspend_timeout);
+}
+
+TEST_F(AClientRequest, to_allow_suspend_suspends_immediately_if_timeout_expired)
+{
+    turn_on_display();
+
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::suspend,
+        repowerd::PowerSupply::battery,
+        suspend_timeout);
+
+    client_request_disallow_suspend();
+
+    expect_display_turns_off();
+    expect_no_system_power_change();
+    advance_time_by(suspend_timeout);
+    verify_expectations();
+
+    expect_system_suspends();
+    client_request_allow_suspend();
+}
+
+TEST_F(AClientRequest, to_allow_suspend_does_not_suspend_immediately_if_timeout_not_expired)
+{
+    turn_on_display();
+
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::suspend,
+        repowerd::PowerSupply::battery,
+        suspend_timeout);
+
+    client_request_disallow_suspend();
+
+    expect_display_turns_off();
+    advance_time_by(user_inactivity_normal_suspend_timeout);
+    verify_expectations();
+
+    expect_no_system_power_change();
+    client_request_allow_suspend();
+    verify_expectations();
+
+    expect_system_suspends();
+    advance_time_by(10s);
+}
+
 TEST_F(AClientRequest, to_disable_inactivity_timeout_is_logged)
 {
     client_request_disable_inactivity_timeout();
@@ -295,4 +356,18 @@ TEST_F(AClientRequest, to_set_normal_brightness_value_is_logged)
     client_request_set_normal_brightness_value(0.67);
 
     EXPECT_TRUE(log_contains_line({"set_normal_brightness_value", "0.67"}));
+}
+
+TEST_F(AClientRequest, to_allow_suspend_is_logged)
+{
+    client_request_allow_suspend();
+
+    EXPECT_TRUE(log_contains_line({"allow_suspend"}));
+}
+
+TEST_F(AClientRequest, to_disallow_suspend_is_logged)
+{
+    client_request_disallow_suspend();
+
+    EXPECT_TRUE(log_contains_line({"disallow_suspend"}));
 }

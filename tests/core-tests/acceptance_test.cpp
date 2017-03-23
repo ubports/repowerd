@@ -285,6 +285,20 @@ void rt::AcceptanceTestBase::client_request_set_normal_brightness_value(double v
     daemon.flush();
 }
 
+void rt::AcceptanceTestBase::client_request_allow_suspend(
+    std::string const& id, pid_t pid)
+{
+    config.the_fake_client_requests()->emit_allow_suspend(id, pid);
+    daemon.flush();
+}
+
+void rt::AcceptanceTestBase::client_request_disallow_suspend(
+    std::string const& id, pid_t pid)
+{
+    config.the_fake_client_requests()->emit_disallow_suspend(id, pid);
+    daemon.flush();
+}
+
 void rt::AcceptanceTestBase::client_setting_set_inactivity_behavior(
         PowerAction power_action,
         PowerSupply power_supply,

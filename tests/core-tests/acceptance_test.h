@@ -77,6 +77,10 @@ struct AcceptanceTestBase
     void client_request_disable_autobrightness(pid_t pid = default_pid);
     void client_request_enable_autobrightness(pid_t pid = default_pid);
     void client_request_set_normal_brightness_value(double value, pid_t pid = default_pid);
+    void client_request_allow_suspend(
+        std::string const& id = "AcceptanceTestId", pid_t pid = default_pid);
+    void client_request_disallow_suspend(
+        std::string const& id = "AcceptanceTestId", pid_t pid = default_pid);
     void client_setting_set_inactivity_behavior(
         PowerAction power_action,
         PowerSupply power_supply,
