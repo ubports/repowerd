@@ -35,6 +35,8 @@ using SetInactivityTimeoutHandler = std::function<void(std::chrono::milliseconds
 using SetNormalBrightnessValueHandler = std::function<void(double, pid_t)>;
 using EnableAutobrightnessHandler = std::function<void(pid_t)>;
 using DisableAutobrightnessHandler = std::function<void(pid_t)>;
+using DisallowSuspendHandler = std::function<void(std::string const&, pid_t)>;
+using AllowSuspendHandler = std::function<void(std::string const&, pid_t)>;
 
 class ClientRequests
 {
@@ -56,6 +58,11 @@ public:
         EnableAutobrightnessHandler const& handler) = 0;
     virtual HandlerRegistration register_disable_autobrightness_handler(
         DisableAutobrightnessHandler const& handler) = 0;
+
+    virtual HandlerRegistration register_allow_suspend_handler(
+        DisallowSuspendHandler const& handler) = 0;
+    virtual HandlerRegistration register_disallow_suspend_handler(
+        AllowSuspendHandler const& handler) = 0;
 
 protected:
     ClientRequests() = default;

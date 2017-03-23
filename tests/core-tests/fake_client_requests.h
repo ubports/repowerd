@@ -49,12 +49,19 @@ public:
     HandlerRegistration register_set_normal_brightness_value_handler(
         SetNormalBrightnessValueHandler const& handler) override;
 
+    HandlerRegistration register_allow_suspend_handler(
+        AllowSuspendHandler const& handler) override;
+    HandlerRegistration register_disallow_suspend_handler(
+        DisallowSuspendHandler const& handler) override;
+
     void emit_disable_inactivity_timeout(std::string const& id, pid_t pid = default_pid);
     void emit_enable_inactivity_timeout(std::string const& id, pid_t pid = default_pid);
     void emit_set_inactivity_timeout(std::chrono::milliseconds timeout, pid_t pid = default_pid);
     void emit_disable_autobrightness(pid_t pid = default_pid);
     void emit_enable_autobrightness(pid_t pid = default_pid);
     void emit_set_normal_brightness_value(double f, pid_t pid = default_pid);
+    void emit_allow_suspend(std::string const& id, pid_t pid = default_pid);
+    void emit_disallow_suspend(std::string const& id, pid_t pid = default_pid);
 
     struct Mock
     {
@@ -72,6 +79,10 @@ public:
         MOCK_METHOD0(unregister_enable_autobrightness_handler, void());
         MOCK_METHOD1(register_set_normal_brightness_value_handler, void(SetNormalBrightnessValueHandler const&));
         MOCK_METHOD0(unregister_set_normal_brightness_value_handler, void());
+        MOCK_METHOD1(register_allow_suspend_handler, void(AllowSuspendHandler const&));
+        MOCK_METHOD0(unregister_allow_suspend_handler, void());
+        MOCK_METHOD1(register_disallow_suspend_handler, void(DisallowSuspendHandler const&));
+        MOCK_METHOD0(unregister_disallow_suspend_handler, void());
     };
     testing::NiceMock<Mock> mock;
 
@@ -82,6 +93,8 @@ private:
     DisableAutobrightnessHandler disable_autobrightness_handler;
     EnableAutobrightnessHandler enable_autobrightness_handler;
     SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
+    AllowSuspendHandler allow_suspend_handler;
+    DisallowSuspendHandler disallow_suspend_handler;
 };
 
 }

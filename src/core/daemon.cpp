@@ -264,6 +264,24 @@ repowerd::Daemon::register_event_handlers()
             }));
 
     registrations.push_back(
+        client_requests->register_allow_suspend_handler(
+            [this] (std::string const& id, pid_t pid)
+            {
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this, id] (Session* s) { s->state_event_adapter.handle_allow_suspend(id); });
+            }));
+
+    registrations.push_back(
+        client_requests->register_disallow_suspend_handler(
+            [this] (std::string const& id, pid_t pid)
+            {
+                enqueue_action_to_sessions(
+                    sessions_for_pid(pid),
+                    [this, id] (Session* s) { s->state_event_adapter.handle_disallow_suspend(id); });
+            }));
+
+    registrations.push_back(
         power_source->register_power_source_change_handler(
             [this]
             {

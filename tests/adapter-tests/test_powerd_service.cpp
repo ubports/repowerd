@@ -26,7 +26,6 @@
 #include "fake_brightness_notification.h"
 #include "fake_device_config.h"
 #include "fake_log.h"
-#include "fake_system_power_control.h"
 #include "fake_wakeup_service.h"
 
 #include "fake_shared.h"
@@ -190,31 +189,43 @@ struct APowerdService : testing::Test
 {
     APowerdService()
     {
+        registrations.push_back(
+            unity_screen_service.register_allow_suspend_handler(
+                [this](auto id, auto pid){ mock_handlers.allow_suspend(id, pid); }));
+        registrations.push_back(
+            unity_screen_service.register_disallow_suspend_handler(
+                [this](auto id, auto pid) { mock_handlers.disallow_suspend(id, pid); }));
         unity_screen_service.start_processing();
     }
 
+    struct MockHandlers
+    {
+        MOCK_METHOD2(allow_suspend, void(std::string const&, pid_t));
+        MOCK_METHOD2(disallow_suspend, void(std::string const&, pid_t));
+    };
+    testing::NiceMock<MockHandlers> mock_handlers;
+
     static int constexpr active_state{1};
     std::chrono::seconds const default_timeout{3};
-    repowerd::SuspendType const suspend_type_any{repowerd::SuspendType::any};
 
     rt::DBusBus bus;
     rt::FakeBrightnessNotification fake_brightness_notification;
     rt::FakeDeviceConfig fake_device_config;
     rt::FakeLog fake_log;
-    rt::FakeSystemPowerControl fake_system_power_control;
     rt::FakeWakeupService fake_wakeup_service;
     NiceMock<MockTemporarySuspendInhibition> mock_temporary_suspend_inhibition;
     repowerd::UnityScreenService unity_screen_service{
         rt::fake_shared(fake_wakeup_service),
         rt::fake_shared(fake_brightness_notification),
         rt::fake_shared(fake_log),
-        rt::fake_shared(fake_system_power_control),
         rt::fake_shared(mock_temporary_suspend_inhibition),
         fake_device_config,
         bus.address()};
     PowerdDBusClient client{bus.address()};
     std::vector<repowerd::HandlerRegistration> registrations;
 };
+
+ACTION_P(AppendArg0To, dst) { return dst->push_back(arg0); }
 
 }
 
@@ -224,11 +235,11 @@ TEST_F(APowerdService, replies_to_introspection_request)
     EXPECT_THAT(reply, StrNe(""));
 }
 
-TEST_F(APowerdService, disallows_suspend_for_request_sys_state_request)
+TEST_F(APowerdService, forwards_request_sys_state_request)
 {
-    client.request_request_sys_state(active_state).get();
+    EXPECT_CALL(mock_handlers, disallow_suspend(_, _));
 
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
+    client.request_request_sys_state(active_state).get();
 }
 
 TEST_F(APowerdService, returns_different_cookies_for_request_sys_state_requests)
@@ -250,21 +261,32 @@ TEST_F(APowerdService, returns_error_for_invalid_request_sys_state_request)
     EXPECT_THAT(g_dbus_message_get_message_type(reply_msg), Eq(G_DBUS_MESSAGE_TYPE_ERROR));
 }
 
-TEST_F(APowerdService,
-       allows_suspend_when_single_request_sys_state_request_is_cleared)
+TEST_F(APowerdService, allows_suspend_for_clear_sys_state_request)
 {
-    using namespace testing;
+    std::string id_disallow;
+    std::string id_allow;
+
+    InSequence s;
+    EXPECT_CALL(mock_handlers, disallow_suspend(_, _))
+        .WillOnce(SaveArg<0>(&id_disallow));
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _))
+        .WillOnce(SaveArg<0>(&id_allow));
 
     auto reply1 = client.request_request_sys_state(active_state);
-    client.request_clear_sys_state(reply1.get()).get();
+    client.request_clear_sys_state(reply1.get());
 
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
+    EXPECT_THAT(id_allow, Eq(id_disallow));
 }
 
-TEST_F(APowerdService,
-       allows_suspend_when_all_request_sys_state_request_are_cleared)
+TEST_F(APowerdService, allows_suspend_for_multiple_clear_sys_state_requests)
 {
-    using namespace testing;
+    std::vector<std::string> id_disallow;
+    std::vector<std::string> id_allow;
+
+    EXPECT_CALL(mock_handlers, disallow_suspend(_, _))
+        .Times(3).WillRepeatedly(AppendArg0To(&id_disallow));
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _))
+        .Times(2).WillRepeatedly(AppendArg0To(&id_allow));
 
     auto reply1 = client.request_request_sys_state(active_state);
     auto reply2 = client.request_request_sys_state(active_state);
@@ -272,65 +294,56 @@ TEST_F(APowerdService,
 
     client.request_clear_sys_state(reply1.get());
     client.request_clear_sys_state(reply2.get());
-    auto cookie3 = reply3.get();
+    auto id3 = reply3.get();
 
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
+    Mock::VerifyAndClearExpectations(&mock_handlers);
 
-    client.request_clear_sys_state(cookie3).get();
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _))
+        .WillOnce(AppendArg0To(&id_allow));
 
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
+    client.request_clear_sys_state(id3);
+
+    EXPECT_THAT(id_allow, ContainerEq(id_disallow));
 }
 
-TEST_F(APowerdService,
-       allows_suspend_when_single_client_disconnects)
+TEST_F(APowerdService, removes_all_client_suspend_disallowances_when_client_disconnects)
 {
-    client.request_request_sys_state(active_state).get();
-    client.request_request_sys_state(active_state).get();
-    client.request_request_sys_state(active_state).get();
+    std::vector<std::string> id_disallow;
+    std::vector<std::string> id_allow;
+
+    rt::WaitCondition request_processed;
+
+    EXPECT_CALL(mock_handlers, disallow_suspend(_, _))
+        .Times(3).WillRepeatedly(AppendArg0To(&id_disallow));
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _))
+        .WillOnce(AppendArg0To(&id_allow))
+        .WillOnce(AppendArg0To(&id_allow))
+        .WillOnce(DoAll(AppendArg0To(&id_allow), WakeUp(&request_processed)));
+
+    client.request_request_sys_state(active_state);
+    client.request_request_sys_state(active_state);
+    client.request_request_sys_state(active_state);
 
     client.disconnect();
 
-    EXPECT_TRUE(
-        rt::spin_wait_for_condition_or_timeout(
-            [&] { return fake_system_power_control.is_suspend_allowed(suspend_type_any); },
-            default_timeout));
-}
+    request_processed.wait_for(default_timeout);
+    EXPECT_TRUE(request_processed.woken());
 
-TEST_F(APowerdService,
-       allows_suspend_when_all_clients_disconnect_or_remove_requests)
-{
-    using namespace testing;
-
-    PowerdDBusClient other_client{bus.address()};
-
-    auto reply1 = client.request_request_sys_state(active_state);
-    auto reply2 = client.request_request_sys_state(active_state);
-    other_client.request_request_sys_state(active_state);
-    other_client.request_request_sys_state(active_state);
-
-    other_client.disconnect();
-    client.request_clear_sys_state(reply1.get());
-    auto cookie2 = reply2.get();
-
-    EXPECT_FALSE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
-
-    client.request_clear_sys_state(cookie2).get();
-
-    EXPECT_TRUE(fake_system_power_control.is_suspend_allowed(suspend_type_any));
+    EXPECT_THAT(id_allow, UnorderedElementsAreArray(id_disallow));
 }
 
 TEST_F(APowerdService, ignores_invalid_clear_sys_state_request)
 {
     std::string const invalid_cookie{"aaa"};
 
-    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _)).Times(0);
 
     client.request_clear_sys_state(invalid_cookie).get();
 }
 
 TEST_F(APowerdService, ignores_disconnects_from_clients_without_sys_state_request)
 {
-    EXPECT_CALL(fake_system_power_control.mock, allow_suspend(_, _)).Times(0);
+    EXPECT_CALL(mock_handlers, allow_suspend(_, _)).Times(0);
 
     client.disconnect();
 

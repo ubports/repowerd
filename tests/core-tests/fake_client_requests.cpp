@@ -119,6 +119,32 @@ repowerd::HandlerRegistration rt::FakeClientRequests::register_set_normal_bright
         }};
 }
 
+repowerd::HandlerRegistration rt::FakeClientRequests::register_allow_suspend_handler(
+    AllowSuspendHandler const& handler)
+{
+    mock.register_allow_suspend_handler(handler);
+    allow_suspend_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_allow_suspend_handler();
+            allow_suspend_handler = null_arg2_handler;
+        }};
+}
+
+repowerd::HandlerRegistration rt::FakeClientRequests::register_disallow_suspend_handler(
+    DisallowSuspendHandler const& handler)
+{
+    mock.register_disallow_suspend_handler(handler);
+    disallow_suspend_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_disallow_suspend_handler();
+            disallow_suspend_handler = null_arg2_handler;
+        }};
+}
+
 void rt::FakeClientRequests::emit_disable_inactivity_timeout(
     std::string const& id, pid_t pid)
 {
@@ -150,4 +176,16 @@ void rt::FakeClientRequests::emit_enable_autobrightness(pid_t pid)
 void rt::FakeClientRequests::emit_set_normal_brightness_value(double f, pid_t pid)
 {
     set_normal_brightness_value_handler(f, pid);
+}
+
+void rt::FakeClientRequests::emit_allow_suspend(
+    std::string const& id, pid_t pid)
+{
+    allow_suspend_handler(id, pid);
+}
+
+void rt::FakeClientRequests::emit_disallow_suspend(
+    std::string const& id, pid_t pid)
+{
+    disallow_suspend_handler(id, pid);
 }

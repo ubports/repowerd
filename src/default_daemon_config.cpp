@@ -568,7 +568,6 @@ repowerd::DefaultDaemonConfig::the_unity_screen_service()
             the_wakeup_service(),
             the_brightness_notification(),
             the_log(),
-            the_system_power_control(),
             the_temporary_suspend_inhibition(),
             *the_device_config(),
             the_dbus_bus_address());

@@ -39,7 +39,6 @@ namespace repowerd
 class BrightnessNotification;
 class DeviceConfig;
 class Log;
-class SystemPowerControl;
 class TemporarySuspendInhibition;
 class WakeupService;
 
@@ -52,7 +51,6 @@ public:
         std::shared_ptr<WakeupService> const& wakeup_service,
         std::shared_ptr<BrightnessNotification> const& brightness_notification,
         std::shared_ptr<Log> const& log,
-        std::shared_ptr<SystemPowerControl> const& system_power_control,
         std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
         DeviceConfig const& device_config,
         std::string const& dbus_bus_address);
@@ -77,6 +75,11 @@ public:
         NotificationHandler const& handler) override;
     HandlerRegistration register_notification_done_handler(
         NotificationDoneHandler const& handler) override;
+
+    HandlerRegistration register_allow_suspend_handler(
+        DisallowSuspendHandler const& handler) override;
+    HandlerRegistration register_disallow_suspend_handler(
+        AllowSuspendHandler const& handler) override;
 
     void notify_display_power_on(DisplayPowerChangeReason reason) override;
     void notify_display_power_off(DisplayPowerChangeReason reason) override;
@@ -117,10 +120,12 @@ private:
     std::string dbus_requestSysState(
         std::string const& sender,
         std::string const& name,
-        int32_t state);
+        int32_t state,
+        pid_t pid);
     void dbus_clearSysState(
         std::string const& sender,
-        std::string const& cookie);
+        std::string const& cookie,
+        pid_t pid);
     std::string dbus_requestWakeup(
         std::string const& sender,
         std::string const& name,
@@ -135,7 +140,6 @@ private:
 
     std::shared_ptr<WakeupService> const wakeup_service;
     std::shared_ptr<BrightnessNotification> const brightness_notification;
-    std::shared_ptr<SystemPowerControl> const system_power_control;
     std::shared_ptr<TemporarySuspendInhibition> const temporary_suspend_inhibition;
     std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
@@ -149,6 +153,8 @@ private:
     SetNormalBrightnessValueHandler set_normal_brightness_value_handler;
     NotificationHandler notification_handler;
     NotificationDoneHandler notification_done_handler;
+    AllowSuspendHandler allow_suspend_handler;
+    DisallowSuspendHandler disallow_suspend_handler;
 
     bool started;
 

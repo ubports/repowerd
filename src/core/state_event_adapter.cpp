@@ -56,3 +56,20 @@ void repowerd::StateEventAdapter::handle_notification_done(
     if (removed && active_notifications.empty())
         state_machine.handle_no_notification();
 }
+
+void repowerd::StateEventAdapter::handle_allow_suspend(
+    std::string const& request_id)
+{
+    suspend_disallowances.erase(request_id);
+
+    if (suspend_disallowances.empty())
+        state_machine.handle_allow_suspend();
+}
+
+void repowerd::StateEventAdapter::handle_disallow_suspend(
+    std::string const& request_id)
+{
+    suspend_disallowances.insert(request_id);
+
+    state_machine.handle_disallow_suspend();
+}

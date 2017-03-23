@@ -98,6 +98,9 @@ struct MockStateMachine : public repowerd::StateMachine
 
     MOCK_METHOD0(handle_system_resume, void());
 
+    MOCK_METHOD0(handle_allow_suspend, void());
+    MOCK_METHOD0(handle_disallow_suspend, void());
+
     void start()
     {
         *sessions_activity_log += " start:" + name;
@@ -568,6 +571,68 @@ TEST_F(ADaemon, notifies_inactive_state_machine_of_set_normal_brightness_value)
     EXPECT_CALL(*config.the_mock_state_machine(1), handle_set_normal_brightness_value(_)).Times(0);
 
     config.the_fake_client_requests()->emit_set_normal_brightness_value(value);
+}
+
+TEST_F(ADaemon, registers_starts_and_unregisters_allow_suspend_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_allow_suspend_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_allow_suspend_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_allow_suspend_handler)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_allow_suspend());
+
+    config.the_fake_client_requests()->emit_allow_suspend("id");
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_allow_suspend)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_allow_suspend());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_allow_suspend()).Times(0);
+    config.the_fake_client_requests()->emit_allow_suspend("id");
+}
+
+TEST_F(ADaemon, registers_starts_and_unregisters_disallow_suspend_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_client_requests()->mock, register_disallow_suspend_handler(_));
+    EXPECT_CALL(config.the_fake_client_requests()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+
+    EXPECT_CALL(config.the_fake_client_requests()->mock, unregister_disallow_suspend_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_client_requests().get());
+}
+
+TEST_F(ADaemon, notifies_state_machine_of_disallow_suspend_handler)
+{
+    start_daemon();
+
+    EXPECT_CALL(*config.the_mock_state_machine(), handle_disallow_suspend());
+
+    config.the_fake_client_requests()->emit_disallow_suspend("id");
+}
+
+TEST_F(ADaemon, notifies_inactive_state_machine_of_disallow_suspend)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_disallow_suspend());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_disallow_suspend()).Times(0);
+    config.the_fake_client_requests()->emit_disallow_suspend("id");
 }
 
 TEST_F(ADaemon, registers_and_unregisters_notification_handler)

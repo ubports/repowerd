@@ -26,7 +26,6 @@
 
 #include "src/core/infinite_timeout.h"
 #include "src/core/log.h"
-#include "src/core/system_power_control.h"
 
 #include <cmath>
 
@@ -34,7 +33,6 @@ namespace
 {
 
 char const* const log_tag = "UnityScreenService";
-char const* const suspend_id = "UnityScreenService";
 
 auto const null_arg_handler = [](auto){};
 auto const null_arg2_handler = [](auto,auto){};
@@ -159,13 +157,11 @@ repowerd::UnityScreenService::UnityScreenService(
     std::shared_ptr<WakeupService> const& wakeup_service,
     std::shared_ptr<BrightnessNotification> const& brightness_notification,
     std::shared_ptr<Log> const& log,
-    std::shared_ptr<SystemPowerControl> const& system_power_control,
     std::shared_ptr<TemporarySuspendInhibition> const& temporary_suspend_inhibition,
     DeviceConfig const& device_config,
     std::string const& dbus_bus_address)
     : wakeup_service{wakeup_service},
       brightness_notification{brightness_notification},
-      system_power_control{system_power_control},
       temporary_suspend_inhibition{temporary_suspend_inhibition},
       log{log},
       dbus_connection{dbus_bus_address},
@@ -178,6 +174,8 @@ repowerd::UnityScreenService::UnityScreenService(
       set_normal_brightness_value_handler{null_arg2_handler},
       notification_handler{null_arg2_handler},
       notification_done_handler{null_arg2_handler},
+      allow_suspend_handler{null_arg2_handler},
+      disallow_suspend_handler{null_arg2_handler},
       started{false},
       next_keep_display_on_id{1},
       next_request_sys_state_id{1},
@@ -345,6 +343,27 @@ repowerd::UnityScreenService::register_notification_done_handler(
         [this] { notification_done_handler = null_arg2_handler; }};
 }
 
+repowerd::HandlerRegistration
+repowerd::UnityScreenService::register_allow_suspend_handler(
+    AllowSuspendHandler const& handler)
+{
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { allow_suspend_handler = handler; },
+        [this] { allow_suspend_handler = null_arg2_handler; }};
+}
+
+repowerd::HandlerRegistration
+repowerd::UnityScreenService::register_disallow_suspend_handler(
+    DisallowSuspendHandler const& handler)
+{
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { disallow_suspend_handler = handler; },
+        [this] { disallow_suspend_handler = null_arg2_handler; }};
+}
+
+
 void repowerd::UnityScreenService::notify_display_power_on(
     DisplayPowerChangeReason reason)
 {
@@ -439,7 +458,7 @@ void repowerd::UnityScreenService::dbus_method_call(
 
         try
         {
-            auto const cookie = dbus_requestSysState(sender, name, state);
+            auto const cookie = dbus_requestSysState(sender, name, state, pid);
             g_dbus_method_invocation_return_value(
                 invocation, g_variant_new("(s)", cookie.c_str()));
         }
@@ -454,7 +473,7 @@ void repowerd::UnityScreenService::dbus_method_call(
         char const* cookie{""};
         g_variant_get(parameters, "(&s)", &cookie);
 
-        dbus_clearSysState(sender, cookie);
+        dbus_clearSysState(sender, cookie, pid);
 
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
@@ -580,16 +599,15 @@ void repowerd::UnityScreenService::dbus_NameOwnerChanged(
 
     if (new_owner.empty() && old_owner == name)
     {
-        auto range = keep_display_on_ids.equal_range(name);
-        for (auto iter = range.first; iter != range.second; ++iter)
+        auto const kdo_range = keep_display_on_ids.equal_range(name);
+        for (auto iter = kdo_range.first; iter != kdo_range.second; ++iter)
             enable_inactivity_timeout_handler(std::to_string(iter->second), 0);
         keep_display_on_ids.erase(name);
 
-        if (request_sys_state_ids.erase(name) > 0 &&
-            request_sys_state_ids.empty())
-        {
-            system_power_control->allow_suspend(suspend_id, SuspendType::any);
-        }
+        auto rss_range = request_sys_state_ids.equal_range(name);
+        for (auto iter = rss_range.first; iter != rss_range.second; ++iter)
+            allow_suspend_handler(std::to_string(iter->second), 0);
+        request_sys_state_ids.erase(name);
 
         auto const num_notifications_removed = active_notifications.erase(name);
         for (auto i = 0u; i < num_notifications_removed; ++i)
@@ -682,7 +700,8 @@ void repowerd::UnityScreenService::dbus_emit_DisplayPowerStateChange(
 std::string repowerd::UnityScreenService::dbus_requestSysState(
     std::string const& sender,
     std::string const& name,
-    int32_t state)
+    int32_t state,
+    pid_t pid)
 {
     log->log(log_tag, "dbus_requestSysState(%s,%s,%d)",
              sender.c_str(), name.c_str(), state);
@@ -695,7 +714,7 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
     auto const id = next_request_sys_state_id++;
     request_sys_state_ids.emplace(sender, id);
 
-    system_power_control->disallow_suspend(suspend_id, SuspendType::any);
+    disallow_suspend_handler(std::to_string(id), pid);
 
     log->log(log_tag, "dbus_requestSysState(%s,%s,%d) => %d",
              sender.c_str(), name.c_str(), state, id);
@@ -705,7 +724,8 @@ std::string repowerd::UnityScreenService::dbus_requestSysState(
 
 void repowerd::UnityScreenService::dbus_clearSysState(
     std::string const& sender,
-    std::string const& cookie)
+    std::string const& cookie,
+    pid_t pid)
 {
     log->log(log_tag, "dbus_clearSysState(%s,%s)",
              sender.c_str(), cookie.c_str());
@@ -728,10 +748,8 @@ void repowerd::UnityScreenService::dbus_clearSysState(
         }
     }
 
-    if (id_removed && request_sys_state_ids.empty())
-    {
-        system_power_control->allow_suspend(suspend_id, SuspendType::any);
-    }
+    if (id_removed)
+        allow_suspend_handler(std::to_string(id), pid);
 }
 
 std::string repowerd::UnityScreenService::dbus_requestWakeup(

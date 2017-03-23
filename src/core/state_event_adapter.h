@@ -35,10 +35,14 @@ public:
     void handle_notification(std::string const& id);
     void handle_notification_done(std::string const& id);
 
+    void handle_allow_suspend(std::string const& id);
+    void handle_disallow_suspend(std::string const& id);
+
 private:
     StateMachine& state_machine;
     std::set<std::string> inactivity_timeout_disallowances;
     std::set<std::string> active_notifications;
+    std::set<std::string> suspend_disallowances;
 };
 
 }

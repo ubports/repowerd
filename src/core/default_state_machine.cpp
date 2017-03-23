@@ -551,6 +551,14 @@ void repowerd::DefaultStateMachine::handle_disable_autobrightness()
     brightness_control->disable_autobrightness();
 }
 
+void repowerd::DefaultStateMachine::handle_allow_suspend()
+{
+}
+
+void repowerd::DefaultStateMachine::handle_disallow_suspend()
+{
+}
+
 void repowerd::DefaultStateMachine::handle_system_resume()
 {
     log->log(log_tag, "handle_system_resume");
