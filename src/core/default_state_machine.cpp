@@ -149,7 +149,7 @@ void repowerd::DefaultStateMachine::handle_alarm(AlarmId id)
     {
         log->log(log_tag, "handle_alarm(suspend)");
         user_inactivity_suspend_alarm_id = AlarmId::invalid;
-        if (is_inactivity_timeout_application_allowed() && !paused)
+        if (is_inactivity_timeout_application_allowed())
             suspend_when_allowed();
     }
     else if (id == proximity_disable_alarm_id)
@@ -935,7 +935,8 @@ void repowerd::DefaultStateMachine::suspend_when_allowed()
     if (suspend_allowed)
     {
         suspend_pending = false;
-        system_power_control->suspend();
+        if (!paused)
+            system_power_control->suspend();
     }
     else
     {

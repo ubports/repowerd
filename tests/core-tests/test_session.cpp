@@ -358,6 +358,20 @@ TEST_F(ASession,
 }
 
 TEST_F(ASession,
+       while_inactive_does_not_change_power_if_client_reallows_suspend)
+{
+    turn_on_display();
+
+    client_request_disallow_suspend();
+
+    switch_to_session(incompatible(0));
+
+    expect_no_system_power_change();
+    client_request_allow_suspend();
+    advance_time_by(1000s);
+}
+
+TEST_F(ASession,
        switch_to_incompatible_session_allows_default_system_handlers_for_power)
 {
     EXPECT_FALSE(are_default_system_handlers_allowed());
