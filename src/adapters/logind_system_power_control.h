@@ -48,9 +48,6 @@ public:
 
     void power_off() override;
     void suspend() override;
-    void suspend_if_allowed() override;
-    void suspend_when_allowed(std::string const& id) override;
-    void cancel_suspend_when_allowed(std::string const& id) override;
 
     void allow_default_system_handlers() override;
     void disallow_default_system_handlers() override;
@@ -76,7 +73,6 @@ private:
 
     std::mutex inhibitions_mutex;
     std::unordered_set<std::string> suspend_disallowances;
-    std::unordered_set<std::string> pending_suspends;
     Fd idle_and_lid_inhibition_fd;
 };
 

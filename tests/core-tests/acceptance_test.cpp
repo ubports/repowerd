@@ -178,8 +178,6 @@ void rt::AcceptanceTestBase::expect_no_system_power_change()
 {
     EXPECT_CALL(config.the_fake_system_power_control()->mock, power_off()).Times(0);
     EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend()).Times(0);
-    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_if_allowed()).Times(0);
-    EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend_when_allowed(_)).Times(0);
 }
 
 void rt::AcceptanceTestBase::expect_normal_brightness_value_set_to(double value)
@@ -210,20 +208,6 @@ void rt::AcceptanceTestBase::expect_system_powers_off()
 void rt::AcceptanceTestBase::expect_system_suspends()
 {
     EXPECT_CALL(config.the_fake_system_power_control()->mock, suspend());
-}
-
-void rt::AcceptanceTestBase::expect_system_suspends_when_allowed(
-    std::string const& substr)
-{
-    EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                suspend_when_allowed(HasSubstr(substr)));
-}
-
-void rt::AcceptanceTestBase::expect_system_cancel_suspend_when_allowed(
-    std::string const& substr)
-{
-    EXPECT_CALL(config.the_fake_system_power_control()->mock,
-                cancel_suspend_when_allowed(HasSubstr(substr)));
 }
 
 bool rt::AcceptanceTestBase::log_contains_line(std::vector<std::string> const& words)

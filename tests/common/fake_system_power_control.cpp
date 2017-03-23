@@ -82,21 +82,6 @@ void rt::FakeSystemPowerControl::suspend()
     mock.suspend();
 }
 
-void rt::FakeSystemPowerControl::suspend_if_allowed()
-{
-    mock.suspend_if_allowed();
-}
-
-void rt::FakeSystemPowerControl::suspend_when_allowed(std::string const& id)
-{
-    mock.suspend_when_allowed(id);
-}
-
-void rt::FakeSystemPowerControl::cancel_suspend_when_allowed(std::string const& id)
-{
-    mock.cancel_suspend_when_allowed(id);
-}
-
 void rt::FakeSystemPowerControl::allow_default_system_handlers()
 {
     mock.allow_default_system_handlers();

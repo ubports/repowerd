@@ -88,12 +88,6 @@ void repowerd::LogindSystemPowerControl::allow_suspend(
     std::unique_lock<std::mutex> lock{inhibitions_mutex};
 
     suspend_disallowances.erase(id);
-
-    if (!pending_suspends.empty())
-    {
-        lock.unlock();
-        suspend_if_allowed();
-    }
 }
 
 void repowerd::LogindSystemPowerControl::disallow_suspend(
@@ -116,36 +110,6 @@ void repowerd::LogindSystemPowerControl::power_off()
 void repowerd::LogindSystemPowerControl::suspend()
 {
     dbus_suspend();
-}
-
-void repowerd::LogindSystemPowerControl::suspend_if_allowed()
-{
-    auto const allowed_to_suspend =
-        [this]
-        {
-            std::lock_guard<std::mutex> lock{inhibitions_mutex};
-            return suspend_disallowances.empty();
-        };
-
-    if (allowed_to_suspend())
-        dbus_suspend();
-}
-
-void repowerd::LogindSystemPowerControl::suspend_when_allowed(std::string const& id)
-{
-    {
-        std::lock_guard<std::mutex> lock{inhibitions_mutex};
-        pending_suspends.insert(id);
-    }
-
-    suspend_if_allowed();
-}
-
-void repowerd::LogindSystemPowerControl::cancel_suspend_when_allowed(std::string const& id)
-{
-    std::lock_guard<std::mutex> lock{inhibitions_mutex};
-
-    pending_suspends.erase(id);
 }
 
 void repowerd::LogindSystemPowerControl::allow_default_system_handlers()

@@ -126,74 +126,6 @@ TEST_F(ALogindSystemPowerControl, suspends_system_regardless_of_disallowances)
     expect_power_requests("[suspend:f]");
 }
 
-TEST_F(ALogindSystemPowerControl, suspend_if_allowed_suspends_if_no_disallowances)
-{
-    expect_power_requests("");
-
-    system_power_control.suspend_if_allowed();
-
-    expect_power_requests("[suspend:f]");
-}
-
-TEST_F(ALogindSystemPowerControl, suspend_if_allowed_does_not_suspend_if_there_are_disallowances)
-{
-    expect_power_requests("");
-
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.suspend_if_allowed();
-
-    expect_power_requests("");
-}
-
-TEST_F(ALogindSystemPowerControl,
-       suspend_if_allowed_suspends_after_disallowance_have_been_removed)
-{
-    expect_power_requests("");
-
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.disallow_suspend("id2", repowerd::SuspendType::any);
-    system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.allow_suspend("id2", repowerd::SuspendType::any);
-
-    system_power_control.suspend_if_allowed();
-
-    expect_power_requests("[suspend:f]");
-}
-
-TEST_F(ALogindSystemPowerControl,
-       suspend_when_allowed_suspends_immediately_if_allowed)
-{
-    expect_power_requests("");
-
-    system_power_control.suspend_when_allowed("when_allowed");
-
-    expect_power_requests("[suspend:f]");
-}
-
-TEST_F(ALogindSystemPowerControl,
-       suspend_when_allowed_suspends_when_allowed_later)
-{
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.suspend_when_allowed("when_allowed");
-
-    expect_power_requests("");
-
-    system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
-
-    expect_power_requests("[suspend:f]");
-}
-
-TEST_F(ALogindSystemPowerControl,
-       cancel_suspend_when_allowed_cancels_pending_suspend)
-{
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.suspend_when_allowed("when_allowed");
-    system_power_control.cancel_suspend_when_allowed("when_allowed");
-    system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
-
-    expect_power_requests("");
-}
-
 TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_adds_inhibition)
 {
     expect_no_inhibitions();
@@ -276,7 +208,7 @@ TEST_F(ALogindSystemPowerControl, power_off_is_logged)
 
 TEST_F(ALogindSystemPowerControl, suspend_is_logged)
 {
-    system_power_control.suspend_if_allowed();
+    system_power_control.suspend();
 
     EXPECT_TRUE(fake_log.contains_line({"suspend"}));
     EXPECT_TRUE(fake_log.contains_line({"suspend", "done"}));

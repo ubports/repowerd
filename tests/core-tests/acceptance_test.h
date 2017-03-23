@@ -63,8 +63,6 @@ struct AcceptanceTestBase
     void expect_display_power_on_notification(DisplayPowerChangeReason);
     void expect_system_powers_off();
     void expect_system_suspends();
-    void expect_system_suspends_when_allowed(std::string const&);
-    void expect_system_cancel_suspend_when_allowed(std::string const&);
     void verify_expectations();
 
     void advance_time_by(std::chrono::milliseconds advance);
