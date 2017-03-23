@@ -83,9 +83,9 @@ void repowerd::LogindSystemPowerControl::allow_suspend(
     if (suspend_type != SuspendType::any)
         return;
 
-    std::unique_lock<std::mutex> lock{inhibitions_mutex};
+    log->log(log_tag, "allow_suspend(%s, SuspendType::any)", id.c_str());
 
-    log->log(log_tag, "releasing inhibition for %s", id.c_str());
+    std::unique_lock<std::mutex> lock{inhibitions_mutex};
 
     suspend_disallowances.erase(id);
 
@@ -102,10 +102,10 @@ void repowerd::LogindSystemPowerControl::disallow_suspend(
     if (suspend_type != SuspendType::any)
         return;
 
-    auto inhibition_fd = dbus_inhibit("sleep:idle", id.c_str());
+    log->log(log_tag, "disallow_suspend(%s, any)", id.c_str());
 
     std::lock_guard<std::mutex> lock{inhibitions_mutex};
-    suspend_disallowances.emplace(id, std::move(inhibition_fd));
+    suspend_disallowances.insert(id);
 }
 
 void repowerd::LogindSystemPowerControl::power_off()

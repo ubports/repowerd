@@ -26,7 +26,6 @@
 
 #include <memory>
 #include <mutex>
-#include <unordered_map>
 #include <unordered_set>
 
 namespace repowerd
@@ -76,7 +75,7 @@ private:
     SystemResumeHandler system_resume_handler;
 
     std::mutex inhibitions_mutex;
-    std::unordered_map<std::string, Fd> suspend_disallowances;
+    std::unordered_set<std::string> suspend_disallowances;
     std::unordered_set<std::string> pending_suspends;
     Fd idle_and_lid_inhibition_fd;
 };

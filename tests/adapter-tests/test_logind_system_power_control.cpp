@@ -86,38 +86,11 @@ struct ALogindSystemPowerControl : testing::Test
 
 }
 
-TEST_F(ALogindSystemPowerControl, disallow_any_suspend_adds_inhibition)
+TEST_F(ALogindSystemPowerControl, disallow_any_suspend_does_not_add_inhibition)
 {
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
     system_power_control.disallow_suspend("id2", repowerd::SuspendType::any);
 
-    expect_inhibitions(
-        {
-            inhibition_name_for_id("id1"),
-            inhibition_name_for_id("id2")
-        });
-}
-
-TEST_F(ALogindSystemPowerControl, allow_any_suspend_removes_inhibition)
-{
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
-    system_power_control.disallow_suspend("id2", repowerd::SuspendType::any);
-    system_power_control.disallow_suspend("id3", repowerd::SuspendType::any);
-
-    system_power_control.allow_suspend("id2", repowerd::SuspendType::any);
-    expect_inhibitions(
-        {
-            inhibition_name_for_id("id1"),
-            inhibition_name_for_id("id3")
-        });
-
-    system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
-    expect_inhibitions(
-        {
-            inhibition_name_for_id("id3")
-        });
-
-    system_power_control.allow_suspend("id3", repowerd::SuspendType::any);
     expect_no_inhibitions();
 }
 
@@ -130,10 +103,9 @@ TEST_F(ALogindSystemPowerControl, disallow_automatic_suspend_is_a_noop)
 
 TEST_F(ALogindSystemPowerControl, allow_automatic_suspend_is_a_noop)
 {
-    system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
     system_power_control.allow_suspend("id1", repowerd::SuspendType::automatic);
 
-    expect_inhibitions({inhibition_name_for_id("id1")});
+    expect_no_inhibitions();
 }
 
 TEST_F(ALogindSystemPowerControl, powers_off_system)
@@ -257,19 +229,18 @@ TEST_F(ALogindSystemPowerControl, notifies_of_system_resume)
     EXPECT_TRUE(fake_log.contains_line({"PrepareForSleep", "false"}));
 }
 
-TEST_F(ALogindSystemPowerControl, disallow_any_suspend_logs_inhibition)
+TEST_F(ALogindSystemPowerControl, disallow_any_suspend_is_logged)
 {
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::any);
 
-    EXPECT_TRUE(fake_log.contains_line({"inhibit", "sleep:idle", "id1"}));
-    EXPECT_TRUE(fake_log.contains_line({"inhibit", "sleep:idle", "id1", "done"}));
+    EXPECT_TRUE(fake_log.contains_line({"disallow_suspend", "id1", "any"}));
 }
 
-TEST_F(ALogindSystemPowerControl, allow_any_suspend_logs_inhibition_release)
+TEST_F(ALogindSystemPowerControl, allow_any_suspend_is_logged)
 {
     system_power_control.allow_suspend("id1", repowerd::SuspendType::any);
 
-    EXPECT_TRUE(fake_log.contains_line({"releasing", "inhibition", "id1"}));
+    EXPECT_TRUE(fake_log.contains_line({"allow_suspend", "id1", "any"}));
 }
 
 TEST_F(ALogindSystemPowerControl, allow_and_disallow_automatic_suspend_log_nothing)
@@ -277,7 +248,7 @@ TEST_F(ALogindSystemPowerControl, allow_and_disallow_automatic_suspend_log_nothi
     system_power_control.allow_suspend("id1", repowerd::SuspendType::automatic);
     system_power_control.disallow_suspend("id1", repowerd::SuspendType::automatic);
 
-    EXPECT_FALSE(fake_log.contains_line({"inhibit"}));
+    EXPECT_FALSE(fake_log.contains_line({"id1"}));
 }
 
 TEST_F(ALogindSystemPowerControl, disallow_default_system_handlers_logs_inhibition)
