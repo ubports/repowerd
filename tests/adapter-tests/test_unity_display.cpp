@@ -22,6 +22,7 @@
 #include "src/adapters/dbus_event_loop.h"
 #include "src/adapters/unity_display.h"
 
+#include "duration_of.h"
 #include "fake_log.h"
 #include "fake_shared.h"
 #include "spin_wait.h"
@@ -35,6 +36,7 @@
 namespace rt = repowerd::test;
 
 using namespace testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -241,6 +243,17 @@ TEST_F(AUnityDisplay,
     repowerd::UnityDisplay local_unity_display{
         rt::fake_shared(fake_log),
         empty_bus.address()};
+}
+
+TEST_F(AUnityDisplay, waits_at_most_one_second_for_turn_on_response)
+{
+    EXPECT_CALL(service.mock_dbus_calls, turn_on("all"))
+        .WillOnce(InvokeWithoutArgs([]{ std::this_thread::sleep_for(1200ms); }));
+
+    EXPECT_THAT(
+        rt::duration_of(
+            [this] { unity_display.turn_on(repowerd::DisplayPowerControlFilter::all); }),
+        AllOf(Ge(1000ms), Le(1100ms)));
 }
 
 TEST_F(AUnityDisplay, logs_turn_on_request)

@@ -84,7 +84,16 @@ target_link_libraries(
 )
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_TESTS)
-    set(ADAPTER_TESTS_FILTER "${ADAPTER_TESTS_FILTER}:ARealChrono.*:AnEventLoopTimer.*:ARealTemporarySuspendInhibition.*:ATimerfdWakeupService.*")
+    set(
+        ADAPTER_TESTS_FILTER
+        "${ADAPTER_TESTS_FILTER}:\
+         ARealChrono.*:\
+         AnEventLoopTimer.*:\
+         ARealTemporarySuspendInhibition.*:\
+         ATimerfdWakeupService.*:\
+         AUnityDisplay.waits_at_most_one_second_for_turn_on_response"
+    )
+    string(REPLACE " " "" ADAPTER_TESTS_FILTER ${ADAPTER_TESTS_FILTER})
 endif()
 
 add_test(
