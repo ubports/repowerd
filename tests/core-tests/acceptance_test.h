@@ -102,6 +102,8 @@ struct AcceptanceTestBase
     void emit_proximity_state_far_if_enabled();
     void emit_proximity_state_near();
     void emit_proximity_state_near_if_enabled();
+    void emit_system_allow_suspend();
+    void emit_system_disallow_suspend();
     void emit_active_call();
     void emit_no_active_call();
     void open_lid();

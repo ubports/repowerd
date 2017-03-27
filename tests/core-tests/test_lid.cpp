@@ -54,6 +54,7 @@ TEST_F(ALid, closed_suspends_regardless_of_suspend_disallowances)
     turn_on_display();
 
     client_request_disallow_suspend();
+    emit_system_disallow_suspend();
 
     InSequence s;
     expect_display_turns_off();

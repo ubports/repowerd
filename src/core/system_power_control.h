@@ -27,6 +27,8 @@ namespace repowerd
 {
 
 using SystemResumeHandler = std::function<void()>;
+using SystemAllowSuspendHandler = std::function<void(std::string const&)>;
+using SystemDisallowSuspendHandler = std::function<void(std::string const&)>;
 
 class SystemPowerControl
 {
@@ -37,6 +39,11 @@ public:
 
     virtual HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& system_resume_handler) = 0;
+
+    virtual HandlerRegistration register_system_allow_suspend_handler(
+        SystemAllowSuspendHandler const& system_allow_suspend_handler) = 0;
+    virtual HandlerRegistration register_system_disallow_suspend_handler(
+        SystemDisallowSuspendHandler const& system_disallow_suspend_handler) = 0;
 
     virtual void allow_automatic_suspend(std::string const& id) = 0;
     virtual void disallow_automatic_suspend(std::string const& id) = 0;

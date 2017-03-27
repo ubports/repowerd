@@ -77,6 +77,20 @@ repowerd::LogindSystemPowerControl::register_system_resume_handler(
         [this] { this->system_resume_handler = []{}; }};
 }
 
+repowerd::HandlerRegistration
+repowerd::LogindSystemPowerControl::register_system_allow_suspend_handler(
+    SystemAllowSuspendHandler const&)
+{
+    return HandlerRegistration{};
+}
+
+repowerd::HandlerRegistration
+repowerd::LogindSystemPowerControl::register_system_disallow_suspend_handler(
+    SystemDisallowSuspendHandler const&)
+{
+    return HandlerRegistration{};
+}
+
 void repowerd::LogindSystemPowerControl::allow_automatic_suspend(std::string const&)
 {
 }

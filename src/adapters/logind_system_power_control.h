@@ -42,6 +42,10 @@ public:
     void start_processing() override;
     HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& system_resume_handler) override;
+    HandlerRegistration register_system_allow_suspend_handler(
+        SystemAllowSuspendHandler const& system_allow_suspend_handler) override;
+    HandlerRegistration register_system_disallow_suspend_handler(
+        SystemDisallowSuspendHandler const& system_disallow_suspend_handler) override;
 
     void allow_automatic_suspend(std::string const& id) override;
     void disallow_automatic_suspend(std::string const& id) override;

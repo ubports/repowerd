@@ -20,6 +20,11 @@
 
 namespace rt = repowerd::test;
 
+namespace
+{
+char const* const suspend_id = "FakeSystemPowerControl";
+}
+
 rt::FakeSystemPowerControl::FakeSystemPowerControl()
     : are_default_system_handlers_allowed_{true},
       system_resume_handler{[]{}}
@@ -43,6 +48,38 @@ repowerd::HandlerRegistration rt::FakeSystemPowerControl::register_system_resume
 
             std::lock_guard<std::mutex> lock{mutex};
             this->system_resume_handler = []{};
+        }};
+}
+
+repowerd::HandlerRegistration
+rt::FakeSystemPowerControl::register_system_allow_suspend_handler(
+    SystemAllowSuspendHandler const& handler)
+{
+    mock.register_system_allow_suspend_handler(handler);
+    this->system_allow_suspend_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_system_allow_suspend_handler();
+
+            std::lock_guard<std::mutex> lock{mutex};
+            this->system_allow_suspend_handler = [](auto){};
+        }};
+}
+
+repowerd::HandlerRegistration
+rt::FakeSystemPowerControl::register_system_disallow_suspend_handler(
+    SystemDisallowSuspendHandler const& handler)
+{
+    mock.register_system_disallow_suspend_handler(handler);
+    this->system_disallow_suspend_handler = handler;
+    return HandlerRegistration{
+        [this]
+        {
+            mock.unregister_system_disallow_suspend_handler();
+
+            std::lock_guard<std::mutex> lock{mutex};
+            this->system_disallow_suspend_handler = [](auto){};
         }};
 }
 
@@ -116,4 +153,28 @@ void rt::FakeSystemPowerControl::emit_system_resume()
     }
 
     handler();
+}
+
+void rt::FakeSystemPowerControl::emit_system_allow_suspend()
+{
+    SystemAllowSuspendHandler handler;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        handler = system_allow_suspend_handler;
+    }
+
+    handler(suspend_id);
+}
+
+void rt::FakeSystemPowerControl::emit_system_disallow_suspend()
+{
+    SystemDisallowSuspendHandler handler;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        handler = system_disallow_suspend_handler;
+    }
+
+    handler(suspend_id);
 }

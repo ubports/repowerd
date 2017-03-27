@@ -51,6 +51,20 @@ repowerd::LibsuspendSystemPowerControl::register_system_resume_handler(
     return HandlerRegistration{};
 }
 
+repowerd::HandlerRegistration
+repowerd::LibsuspendSystemPowerControl::register_system_allow_suspend_handler(
+    SystemAllowSuspendHandler const&)
+{
+    return HandlerRegistration{};
+}
+
+repowerd::HandlerRegistration
+repowerd::LibsuspendSystemPowerControl::register_system_disallow_suspend_handler(
+    SystemDisallowSuspendHandler const&)
+{
+    return HandlerRegistration{};
+}
+
 void repowerd::LibsuspendSystemPowerControl::allow_automatic_suspend(
     std::string const& id)
 {

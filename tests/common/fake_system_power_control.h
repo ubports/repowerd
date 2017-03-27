@@ -36,8 +36,14 @@ public:
     FakeSystemPowerControl();
 
     void start_processing() override;
+
     HandlerRegistration register_system_resume_handler(
         SystemResumeHandler const& systemd_resume_handler) override;
+
+    HandlerRegistration register_system_allow_suspend_handler(
+        SystemAllowSuspendHandler const& system_allow_suspend_handler) override;
+    HandlerRegistration register_system_disallow_suspend_handler(
+        SystemDisallowSuspendHandler const& system_disallow_suspend_handler) override;
 
     void allow_automatic_suspend(std::string const& id) override;
     void disallow_automatic_suspend(std::string const& id) override;
@@ -52,12 +58,20 @@ public:
     bool are_default_system_handlers_allowed();
 
     void emit_system_resume();
+    void emit_system_allow_suspend();
+    void emit_system_disallow_suspend();
 
     struct MockMethods
     {
         MOCK_METHOD0(start_processing, void());
         MOCK_METHOD1(register_system_resume_handler, void(SystemResumeHandler const&));
         MOCK_METHOD0(unregister_system_resume_handler, void());
+        MOCK_METHOD1(register_system_allow_suspend_handler,
+                     void(SystemAllowSuspendHandler const&));
+        MOCK_METHOD0(unregister_system_allow_suspend_handler, void());
+        MOCK_METHOD1(register_system_disallow_suspend_handler,
+                     void(SystemDisallowSuspendHandler const&));
+        MOCK_METHOD0(unregister_system_disallow_suspend_handler, void());
         MOCK_METHOD1(allow_automatic_suspend, void(std::string const&));
         MOCK_METHOD1(disallow_automatic_suspend, void(std::string const&));
         MOCK_METHOD0(power_off, void());
@@ -72,6 +86,8 @@ private:
     std::unordered_set<std::string> automatic_suspend_disallowances;
     bool are_default_system_handlers_allowed_;
     SystemResumeHandler system_resume_handler;
+    SystemAllowSuspendHandler system_allow_suspend_handler;
+    SystemDisallowSuspendHandler system_disallow_suspend_handler;
 };
 
 }

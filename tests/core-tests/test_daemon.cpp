@@ -1100,3 +1100,49 @@ TEST_F(ADaemon, notifies_state_machine_of_system_resume)
 
     config.the_fake_system_power_control()->emit_system_resume();
 }
+
+TEST_F(ADaemon, registers_and_unregisters_system_allow_suspend_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, register_system_allow_suspend_handler(_));
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, unregister_system_allow_suspend_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+}
+
+TEST_F(ADaemon, notifies_all_state_machines_of_system_allow_suspend)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_allow_suspend());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_allow_suspend());
+
+    config.the_fake_system_power_control()->emit_system_allow_suspend();
+}
+
+TEST_F(ADaemon, registers_and_unregisters_system_disallow_suspend_handler)
+{
+    InSequence s;
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, register_system_disallow_suspend_handler(_));
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, start_processing());
+    start_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+
+    EXPECT_CALL(config.the_fake_system_power_control()->mock, unregister_system_disallow_suspend_handler());
+    stop_daemon();
+    testing::Mock::VerifyAndClearExpectations(config.the_fake_system_power_control().get());
+}
+
+TEST_F(ADaemon, notifies_all_state_machines_of_system_disallow_suspend)
+{
+    start_daemon_with_second_session_active();
+
+    EXPECT_CALL(*config.the_mock_state_machine(0), handle_disallow_suspend());
+    EXPECT_CALL(*config.the_mock_state_machine(1), handle_disallow_suspend());
+
+    config.the_fake_system_power_control()->emit_system_disallow_suspend();
+}

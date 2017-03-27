@@ -379,6 +379,18 @@ void rt::AcceptanceTestBase::emit_proximity_state_near_if_enabled()
         repowerd::ProximityState::near);
 }
 
+void rt::AcceptanceTestBase::emit_system_allow_suspend()
+{
+    config.the_fake_system_power_control()->emit_system_allow_suspend();
+    daemon.flush();
+}
+
+void rt::AcceptanceTestBase::emit_system_disallow_suspend()
+{
+    config.the_fake_system_power_control()->emit_system_disallow_suspend();
+    daemon.flush();
+}
+
 void rt::AcceptanceTestBase::emit_active_call()
 {
     config.the_fake_voice_call_service()->emit_active_call();

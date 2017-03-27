@@ -22,6 +22,8 @@
 #include <gtest/gtest.h>
 
 namespace rt = repowerd::test;
+
+using namespace std::chrono_literals;
 using namespace testing;
 
 namespace
@@ -50,6 +52,9 @@ struct ASystemPowerControl : rt::AcceptanceTest
         config.the_fake_system_power_control()->emit_system_resume();
         daemon.flush();
     }
+
+    std::chrono::milliseconds const suspend_timeout{
+        user_inactivity_normal_suspend_timeout + 10s};
 };
 
 }
@@ -135,6 +140,24 @@ TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_before_display_is_tu
 
     press_power_button();
     release_power_button();
+}
+
+TEST_F(ASystemPowerControl, system_disallow_suspend_inhibits_suspend_due_to_inactivity)
+{
+    turn_on_display();
+
+    client_setting_set_inactivity_behavior(
+        repowerd::PowerAction::suspend,
+        repowerd::PowerSupply::battery,
+        suspend_timeout);
+
+    emit_system_disallow_suspend();
+
+    expect_no_system_power_change();
+    advance_time_by(suspend_timeout);
+
+    expect_system_suspends();
+    emit_system_allow_suspend();
 }
 
 TEST_F(ASystemPowerControl, resume_turns_on_screen)

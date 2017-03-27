@@ -380,6 +380,22 @@ repowerd::Daemon::register_event_handlers()
                     [this] (Session* s) { s->state_machine->handle_system_resume(); });
             }));
 
+    registrations.push_back(
+        system_power_control->register_system_allow_suspend_handler(
+            [this] (std::string const& id)
+            {
+                enqueue_action_to_all_sessions(
+                    [this, id] (Session* s) { s->state_event_adapter.handle_allow_suspend(id); });
+            }));
+
+    registrations.push_back(
+        system_power_control->register_system_disallow_suspend_handler(
+            [this] (std::string const& id)
+            {
+                enqueue_action_to_all_sessions(
+                    [this, id] (Session* s) { s->state_event_adapter.handle_disallow_suspend(id); });
+            }));
+
     return registrations;
 }
 
