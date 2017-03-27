@@ -51,6 +51,7 @@ public:
     std::string power_requests();
 
     void emit_prepare_for_sleep(bool start);
+    void set_block_inhibited(std::string const& blocks);
 
 private:
     void dbus_method_call(
@@ -79,6 +80,7 @@ private:
 
     std::unordered_map<std::string,Fd> inhibitions;
     std::string power_requests_;
+    std::string block_inhibited;
 };
 
 }

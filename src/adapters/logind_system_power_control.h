@@ -64,17 +64,26 @@ private:
         gchar const* interface_name,
         gchar const* signal_name,
         GVariant* parameters);
+    void handle_dbus_change_manager_properties(GVariantIter* properties_iter);
     Fd dbus_inhibit(char const* what, char const* who);
     void dbus_power_off();
     void dbus_suspend();
+    void initialize_is_suspend_blocked();
+    std::string dbus_get_block_inhibited();
+    void update_suspend_block(std::string const& blocks);
+    void notify_suspend_block_state();
 
     std::shared_ptr<Log> const log;
     DBusConnectionHandle dbus_connection;
     DBusEventLoop dbus_event_loop;
 
     HandlerRegistration dbus_manager_signal_handler_registration;
+    HandlerRegistration dbus_manager_properties_handler_registration;
     SystemResumeHandler system_resume_handler;
+    SystemAllowSuspendHandler system_allow_suspend_handler;
+    SystemDisallowSuspendHandler system_disallow_suspend_handler;
 
+    bool is_suspend_blocked;
     std::mutex inhibitions_mutex;
     Fd idle_and_lid_inhibition_fd;
 };

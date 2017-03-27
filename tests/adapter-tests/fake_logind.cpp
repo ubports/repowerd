@@ -59,6 +59,7 @@ char const* const logind_introspection = R"(<!DOCTYPE node PUBLIC '-//freedeskto
         <signal name='PrepareForSleep'>
             <arg name='start' type='b'/>
         </signal>
+        <property type='s' name='BlockInhibited' access='read'/>
     </interface>
 </node>)";
 
@@ -279,6 +280,25 @@ void rt::FakeLogind::emit_prepare_for_sleep(bool start)
         "PrepareForSleep", params);
 }
 
+void rt::FakeLogind::set_block_inhibited(std::string const& blocks)
+{
+    block_inhibited = blocks;
+
+    auto const changed_properties_str =
+        "'BlockInhibited': <@s '"s + blocks + "'>";
+    auto const params_str =
+        "(@s 'org.freedesktop.login1.Manager',"s +
+        " @a{sv} {" + changed_properties_str + "}," +
+        " @as [])";
+
+    auto const params = g_variant_new_parsed(params_str.c_str());
+
+    emit_signal_full(
+        "/org/freedesktop/login1",
+        "org.freedesktop.DBus.Properties",
+        "PropertiesChanged", params);
+}
+
 void rt::FakeLogind::dbus_method_call(
     GDBusConnection* /*connection*/,
     gchar const* /*sender_cstr*/,
@@ -340,6 +360,23 @@ void rt::FakeLogind::dbus_method_call(
                         user_path.c_str());
                 }
             }
+        }
+
+        g_dbus_method_invocation_return_value(invocation, property);
+    }
+    else if (interface_name == "org.freedesktop.DBus.Properties" &&
+             method_name == "Get" &&
+             object_path == "/org/freedesktop/login1")
+    {
+        char const* property_name_cstr{""};
+        g_variant_get(parameters, "(&s&s)", nullptr, &property_name_cstr);
+        std::string const property_name{property_name_cstr ? property_name_cstr : ""};
+
+        GVariant* property = nullptr;
+        if (property_name == "BlockInhibited")
+        {
+            property = g_variant_new_parsed(
+                "(<%s>,)", block_inhibited.c_str());
         }
 
         g_dbus_method_invocation_return_value(invocation, property);

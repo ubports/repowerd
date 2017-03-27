@@ -32,6 +32,11 @@ char const* const log_tag = "LogindSystemPowerControl";
 char const* const dbus_logind_name = "org.freedesktop.login1";
 char const* const dbus_manager_path = "/org/freedesktop/login1";
 char const* const dbus_manager_interface = "org.freedesktop.login1.Manager";
+
+char const* const suspend_id = "LogindSystemPowerControl";
+
+auto null_arg_handler = []{};
+auto null_arg1_handler = [](auto){};
 }
 
 repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
@@ -40,19 +45,17 @@ repowerd::LogindSystemPowerControl::LogindSystemPowerControl(
     : log{log},
       dbus_connection{dbus_bus_address},
       dbus_event_loop{"SystemPower"},
-      system_resume_handler{[]{}},
+      system_resume_handler{null_arg_handler},
+      system_allow_suspend_handler{null_arg1_handler},
+      system_disallow_suspend_handler{null_arg1_handler},
+      is_suspend_blocked{false},
       idle_and_lid_inhibition_fd{-1}
 {
 }
 
 void repowerd::LogindSystemPowerControl::start_processing()
 {
-    dbus_manager_signal_handler_registration = dbus_event_loop.register_signal_handler(
-        dbus_connection,
-        dbus_logind_name,
-        dbus_manager_interface,
-        "PrepareForSleep",
-        dbus_manager_path,
+    auto const dbus_signal_handler =
         [this] (
             GDBusConnection* connection,
             gchar const* sender,
@@ -64,7 +67,25 @@ void repowerd::LogindSystemPowerControl::start_processing()
             handle_dbus_signal(
                 connection, sender, object_path, interface_name,
                 signal_name, parameters);
-        });
+        };
+
+    dbus_manager_signal_handler_registration = dbus_event_loop.register_signal_handler(
+        dbus_connection,
+        dbus_logind_name,
+        dbus_manager_interface,
+        "PrepareForSleep",
+        dbus_manager_path,
+        dbus_signal_handler);
+
+    dbus_manager_properties_handler_registration = dbus_event_loop.register_signal_handler(
+        dbus_connection,
+        dbus_logind_name,
+        "org.freedesktop.DBus.Properties",
+        "PropertiesChanged",
+        dbus_manager_path,
+        dbus_signal_handler);
+
+    dbus_event_loop.enqueue([this] { initialize_is_suspend_blocked(); }).get();
 }
 
 repowerd::HandlerRegistration
@@ -74,21 +95,27 @@ repowerd::LogindSystemPowerControl::register_system_resume_handler(
     return EventLoopHandlerRegistration{
         dbus_event_loop,
         [this, &handler] { this->system_resume_handler = handler; },
-        [this] { this->system_resume_handler = []{}; }};
+        [this] { this->system_resume_handler = null_arg_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::LogindSystemPowerControl::register_system_allow_suspend_handler(
-    SystemAllowSuspendHandler const&)
+    SystemAllowSuspendHandler const& handler)
 {
-    return HandlerRegistration{};
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { this->system_allow_suspend_handler = handler; },
+        [this] { this->system_allow_suspend_handler = null_arg1_handler; }};
 }
 
 repowerd::HandlerRegistration
 repowerd::LogindSystemPowerControl::register_system_disallow_suspend_handler(
-    SystemDisallowSuspendHandler const&)
+    SystemDisallowSuspendHandler const& handler)
 {
-    return HandlerRegistration{};
+    return EventLoopHandlerRegistration{
+        dbus_event_loop,
+        [this, &handler] { this->system_disallow_suspend_handler = handler; },
+        [this] { this->system_disallow_suspend_handler = null_arg1_handler; }};
 }
 
 void repowerd::LogindSystemPowerControl::allow_automatic_suspend(std::string const&)
@@ -146,8 +173,49 @@ void repowerd::LogindSystemPowerControl::handle_dbus_signal(
         if (start == FALSE)
             system_resume_handler();
     }
+    else if (signal_name == "PropertiesChanged")
+    {
+        char const* properties_interface_cstr{""};
+        GVariantIter* properties_iter;
+        g_variant_get(parameters, "(&sa{sv}as)",
+                      &properties_interface_cstr, &properties_iter, nullptr);
+
+        std::string const properties_interface{properties_interface_cstr};
+
+        if (properties_interface == "org.freedesktop.login1.Manager")
+            handle_dbus_change_manager_properties(properties_iter);
+
+        g_variant_iter_free(properties_iter);
+    }
 }
 
+void repowerd::LogindSystemPowerControl::handle_dbus_change_manager_properties(
+    GVariantIter* properties_iter)
+{
+    char const* key_cstr{""};
+    GVariant* value{nullptr};
+
+    while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
+    {
+        auto const key_str = std::string{key_cstr};
+
+        if (key_str == "BlockInhibited")
+        {
+            // TODO: logind incorrectly returns the previous property value,
+            // so we need to get it manually
+            auto const blocks = dbus_get_block_inhibited();
+            log->log(log_tag, "change_manager_properties(), BlockInhibited=%s",
+                     blocks.c_str());
+
+            auto const prev_is_suspend_blocked = is_suspend_blocked;
+            update_suspend_block(blocks);
+            if (is_suspend_blocked != prev_is_suspend_blocked)
+                notify_suspend_block_state();
+        }
+
+        g_variant_unref(value);
+    }
+}
 
 repowerd::Fd repowerd::LogindSystemPowerControl::dbus_inhibit(
     char const* what, char const* why)
@@ -253,4 +321,66 @@ void repowerd::LogindSystemPowerControl::dbus_suspend()
         log->log(log_tag, "dbus_suspend() done");
 
     g_variant_unref(result);
+}
+
+void repowerd::LogindSystemPowerControl::initialize_is_suspend_blocked()
+{
+    auto const blocks = dbus_get_block_inhibited();
+    log->log(log_tag, "initialize_is_suspend_blocked(), BlockInhibited=%s",
+             blocks.c_str());
+    update_suspend_block(blocks);
+    notify_suspend_block_state();
+}
+
+std::string repowerd::LogindSystemPowerControl::dbus_get_block_inhibited()
+{
+    int constexpr timeout_default = -1;
+    auto constexpr null_cancellable = nullptr;
+    ScopedGError error;
+
+    auto const result = g_dbus_connection_call_sync(
+        dbus_connection,
+        dbus_logind_name,
+        dbus_manager_path,
+        "org.freedesktop.DBus.Properties",
+        "Get",
+        g_variant_new("(ss)", dbus_manager_interface, "BlockInhibited"),
+        G_VARIANT_TYPE("(v)"),
+        G_DBUS_CALL_FLAGS_NONE,
+        timeout_default,
+        null_cancellable,
+        error);
+
+    if (!result)
+    {
+        log->log(log_tag, "dbus_get_block_inhibited() failed to get BlockInhibited: %s",
+                 error.message_str().c_str());
+        return "";
+    }
+
+    GVariant* block_inhibited_variant{nullptr};
+    g_variant_get(result, "(v)", &block_inhibited_variant);
+
+    char const* blocks_cstr{""};
+    g_variant_get(block_inhibited_variant, "&s", &blocks_cstr);
+
+    std::string const blocks{blocks_cstr};
+
+    g_variant_unref(block_inhibited_variant);
+    g_variant_unref(result);
+
+    return blocks;
+}
+
+void repowerd::LogindSystemPowerControl::update_suspend_block(std::string const& blocks)
+{
+    is_suspend_blocked = blocks.find("sleep") != std::string::npos;
+}
+
+void repowerd::LogindSystemPowerControl::notify_suspend_block_state()
+{
+    if (is_suspend_blocked)
+        system_disallow_suspend_handler(suspend_id);
+    else
+        system_allow_suspend_handler(suspend_id);
 }
