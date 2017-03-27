@@ -80,6 +80,53 @@ TEST_F(ASystemPowerControl,
     expect_automatic_suspend_is_disallowed();
 }
 
+TEST_F(ASystemPowerControl,
+       suspend_inhibition_is_respected_for_automatic_suspend_due_to_inactivity)
+{
+    turn_on_display();
+    client_request_disallow_suspend();
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+
+    expect_automatic_suspend_is_disallowed();
+}
+
+TEST_F(ASystemPowerControl,
+       suspend_inhibition_is_ignored_for_automatic_suspend_due_to_power_key)
+{
+    turn_on_display();
+    client_request_disallow_suspend();
+
+    press_power_button();
+    release_power_button();
+
+    expect_automatic_suspend_is_allowed();
+}
+
+TEST_F(ASystemPowerControl,
+       removal_of_suspend_inhibition_is_respected_for_automatic_suspend_due_to_inactivity)
+{
+    turn_on_display();
+    client_request_disallow_suspend();
+
+    advance_time_by(user_inactivity_normal_display_off_timeout);
+
+    client_request_allow_suspend();
+    expect_automatic_suspend_is_allowed();
+}
+
+TEST_F(ASystemPowerControl,
+       removal_of_suspend_inhibition_has_no_effect_for_automatic_suspend_due_to_proximity)
+{
+    turn_on_display();
+    client_request_disallow_suspend();
+
+    emit_proximity_state_near();
+
+    client_request_allow_suspend();
+
+    expect_automatic_suspend_is_disallowed();
+}
+
 TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_before_display_is_turned_on)
 {
     testing::InSequence s;

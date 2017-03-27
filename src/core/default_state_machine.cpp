@@ -82,6 +82,7 @@ repowerd::DefaultStateMachine::DefaultStateMachine(
       timer{config.the_timer()},
       display_power_mode{DisplayPowerMode::off},
       display_power_mode_at_power_button_press{DisplayPowerMode::unknown},
+      display_power_mode_reason{DisplayPowerChangeReason::unknown},
       power_button_long_press_alarm_id{AlarmId::invalid},
       power_button_long_press_detected{false},
       power_button_long_press_timeout{config.the_state_machine_options()->power_button_long_press_timeout()},
@@ -559,6 +560,12 @@ void repowerd::DefaultStateMachine::handle_allow_suspend()
 
     suspend_allowed = true;
 
+    if (display_power_mode == DisplayPowerMode::off &&
+        display_power_mode_reason == DisplayPowerChangeReason::activity)
+    {
+        system_power_control->allow_automatic_suspend(suspend_id);
+    }
+
     if (suspend_pending)
         suspend_when_allowed();
 }
@@ -787,7 +794,13 @@ void repowerd::DefaultStateMachine::turn_off_display(
     display_power_event_sink->notify_display_power_off(reason);
     performance_booster->disable_interactive_mode();
     if (reason != DisplayPowerChangeReason::proximity)
-        system_power_control->allow_automatic_suspend(suspend_id);
+    {
+        if ((reason == DisplayPowerChangeReason::activity && suspend_allowed) ||
+            reason != DisplayPowerChangeReason::activity)
+        {
+            system_power_control->allow_automatic_suspend(suspend_id);
+        }
+    }
 }
 
 void repowerd::DefaultStateMachine::turn_on_display_without_timeout(
