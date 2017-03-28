@@ -152,7 +152,18 @@ void repowerd::BacklightBrightnessControl::set_dim_brightness()
     event_loop.enqueue(
         [this]
         { 
-            transition_to_brightness_value(dim_brightness, TransitionSpeed::normal);
+            bool should_transition = true;
+
+            auto const backlight_brightness = get_brightness_value();
+            if (backlight_brightness > 0.0 &&
+                backlight_brightness < dim_brightness)
+            {
+                should_transition = false;
+            }
+
+            if (should_transition)
+                transition_to_brightness_value(dim_brightness, TransitionSpeed::normal);
+
             active_brightness_type = ActiveBrightnessType::dim;
         }).get();
 }

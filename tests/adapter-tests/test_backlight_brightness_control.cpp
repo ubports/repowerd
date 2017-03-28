@@ -300,6 +300,39 @@ TEST_F(ABacklightBrightnessControl,
 }
 
 TEST_F(ABacklightBrightnessControl,
+       does_not_transition_to_dim_if_current_brightness_is_positive_but_lower_than_dim)
+{
+    auto const half_dim_percent = dim_percent / 2.0;
+    ASSERT_THAT(half_dim_percent, Lt(dim_percent));
+
+    backlight.set_brightness(half_dim_percent);
+
+    brightness_control.set_dim_brightness();
+
+    expect_brightness_value(half_dim_percent);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       transitions_to_dim_if_current_brightness_is_zero)
+{
+    backlight.set_brightness(0.0);
+
+    brightness_control.set_dim_brightness();
+
+    expect_brightness_value(dim_percent);
+}
+
+TEST_F(ABacklightBrightnessControl,
+       transitions_to_dim_if_current_brightness_is_unknown)
+{
+    backlight.set_brightness(repowerd::Backlight::unknown_brightness);
+
+    brightness_control.set_dim_brightness();
+
+    expect_brightness_value(dim_percent);
+}
+
+TEST_F(ABacklightBrightnessControl,
        disables_light_events_when_autobrightness_is_disabled)
 {
     light_sensor.emit_light_if_enabled(500.0);
