@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 
 #include <vector>
+#include <mutex>
 
 namespace repowerd
 {
@@ -54,6 +55,8 @@ private:
         AlarmId id;
         std::chrono::milliseconds time;
     };
+
+    std::mutex mutex;
 
     AlarmHandler handler;
     AlarmId next_alarm_id;

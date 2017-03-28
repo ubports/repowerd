@@ -32,17 +32,24 @@ rt::FakeTimer::FakeTimer()
 repowerd::HandlerRegistration rt::FakeTimer::register_alarm_handler(AlarmHandler const& handler)
 {
     mock.register_alarm_handler(handler);
+
+    std::lock_guard<std::mutex> lock{mutex};
     this->handler = handler;
+
     return HandlerRegistration{
         [this]
         {
             mock.unregister_alarm_handler();
+
+            std::lock_guard<std::mutex> lock{mutex};
             this->handler = [](AlarmId){};
         }};
 }
 
 repowerd::AlarmId rt::FakeTimer::schedule_alarm_in(std::chrono::milliseconds t)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     alarms.push_back({next_alarm_id, now_ms + t});
 
     return next_alarm_id++;
@@ -50,6 +57,8 @@ repowerd::AlarmId rt::FakeTimer::schedule_alarm_in(std::chrono::milliseconds t)
 
 void rt::FakeTimer::cancel_alarm(AlarmId id)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     alarms.erase(
         std::remove_if(
             alarms.begin(),
@@ -60,11 +69,18 @@ void rt::FakeTimer::cancel_alarm(AlarmId id)
 
 std::chrono::steady_clock::time_point rt::FakeTimer::now()
 {
+    std::lock_guard<std::mutex> lock{mutex};
     return std::chrono::steady_clock::time_point{now_ms};
 }
 
 void rt::FakeTimer::advance_by(std::chrono::milliseconds advance)
 {
+    // It's not ideal to call the handlers under lock, but it's good/safe
+    // enough for our testing scenarios and purposes. The only timer
+    // handler we use in production code (in repowerd::Daemon) enqueues
+    // work to other threads, so it can't deadlock.
+    std::lock_guard<std::mutex> lock{mutex};
+
     now_ms += advance;
 
     for (auto const& alarm : alarms)
