@@ -184,11 +184,12 @@ void repowerd::BacklightBrightnessControl::set_normal_brightness_value(double v)
         [this,v]
         { 
             user_normal_brightness = v;
-            if (active_brightness_type == ActiveBrightnessType::normal && !ab_active)
-            {
+
+            if (!ab_active)
                 normal_brightness = user_normal_brightness;
+
+            if (active_brightness_type == ActiveBrightnessType::normal && !ab_active)
                 transition_to_brightness_value(normal_brightness, TransitionSpeed::normal);
-            }
         }).get();
 }
 

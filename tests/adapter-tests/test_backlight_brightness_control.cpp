@@ -256,6 +256,15 @@ TEST_F(ABacklightBrightnessControl, does_not_write_new_normal_brightness_value_i
     expect_brightness_value(0);
 }
 
+TEST_F(ABacklightBrightnessControl,
+       applies_set_normal_brightness_value_when_changing_to_normal_mode)
+{
+    brightness_control.set_normal_brightness_value(0.7);
+    brightness_control.set_normal_brightness();
+
+    expect_brightness_value(0.7);
+}
+
 TEST_F(ABacklightBrightnessControl, transitions_smoothly_between_brightness_values_when_increasing)
 {
     brightness_control.set_off_brightness();
