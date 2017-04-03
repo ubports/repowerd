@@ -1,4 +1,4 @@
-repowerd (2017.03-0ubuntu1) UNRELEASED; urgency=medium
+repowerd (2017.03+17.04.20170403-0ubuntu1) zesty; urgency=medium
 
   * 2017.03 release
     - Fix "Closing the lid does not suspend the device" (LP: #1668596)
@@ -6,7 +6,7 @@ repowerd (2017.03-0ubuntu1) UNRELEASED; urgency=medium
     - Fix brightness issues when turning on the screen on Fairphone 2
     - Add apport hook
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 29 Mar 2017 12:47:31 +0300
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Mon, 03 Apr 2017 14:19:32 +0000
 
 repowerd (2017.02+17.04.20170221-0ubuntu1) zesty; urgency=medium
 
