@@ -60,8 +60,8 @@ synthetic_initial_proximity_event_type_for(std::string device_name)
 bool normal_before_display_on_autobrightness_for(std::string const& device_name)
 {
     auto const quirk_cstr = getenv("REPOWERD_QUIRK_NORMAL_BEFORE_DISPLAY_ON_AUTOBRIGHTNESS");
-    std::string const quirk{quirk_cstr ? quirk_cstr : ""};
-     
+    std::string const quirk{quirk_cstr ? quirk_cstr : "always"};
+
     // Mako needs us to manually set the brightness before the first
     // autobrightness setting after turning on the screen. Otherwise, it
     // doesn't update screen brightness to the proper level until the next
