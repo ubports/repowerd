@@ -1,3 +1,10 @@
+repowerd (2018.01+ubports) xenial; urgency=medium
+
+  * Import to UBports 
+  * Always set brightness before first autobrightness setting
+
+ -- Marius Gripsgard <marius@ubports.com>  Mon, 15 Jan 2018 15:45:57 +0100
+
 repowerd (2017.03+17.04.20170403-0ubuntu1) zesty; urgency=medium
 
   * 2017.03 release
