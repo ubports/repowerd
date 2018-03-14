@@ -1,4 +1,4 @@
-repowerd (2016.10.2+ubports1) vivid; urgency=medium
+repowerd (2016.10.2+ubports1) xenial; urgency=medium
 
   [Ratchanan Srirattanamet]
   * adaptors: make the screen-on call to u-s-c synchronous  
