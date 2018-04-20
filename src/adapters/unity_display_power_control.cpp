@@ -40,7 +40,7 @@ void repowerd::UnityDisplayPowerControl::turn_on()
 {
     log->log(log_tag, "turn_on()");
 
-    g_dbus_connection_call_sync(
+    auto const reply = g_dbus_connection_call_sync(
         dbus_connection,
         unity_display_bus_name,
         unity_display_object_path,
@@ -52,6 +52,9 @@ void repowerd::UnityDisplayPowerControl::turn_on()
         /* timeout_msec */ 1000,
         nullptr,
         nullptr);
+
+    if (reply)
+        g_variant_unref(reply);
 }
 
 void repowerd::UnityDisplayPowerControl::turn_off()
