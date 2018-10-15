@@ -289,7 +289,7 @@ TEST_F(ABacklightBrightnessControl,
 {
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0u));
 }
 
 TEST_F(ABacklightBrightnessControl,
@@ -299,7 +299,7 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.enable_autobrightness();
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0u));
 }
 
 TEST_F(ABacklightBrightnessControl,
@@ -309,7 +309,7 @@ TEST_F(ABacklightBrightnessControl,
     brightness_control.set_normal_brightness();
     light_sensor.emit_light_if_enabled(500.0);
 
-    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0));
+    EXPECT_THAT(autobrightness_algorithm.light_history.size(), Eq(0u));
 }
 
 TEST_F(ABacklightBrightnessControl,
