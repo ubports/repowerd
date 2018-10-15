@@ -101,7 +101,7 @@ TEST_F(AnAndroidAutobrightnessAlgorithm,
 
     wait_for_event_loop_processing();
 
-    EXPECT_THAT(ab_values.size(), Eq(1));
+    EXPECT_THAT(ab_values.size(), Eq(1u));
 }
 
 TEST_F(AnAndroidAutobrightnessAlgorithm, ignores_light_values_when_stopped)

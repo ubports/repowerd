@@ -128,7 +128,7 @@ TEST_F(ASysfsBacklight, uses_sysfs_backlight_if_present)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1));
+    EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1u));
 }
 
 TEST_F(ASysfsBacklight, uses_sysfs_led_backlight_if_present)
@@ -138,7 +138,7 @@ TEST_F(ASysfsBacklight, uses_sysfs_led_backlight_if_present)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Gt(1));
+    EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Gt(1u));
 }
 
 TEST_F(ASysfsBacklight, prefers_sysfs_backlight_over_led_backlight_if_both_present)
@@ -149,8 +149,8 @@ TEST_F(ASysfsBacklight, prefers_sysfs_backlight_over_led_backlight_if_both_prese
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1));
-    EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Eq(1));
+    EXPECT_THAT(sysfs_backlight->brightness_contents->size(), Gt(1u));
+    EXPECT_THAT(sysfs_led_backlight->brightness_contents->size(), Eq(1u));
 }
 
 TEST_F(ASysfsBacklight, writes_brightness_value_based_on_max_brightness)
@@ -218,7 +218,7 @@ TEST_F(ASysfsBacklight, prefers_firmware_backlight_over_all_others)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(firmware->brightness_contents->size(), Gt(1));
+    EXPECT_THAT(firmware->brightness_contents->size(), Gt(1u));
 }
 
 TEST_F(ASysfsBacklight, prefers_platform_backlight_over_raw)
@@ -229,7 +229,7 @@ TEST_F(ASysfsBacklight, prefers_platform_backlight_over_raw)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(platform->brightness_contents->size(), Gt(1));
+    EXPECT_THAT(platform->brightness_contents->size(), Gt(1u));
 }
 
 TEST_F(ASysfsBacklight, uses_raw_backlight_if_no_other_choice)
@@ -239,5 +239,5 @@ TEST_F(ASysfsBacklight, uses_raw_backlight_if_no_other_choice)
     auto const backlight = create_sysfs_backlight();
     backlight->set_brightness(0.5);
 
-    EXPECT_THAT(raw->brightness_contents->size(), Gt(1));
+    EXPECT_THAT(raw->brightness_contents->size(), Gt(1u));
 }
