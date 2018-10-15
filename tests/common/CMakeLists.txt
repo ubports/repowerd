@@ -27,7 +27,6 @@ target_link_libraries(
 
     repowerd-core
 
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARY}
-    ${GMOCK_MAIN_LIBRARY}
+    ${GMOCK_LIBRARIES}
+    ${GTEST_MAIN_LIBRARIES}
 )

@@ -65,9 +65,8 @@ target_link_libraries(
     repowerd-adapters
     repowerd-test-common
 
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARY}
-    ${GMOCK_MAIN_LIBRARY}
+    ${GMOCK_LIBRARIES}
+    ${GTEST_MAIN_LIBRARIES}
 )
 
 if (REPOWERD_DISABLE_TIME_SENSITIVE_TESTS)

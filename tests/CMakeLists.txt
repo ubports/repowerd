@@ -16,8 +16,6 @@
 
 include_directories(
     ${CMAKE_SOURCE_DIR}
-    ${GMOCK_INCLUDE_DIR}
-    ${GTEST_INCLUDE_DIR}
     common
 )
 

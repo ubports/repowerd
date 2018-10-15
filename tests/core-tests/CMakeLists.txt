@@ -49,9 +49,8 @@ target_link_libraries(
     repowerd-core
     repowerd-test-common
 
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARY}
-    ${GMOCK_MAIN_LIBRARY}
+    ${GMOCK_LIBRARIES}
+    ${GMOCK_MAIN_LIBRARIES}
 )
 
 add_test(repowerd-core-tests ${EXECUTABLE_OUTPUT_PATH}/repowerd-core-tests)
