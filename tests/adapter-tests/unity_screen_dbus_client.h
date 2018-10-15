@@ -20,6 +20,9 @@
 
 #include "dbus_client.h"
 
+#include <functional>
+#include <string>
+
 namespace repowerd
 {
 namespace test
