@@ -258,7 +258,7 @@ TEST_F(ABacklightBrightnessControl, transitions_smoothly_between_brightness_valu
     brightness_control.set_off_brightness();
     brightness_control.set_normal_brightness();
 
-    EXPECT_THAT(backlight.brightness_history.size(), Ge(20));
+    EXPECT_THAT(backlight.brightness_history.size(), Ge(20u));
     EXPECT_THAT(backlight.brightness_steps_stddev(), Le(0.01));
 }
 
@@ -270,7 +270,7 @@ TEST_F(ABacklightBrightnessControl, transitions_smoothly_between_brightness_valu
 
     brightness_control.set_off_brightness();
 
-    EXPECT_THAT(backlight.brightness_history.size(), Ge(20));
+    EXPECT_THAT(backlight.brightness_history.size(), Ge(20u));
     EXPECT_THAT(backlight.brightness_steps_stddev(), Le(0.01));
 }
 
