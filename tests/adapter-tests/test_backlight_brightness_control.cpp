@@ -33,6 +33,7 @@
 
 #include <thread>
 #include <algorithm>
+#include <functional>
 #include <numeric>
 #include <cmath>
 

@@ -26,6 +26,7 @@
 #include <gmock/gmock.h>
 
 #include <chrono>
+#include <functional>
 
 namespace rt = repowerd::test;
 using namespace std::chrono_literals;
