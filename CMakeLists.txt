@@ -76,6 +76,6 @@ add_subdirectory(src/)
 add_subdirectory(data/)
 
 if(REPOWERD_BUILD_TESTS)
-    find_package(GtestGmock REQUIRED)
+    find_package(GMock REQUIRED)
     add_subdirectory(tests/)
 endif()

@@ -2,30 +2,36 @@ Source: repowerd
 Priority: optional
 Section: admin
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: debhelper (>= 9),
-               dh-systemd,
-               android-headers,
-               cmake,
-               dbus,
-               google-mock,
-               libandroid-properties-dev,
-               libglib2.0-dev,
-               libhardware-dev,
-               libubuntu-application-api-dev,
-               libubuntu-platform-hardware-api-dev,
-               pkg-config
+Build-Depends:
+ android-headers,
+ cmake,
+ cmake-extras,
+ dbus,
+ debhelper (>= 9),
+ dh-systemd,
+ googletest | google-mock,
+ libandroid-properties-dev,
+ libglib2.0-dev,
+ libhardware-dev,
+ libubuntu-application-api-dev,
+ libubuntu-platform-hardware-api-dev,
+ pkg-config,
 Standards-Version: 3.9.7
 Homepage: https://launchpad.net/repowerd
 Vcs-Git: https://git.launchpad.net/repowerd
 
 Package: repowerd
 Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-         repowerd-data (= ${source:Version})
-Replaces: powerd (<< 2016.05~)
-Breaks: powerd (<< 2016.05~)
-Provides: powerd
+Depends:
+ repowerd-data (= ${source:Version}),
+ ${misc:Depends},
+ ${shlibs:Depends},
+Replaces:
+ powerd (<< 2016.05~),
+Breaks:
+ powerd (<< 2016.05~),
+Provides:
+ powerd,
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
  phone and tablet.
@@ -34,8 +40,10 @@ Description: Power daemon to monitor and control system power state
 
 Package: repowerd-data
 Architecture: all
-Depends: ${misc:Depends}
-Conflicts: powerd (<< 2016.05~)
+Depends:
+ ${misc:Depends},
+Conflicts:
+ powerd (<< 2016.05~),
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
  phone and tablet.
@@ -44,9 +52,10 @@ Description: Power daemon to monitor and control system power state
 
 Package: repowerd-tools
 Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-         repowerd-data (= ${source:Version})
+Depends:
+ repowerd-data (= ${source:Version}),
+ ${misc:Depends},
+ ${shlibs:Depends},
 Description: Power daemon to monitor and control system power state
  This daemon monitors and controls system power states for Ubuntu
  phone and tablet. It provides a dbus interface for system services to request
@@ -58,8 +67,9 @@ Description: Power daemon to monitor and control system power state
 
 Package: powerd
 Architecture: all
-Depends: ${misc:Depends},
-         repowerd (>= ${source:Version})
+Depends:
+ repowerd (>= ${source:Version}),
+ ${misc:Depends},
 Section: oldlibs
 Description: Transitional dummy package
  This is a transitional dummy package.
