@@ -17,6 +17,7 @@
  */
 
 #include "fake_libhardware.h"
+#include <functional>
 #include <stdexcept>
 
 namespace rt = repowerd::test;

@@ -37,6 +37,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <functional>
 
 using namespace testing;
 
