@@ -92,7 +92,7 @@ double get_critical_temperature(repowerd::DeviceConfig const& device_config)
 try
 {
     auto const ct_str = device_config.get("shutdownBatteryTemperature", "680");
-    return std::stod(ct_str) * 0.1;
+    return ((double)std::stoi(ct_str)) * 0.1;
 }
 catch (...)
 {
