@@ -28,21 +28,9 @@
 #include <algorithm>
 #include <array>
 
-#include <hybris/properties/properties.h>
-
-namespace
-{
+#include <deviceinfo.h>
 
 char const* const log_tag = "AndroidDeviceConfig";
-
-std::string determine_device_name()
-{
-    char name[PROP_VALUE_MAX] = "";
-    property_get("ro.product.device", name, "");
-    return name;
-}
-
-}
 
 repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
     std::shared_ptr<Log> const& log,
@@ -56,7 +44,8 @@ repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
 
     parse_first_matching_file_in_dirs(config_dirs, "config-default.xml");
 
-    auto const device_name = determine_device_name();
+    DeviceInfo info;
+    auto const device_name = info.name();
     if (device_name != "")
         parse_first_matching_file_in_dirs(config_dirs, "config-" + device_name + ".xml");
 

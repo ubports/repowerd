@@ -20,40 +20,17 @@
 #include "src/core/log.h"
 #include "src/core/infinite_timeout.h"
 
-#include <hybris/properties/properties.h>
+#include <deviceinfo.h>
 
 using namespace std::chrono_literals;
 
-namespace
-{
-
 char const* const log_tag = "DefaultStateMachineOptions";
-
-std::string determine_device_name()
-{
-    char name[PROP_VALUE_MAX] = "";
-    property_get("ro.product.device", name, "");
-    return name;
-}
-
-bool treat_power_button_as_user_activity_for(
-    std::string const& device_name)
-{
-    // On non-phablet/non-android devices the power button
-    // is treated as a generic power-state-changing user activity, i.e.,
-    // it can turn on the screen but not turn it off
-    return device_name.empty();
-}
-
-}
 
 repowerd::DefaultStateMachineOptions::DefaultStateMachineOptions(
     repowerd::Log& log)
-    : device_name_{determine_device_name()},
-      treat_power_button_as_user_activity_{
-        treat_power_button_as_user_activity_for(determine_device_name())}
+    : deviceinfo(std::make_unique<DeviceInfo>())
 {
-    log.log(log_tag, "DeviceName: %s", device_name_.c_str());
+    log.log(log_tag, "DeviceName: %s", deviceinfo->name().c_str());
     log.log(log_tag, "Option: notification_expiration_timeout=%lld",
             static_cast<long long>(notification_expiration_timeout().count()));
     log.log(log_tag, "Option: power_button_long_press_timeout=%lld",
@@ -118,7 +95,7 @@ repowerd::DefaultStateMachineOptions::user_inactivity_reduced_display_off_timeou
 
 bool repowerd::DefaultStateMachineOptions::treat_power_button_as_user_activity() const
 {
-    return treat_power_button_as_user_activity_;
+    return deviceinfo->deviceType() == DeviceInfo::Desktop;
 }
 
 bool repowerd::DefaultStateMachineOptions::turn_on_display_at_startup() const
