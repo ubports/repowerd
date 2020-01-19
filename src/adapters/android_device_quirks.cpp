@@ -20,7 +20,7 @@
 
 #include "src/core/log.h"
 
-#include <hybris/properties/properties.h>
+#include <deviceinfo.h>
 
 using namespace std::chrono_literals;
 
@@ -31,9 +31,8 @@ char const* const log_tag = "AndroidDeviceQuirks";
 
 std::string determine_device_name()
 {
-    char name[PROP_VALUE_MAX] = "";
-    property_get("ro.product.device", name, "");
-    return name;
+    DeviceInfo info;
+    return info.name();
 }
 
 std::chrono::milliseconds synthetic_initial_proximity_event_delay_for(std::string const& device_name)

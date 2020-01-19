@@ -20,7 +20,12 @@
 
 #include "src/core/state_machine_options.h"
 
+#include <deviceinfo.h>
+
 #include <string>
+#include <memory>
+
+class DeviceInfo;
 
 namespace repowerd
 {
@@ -43,8 +48,7 @@ public:
     bool turn_on_display_at_startup() const override;
 
 private:
-    std::string const device_name_;
-    bool const treat_power_button_as_user_activity_;
+    std::unique_ptr<DeviceInfo> deviceinfo;
 };
 
 }
