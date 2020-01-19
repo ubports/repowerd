@@ -67,7 +67,7 @@ target_link_libraries(
     repowerd-adapters
 
     suspend
-    ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
+    ${DEVICEINFO_LDFLAGS}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${GIO_UNIX_LDFLAGS} ${GIO_UNIX_LIBRARIES}
     ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
@@ -78,7 +78,7 @@ target_link_libraries(
 target_include_directories(
     repowerd-adapters PUBLIC
 
-    ${ANDROID_PROPERTIES_INCLUDE_DIRS}
+    ${DEVICEINFO_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
     ${LIBHARDWARE_INCLUDE_DIRS}
