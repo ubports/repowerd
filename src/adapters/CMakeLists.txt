@@ -15,6 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_subdirectory(libsuspend)
+add_subdirectory(sensorfw)
 
 set(
     REPOWERD_ADAPTER_SRCS
@@ -67,6 +68,7 @@ target_link_libraries(
     repowerd-adapters
 
     suspend
+    sensorfw-adapters
     ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
     ${GIO_LDFLAGS} ${GIO_LIBRARIES}
     ${GIO_UNIX_LDFLAGS} ${GIO_UNIX_LIBRARIES}
