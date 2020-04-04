@@ -49,6 +49,10 @@
 #include "adapters/unity_user_activity.h"
 #include "adapters/upower_power_source_and_lid.h"
 
+// Sensorfw
+#include "adapters/sensorfw/sensorfw_light_sensor.h"
+#include "adapters/sensorfw/sensorfw_proximity_sensor.h"
+
 namespace
 {
 char const* const log_tag = "DefaultDaemonConfig";
@@ -251,12 +255,27 @@ repowerd::DefaultDaemonConfig::the_power_source()
 std::shared_ptr<repowerd::ProximitySensor>
 repowerd::DefaultDaemonConfig::the_proximity_sensor()
 {
-    if (!proximity_sensor)
+    if (proximity_sensor)
+        return proximity_sensor;
+
     try
     {
         proximity_sensor = std::make_shared<UbuntuProximitySensor>(
             the_log(),
             *the_device_quirks());
+        return proximity_sensor;
+    }
+    catch (std::exception const& e)
+    {
+        the_log()->log(log_tag, "Failed to create UbuntuProximitySensor: %s", e.what());
+        the_log()->log(log_tag, "Trying SensorfwProximitySensor");
+    }
+
+    try
+    {
+        proximity_sensor = std::make_shared<SensorfwProximitySensor>(
+            the_log(),
+            the_dbus_bus_address());
     }
     catch (std::exception const& e)
     {
@@ -495,14 +514,29 @@ repowerd::DefaultDaemonConfig::the_filesystem()
 std::shared_ptr<repowerd::LightSensor>
 repowerd::DefaultDaemonConfig::the_light_sensor()
 {
-    if (!light_sensor)
+    if (light_sensor)
+        return light_sensor;
+
     try
     {
         light_sensor = std::make_shared<UbuntuLightSensor>();
+        return light_sensor;
     }
     catch (std::exception const& e)
     {
         the_log()->log(log_tag, "Failed to create UbuntuLightSensor: %s", e.what());
+        the_log()->log(log_tag, "Trying SensorfwLightSensor");
+    }
+
+    try
+    {
+        light_sensor = std::make_shared<SensorfwLightSensor>(
+            the_log(),
+            the_dbus_bus_address());
+    }
+    catch (std::exception const& e)
+    {
+        the_log()->log(log_tag, "Failed to create SensorfwLightSensor: %s", e.what());
         the_log()->log(log_tag, "Falling back to NullLightSensor");
         light_sensor = std::make_shared<NullLightSensor>();
     }
