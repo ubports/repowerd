@@ -43,6 +43,8 @@ pkg_check_modules(LIBHARDWARE REQUIRED libhardware)
 pkg_check_modules(UBUNTU_PLATFORM_HARDWARE_API REQUIRED ubuntu-platform-hardware-api)
 find_package(AndroidHeaders REQUIRED)
 
+set(CMAKE_CXX_STANDARD 14)
+
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;AddressSanitizer;ThreadSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
