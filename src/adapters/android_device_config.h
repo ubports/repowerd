@@ -76,6 +76,7 @@ private:
     std::shared_ptr<Filesystem> const filesystem;
     std::string last_config_name;
     std::unordered_map<std::string,std::string> config;
+    bool use_vendor_overlay = false;
 };
 
 }
