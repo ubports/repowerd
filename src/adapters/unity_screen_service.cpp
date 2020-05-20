@@ -412,7 +412,7 @@ void repowerd::UnityScreenService::dbus_method_call(
     }
     else if (method_name == "setUserBrightness")
     {
-        int32_t brightness{0};
+        int32_t brightness{10};
         g_variant_get(parameters, "(i)", &brightness);
 
         dbus_setUserBrightness(brightness, pid);
