@@ -17,6 +17,8 @@
  */
 
 #include "src/adapters/timerfd_wakeup_service.h"
+#include "fake_log.h"
+#include "fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -25,6 +27,7 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace rt = repowerd::test;
 using namespace testing;
 using namespace std::chrono_literals;
 
@@ -93,7 +96,8 @@ struct ATimerfdWakeupService : Test
         }
     }
 
-    repowerd::TimerfdWakeupService wakeup_service;
+    rt::FakeLog fake_log;
+    repowerd::TimerfdWakeupService wakeup_service{rt::fake_shared(fake_log),};
     std::mutex wakeup_mutex;
     std::condition_variable wakeup_cv;
     std::vector<std::string> wakeup_cookies;
