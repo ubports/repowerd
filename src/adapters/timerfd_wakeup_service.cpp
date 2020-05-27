@@ -18,6 +18,7 @@
 
 #include "timerfd_wakeup_service.h"
 #include "event_loop_handler_registration.h"
+#include "src/core/log.h"
 
 #include <sys/timerfd.h>
 
@@ -25,6 +26,8 @@
 
 namespace
 {
+
+char const* const log_tag = "Timerfd";
 
 auto null_handler = [](auto){};
 
@@ -42,12 +45,17 @@ timespec to_timespec(std::chrono::system_clock::time_point const& tp)
 
 }
 
-repowerd::TimerfdWakeupService::TimerfdWakeupService()
-    : timerfd_fd{timerfd_create(CLOCK_REALTIME, TFD_CLOEXEC)},
+repowerd::TimerfdWakeupService::TimerfdWakeupService(std::shared_ptr<Log> const& log)
+    : timerfd_fd{timerfd_create(CLOCK_REALTIME_ALARM, TFD_CLOEXEC)},
       cookie_pool{1},
       wakeup_handler{null_handler},
       event_loop{"Wakeup"}
 {
+    if (timerfd_fd == -1) {
+        log->log(log_tag, "Failed to create timerfd with CLOCK_REALTIME_ALARM, trying CLOCK_REALTIME PLEASE note this will not wake up the device from suspend!");
+        timerfd_fd = timerfd_create(CLOCK_REALTIME, TFD_CLOEXEC);
+    }
+
     if (timerfd_fd == -1)
         throw std::system_error{errno, std::system_category(), "Failed to create timerfd"};
 
