@@ -246,7 +246,7 @@ void repowerd::UnityScreenService::start_processing()
         [this] (std::string const& cookie)
         {
             temporary_suspend_inhibition->inhibit_suspend_for(
-                std::chrono::seconds{3}, "Wakeup_" + cookie);
+                std::chrono::seconds{10}, "Wakeup_" + cookie);
 
             dbus_event_loop.enqueue([this] { dbus_emit_Wakeup(); });
         });
