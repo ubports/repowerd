@@ -400,7 +400,7 @@ TEST_F(APowerdService, inhibits_suspend_temporarily_when_wakeup_is_triggered)
 
     client.request_request_wakeup(tp).get();
 
-    auto const inhibition_timeout = std::chrono::milliseconds{3000};
+    auto const inhibition_timeout = std::chrono::milliseconds{10000};
     EXPECT_CALL(mock_temporary_suspend_inhibition,
                 inhibit_suspend_for(inhibition_timeout, _));
 
