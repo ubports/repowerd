@@ -49,9 +49,9 @@ repowerd::AndroidDeviceQuirks::ProximityEventType
 synthetic_initial_proximity_event_type_for(std::string device_name)
 {
     // In general we assume a "near" state if we don't get an initial event.
-    // However, arale does not emit an initial event when in the "far" state
+    // However, arale and bacon do not emit an initial event when in the "far" state
     // in particular, so we assume a "far" state for arale.
-    if (device_name == "arale")
+    if (device_name == "arale" || device_name == "bacon" || device_name == "A0001" || device_name == "a0001")
         return repowerd::AndroidDeviceQuirks::ProximityEventType::far;
     else
         return repowerd::AndroidDeviceQuirks::ProximityEventType::near;
