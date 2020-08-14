@@ -16,6 +16,7 @@
 
 FILE(GLOB device_config_files "${CMAKE_CURRENT_SOURCE_DIR}/device-configs/*.xml")
 FILE(GLOB dbus_config_files "${CMAKE_CURRENT_SOURCE_DIR}/dbus-configs/*.conf")
+FILE(GLOB systemd_file "${CMAKE_CURRENT_SOURCE_DIR}/repowerd.service")
 
 install(
   FILES ${device_config_files}
@@ -26,3 +27,10 @@ install(
   FILES ${dbus_config_files}
   DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/dbus-1/system.d
 )
+
+pkg_check_modules(SYSTEMD systemd)
+if (${SYSTEMD_FOUND})
+  pkg_get_variable(SYSTEMD_SYSTEM_DIR systemd systemdsystemunitdir)
+  message (STATUS "${SYSTEMD_SYSTEM_DIR} is the systemd system unit file install dir")
+  install (FILES "${systemd_file}"  DESTINATION "${SYSTEMD_SYSTEM_DIR}")
+endif()
