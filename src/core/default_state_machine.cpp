@@ -573,6 +573,7 @@ void repowerd::DefaultStateMachine::handle_disallow_suspend()
     log->log(log_tag, "disallow_suspend");
 
     suspend_allowed = false;
+    system_power_control->disallow_automatic_suspend(suspend_id);
 }
 
 void repowerd::DefaultStateMachine::handle_system_resume()
