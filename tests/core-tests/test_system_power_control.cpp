@@ -155,6 +155,15 @@ TEST_F(ASystemPowerControl, automatic_suspend_is_disallowed_before_display_is_tu
     release_power_button();
 }
 
+TEST_F(ASystemPowerControl, suspend_inhibit_disallow_automatic_suspend_by_itself)
+{
+    testing::InSequence s;
+    expect_automatic_suspend_is_allowed();
+
+    client_request_disallow_suspend();
+    expect_automatic_suspend_is_disallowed();
+}
+
 TEST_F(ASystemPowerControl, system_disallow_suspend_inhibits_suspend_due_to_inactivity)
 {
     turn_on_display();
