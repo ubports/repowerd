@@ -18,7 +18,7 @@
 
 #include "android_backlight.h"
 
-#include <android/hardware/lights.h>
+#include <hardware/lights.h>
 
 #include <stdexcept>
 #include <cstring>
