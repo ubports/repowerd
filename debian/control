@@ -16,7 +16,9 @@ Build-Depends: debhelper (>= 9),
                libubuntu-application-api-dev,
                libubuntu-platform-hardware-api-dev,
                pkg-config,
-               qtbase5-dev
+               qtbase5-dev,
+               libnl-genl-3-dev,
+               libnl-route-3-dev
 Standards-Version: 3.9.7
 Homepage: https://launchpad.net/repowerd
 Vcs-Git: https://git.launchpad.net/repowerd

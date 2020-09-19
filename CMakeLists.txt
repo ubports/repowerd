@@ -41,6 +41,7 @@ pkg_check_modules(GIO_UNIX REQUIRED gio-unix-2.0)
 pkg_check_modules(UA REQUIRED ubuntu-platform-api)
 pkg_check_modules(LIBHARDWARE REQUIRED libhardware)
 pkg_check_modules(UBUNTU_PLATFORM_HARDWARE_API REQUIRED ubuntu-platform-hardware-api)
+find_package(NL REQUIRED)
 find_package(AndroidHeaders REQUIRED)
 
 set(CMAKE_CXX_STANDARD 14)

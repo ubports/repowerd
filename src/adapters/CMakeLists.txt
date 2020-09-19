@@ -57,6 +57,7 @@ set(
     unity_screen_service.cpp
     unity_user_activity.cpp
     upower_power_source_and_lid.cpp
+    wmtwifi_power_service.cpp
 )
 
 add_library(
@@ -75,6 +76,7 @@ target_link_libraries(
     ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
     ${UA_LDFLAGS} ${UA_LIBRARIES}
     ${UBUNTU_PLATFORM_HARDWARE_API_LDFLAGS} ${UBUNTU_PLATFORM_HARDWARE_API_LIBRARIES}
+    ${NL_LIBRARIES}
 )
 
 target_include_directories(
@@ -86,4 +88,5 @@ target_include_directories(
     ${LIBHARDWARE_INCLUDE_DIRS}
     ${UA_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_HARDWARE_API_INCLUDE_DIRS}
+    ${NL_INCLUDE_DIRS}
 )

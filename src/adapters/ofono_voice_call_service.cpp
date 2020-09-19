@@ -18,6 +18,7 @@
 
 #include "ofono_voice_call_service.h"
 #include "event_loop_handler_registration.h"
+#include "wmtwifi_power_service.h"
 
 #include "src/core/log.h"
 
@@ -207,6 +208,7 @@ repowerd::HandlerRegistration repowerd::OfonoVoiceCallService::register_no_activ
 void repowerd::OfonoVoiceCallService::set_low_power_mode()
 {
     dbus_event_loop.enqueue([this] { set_fast_dormancy(true); });
+    suspend_set_wmtwifi(log, "wlan0", 1);
 }
 
 void repowerd::OfonoVoiceCallService::set_normal_power_mode()
