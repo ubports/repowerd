@@ -20,6 +20,7 @@
 
 #include "state_machine.h"
 #include <set>
+#include <string>
 
 namespace repowerd
 {
