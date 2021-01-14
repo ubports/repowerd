@@ -18,15 +18,14 @@
 
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
+#include "src/core/performance_booster.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
-#include "adapters/android_backlight.h"
 #include "adapters/android_device_config.h"
 #include "adapters/android_device_quirks.h"
 #include "adapters/backlight_brightness_control.h"
 #include "adapters/console_log.h"
 #include "adapters/default_state_machine_options.h"
-#include "adapters/dev_alarm_wakeup_service.h"
 #include "adapters/event_loop_timer.h"
 #include "adapters/libsuspend_system_power_control.h"
 #include "adapters/logind_session_tracker.h"
@@ -40,14 +39,20 @@
 #include "adapters/sysfs_backlight.h"
 #include "adapters/syslog_log.h"
 #include "adapters/timerfd_wakeup_service.h"
-#include "adapters/ubuntu_light_sensor.h"
-#include "adapters/ubuntu_performance_booster.h"
-#include "adapters/ubuntu_proximity_sensor.h"
 #include "adapters/unity_display.h"
 #include "adapters/unity_power_button.h"
 #include "adapters/unity_screen_service.h"
 #include "adapters/unity_user_activity.h"
 #include "adapters/upower_power_source_and_lid.h"
+
+// Hybris
+#ifdef REPOWERD_ENABLE_HYBRIS
+#include "adapters/android_backlight.h"
+#include "adapters/dev_alarm_wakeup_service.h"
+#include "adapters/ubuntu_light_sensor.h"
+#include "adapters/ubuntu_performance_booster.h"
+#include "adapters/ubuntu_proximity_sensor.h"
+#endif
 
 namespace
 {
@@ -213,20 +218,24 @@ repowerd::DefaultDaemonConfig::the_notification_service()
 std::shared_ptr<repowerd::PerformanceBooster>
 repowerd::DefaultDaemonConfig::the_performance_booster()
 {
-    if (!performance_booster)
+    if (performance_booster)
+        return performance_booster;
+
+#ifdef REPOWERD_ENABLE_HYBRIS
     try
     {
         performance_booster = std::make_shared<UbuntuPerformanceBooster>(
             the_log());
+        return performance_booster;
     }
     catch (std::exception const& e)
     {
         the_log()->log(log_tag, "Failed to create UbuntuPerformanceBooster: %s", e.what());
         the_log()->log(log_tag, "Falling back to NullPerformanceBooster");
-
-        performance_booster = std::make_shared<NullPerformanceBooster>();
     }
+#endif
 
+    performance_booster = std::make_shared<NullPerformanceBooster>();
     return performance_booster;
 }
 
@@ -251,22 +260,30 @@ repowerd::DefaultDaemonConfig::the_power_source()
 std::shared_ptr<repowerd::ProximitySensor>
 repowerd::DefaultDaemonConfig::the_proximity_sensor()
 {
-    if (!proximity_sensor)
+    if (proximity_sensor)
+        return proximity_sensor;
+
+#ifdef REPOWERD_ENABLE_HYBRIS
     try
     {
         proximity_sensor = std::make_shared<UbuntuProximitySensor>(
             the_log(),
             *the_device_quirks());
+        return proximity_sensor;
     }
     catch (std::exception const& e)
     {
         the_log()->log(log_tag, "Failed to create UbuntuProximitySensor: %s", e.what());
         the_log()->log(log_tag, "Falling back to NullProximitySensor");
-
-        proximity_sensor = std::make_shared<NullProximitySensor>();
     }
+#else
+    the_log()->log(log_tag, "Built without ProximitySensor, Falling back to NullProximitySensor");
+#endif
 
+    proximity_sensor = std::make_shared<NullProximitySensor>();
     return proximity_sensor;
+
+
 }
 
 std::shared_ptr<repowerd::SessionTracker>
@@ -361,6 +378,7 @@ repowerd::DefaultDaemonConfig::the_backlight()
 {
     if (!backlight)
     {
+#ifdef REPOWERD_ENABLE_HYBRIS
         try
         {
             backlight = std::make_shared<AndroidBacklight>();
@@ -370,6 +388,7 @@ repowerd::DefaultDaemonConfig::the_backlight()
             the_log()->log(log_tag, "Failed to create AndroidBacklight: %s", e.what());
             the_log()->log(log_tag, "Trying SysfsBacklight");
         }
+#endif
 
         try
         {
@@ -495,7 +514,10 @@ repowerd::DefaultDaemonConfig::the_filesystem()
 std::shared_ptr<repowerd::LightSensor>
 repowerd::DefaultDaemonConfig::the_light_sensor()
 {
-    if (!light_sensor)
+    if (light_sensor)
+        return light_sensor;
+
+#ifdef REPOWERD_ENABLE_HYBRIS
     try
     {
         light_sensor = std::make_shared<UbuntuLightSensor>();
@@ -504,9 +526,12 @@ repowerd::DefaultDaemonConfig::the_light_sensor()
     {
         the_log()->log(log_tag, "Failed to create UbuntuLightSensor: %s", e.what());
         the_log()->log(log_tag, "Falling back to NullLightSensor");
-        light_sensor = std::make_shared<NullLightSensor>();
     }
+#else
+    the_log()->log(log_tag, "Built without LightSensor, Falling back to NullLightSensor");
+#endif
 
+    light_sensor = std::make_shared<NullLightSensor>();
     return light_sensor;
 }
 
@@ -611,6 +636,7 @@ repowerd::DefaultDaemonConfig::the_upower_power_source_and_lid()
 std::shared_ptr<repowerd::WakeupService>
 repowerd::DefaultDaemonConfig::the_wakeup_service()
 {
+#ifdef REPOWERD_ENABLE_HYBRIS
     if (!wakeup_service)
     try
     {
@@ -621,6 +647,7 @@ repowerd::DefaultDaemonConfig::the_wakeup_service()
         the_log()->log(log_tag, "Failed to create DevAlarmWakeupService: %s", e.what());
         the_log()->log(log_tag, "Trying TimerfdWakeupService");
     }
+#endif
 
     if (!wakeup_service)
         wakeup_service = std::make_shared<TimerfdWakeupService>();

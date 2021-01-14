@@ -21,6 +21,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
 )
 
+if (REPOWERD_ENABLE_HYBRIS)
+    add_definitions(-DREPOWERD_ENABLE_HYBRIS)
+endif()
+
 add_subdirectory(core)
 add_subdirectory(adapters)
 add_subdirectory(tools)

@@ -16,11 +16,20 @@
 
 add_subdirectory(libsuspend)
 
+if (REPOWERD_ENABLE_HYBRIS)
+    set(REPOWERD_ADAPTER_HYBRIS_SRCS
+        android_backlight.cpp
+        dev_alarm_wakeup_service.cpp
+        ubuntu_light_sensor.cpp
+        ubuntu_performance_booster.cpp
+        ubuntu_proximity_sensor.cpp
+    )
+endif()
+
 set(
     REPOWERD_ADAPTER_SRCS
 
     android_autobrightness_algorithm.cpp
-    android_backlight.cpp
     android_device_config.cpp
     android_device_quirks.cpp
     backlight_brightness_control.cpp
@@ -29,7 +38,6 @@ set(
     dbus_connection_handle.cpp
     dbus_event_loop.cpp
     dbus_message_handle.cpp
-    dev_alarm_wakeup_service.cpp
     default_state_machine_options.cpp
     event_loop.cpp
     event_loop_timer.cpp
@@ -48,14 +56,13 @@ set(
     syslog_log.cpp
     sysfs_backlight.cpp
     timerfd_wakeup_service.cpp
-    ubuntu_light_sensor.cpp
-    ubuntu_performance_booster.cpp
-    ubuntu_proximity_sensor.cpp
     unity_display.cpp
     unity_power_button.cpp
     unity_screen_service.cpp
     unity_user_activity.cpp
     upower_power_source_and_lid.cpp
+
+    ${REPOWERD_ADAPTER_HYBRIS_SRCS}
 )
 
 add_library(

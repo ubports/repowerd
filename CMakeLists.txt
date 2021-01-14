@@ -24,6 +24,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 option(REPOWERD_BUILD_TESTS "Build tests" ON)
 option(REPOWERD_DISABLE_TIME_SENSITIVE_TESTS "Don't run time-sensitive tests" OFF)
 
+option(REPOWERD_ENABLE_HYBRIS "Enable hybris support" ON)
+
 # Work around cmake setting conf dir to "/usr/etc" instead of "/etc"
 # when prefix is "/usr"
 if (NOT DEFINED CMAKE_INSTALL_SYSCONFDIR AND CMAKE_INSTALL_PREFIX STREQUAL "/usr")
@@ -38,10 +40,13 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(ANDROID_PROPERTIES REQUIRED libandroid-properties)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 pkg_check_modules(GIO_UNIX REQUIRED gio-unix-2.0)
-pkg_check_modules(UA REQUIRED ubuntu-platform-api)
-pkg_check_modules(LIBHARDWARE REQUIRED libhardware)
-pkg_check_modules(UBUNTU_PLATFORM_HARDWARE_API REQUIRED ubuntu-platform-hardware-api)
-find_package(AndroidHeaders REQUIRED)
+
+if (REPOWERD_ENABLE_HYBRIS)
+    pkg_check_modules(UA REQUIRED ubuntu-platform-api)
+    pkg_check_modules(LIBHARDWARE REQUIRED libhardware)
+    pkg_check_modules(UBUNTU_PLATFORM_HARDWARE_API REQUIRED ubuntu-platform-hardware-api)
+    find_package(AndroidHeaders REQUIRED)
+endif()
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;AddressSanitizer;ThreadSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
