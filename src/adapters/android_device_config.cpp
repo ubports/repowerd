@@ -29,6 +29,7 @@
 #include <array>
 
 #include <deviceinfo.h>
+#include <overlay-reader/overlay-reader.h>
 
 char const* const log_tag = "AndroidDeviceConfig";
 
@@ -55,25 +56,34 @@ repowerd::AndroidDeviceConfig::AndroidDeviceConfig(
 std::string repowerd::AndroidDeviceConfig::get(
     std::string const& name, std::string const& default_value) const
 {
-    auto const iter = config.find(name);
-    if (iter != config.end())
-        return iter->second;
-    else
-        return default_value;
+    if (use_vendor_overlay) {
+        return overlayreader::GetConfigByTarget("android", "config_" + name, default_value);
+    } else {
+        auto const iter = config.find(name);
+        if (iter != config.end())
+            return iter->second;
+        else
+            return default_value;
+    }
 }
 
 void repowerd::AndroidDeviceConfig::parse_first_matching_file_in_dirs(
     std::vector<std::string> const& config_dirs, std::string const& filename)
 {
+    bool parsed = false;
     for (auto const& config_dir : config_dirs)
     {
         auto const full_file_path = Path{config_dir}/filename;
         if (filesystem->is_regular_file(full_file_path))
         {
             parse_file(full_file_path);
+            parsed = true; 
             break;
         }
     }
+    if (!parsed && filename != "config-default.xml")
+        if (overlayreader::FindPackage("android") != "NULL")
+            use_vendor_overlay = true;
 }
 
 void repowerd::AndroidDeviceConfig::parse_file(std::string const& file)

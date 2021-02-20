@@ -58,7 +58,11 @@ create_brightness_spline(repowerd::DeviceConfig const& device_config)
 try
 {
     auto const ab_light_levels_str = device_config.get("autoBrightnessLevels", "");
-    auto const ab_brightness_levels_str = device_config.get("autoBrightnessLcdBacklightValues", "");
+    std::string ab_brightness_levels_str = device_config.get("autoBrightnessLcdBacklightValues", "");
+    if (ab_brightness_levels_str == "")
+        ab_brightness_levels_str = device_config.get("screenBrightnessBacklight", "");
+    if (ab_brightness_levels_str == "")
+        throw std::runtime_error{"Autobrightness not supported"};
     auto ab_light_levels = parse_int_array(ab_light_levels_str);
     auto const ab_brightness_levels = parse_int_array(ab_brightness_levels_str);
 
