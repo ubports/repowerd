@@ -279,7 +279,7 @@ repowerd::DefaultDaemonConfig::the_proximity_sensor()
     }
     catch (std::exception const& e)
     {
-        the_log()->log(log_tag, "Failed to create UbuntuProximitySensor: %s", e.what());
+        the_log()->log(log_tag, "Failed to create SensorfwProximitySensor: %s", e.what());
         the_log()->log(log_tag, "Falling back to NullProximitySensor");
 
         proximity_sensor = std::make_shared<NullProximitySensor>();

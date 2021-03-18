@@ -28,6 +28,8 @@ namespace
 auto const null_handler = [](double){};
 }
 
+char const* const log_tag = "SensorfwLightSensor";
+
 repowerd::SensorfwLightSensor::SensorfwLightSensor(
     std::shared_ptr<Log> const& log,
     std::string const& dbus_bus_address)
@@ -47,6 +49,7 @@ repowerd::HandlerRegistration repowerd::SensorfwLightSensor::register_light_hand
 
 void repowerd::SensorfwLightSensor::enable_light_events()
 {
+	log->log(log_tag, "enable_light_events begin"); 
     dbus_event_loop.enqueue(
         [this]
         {
@@ -56,6 +59,7 @@ void repowerd::SensorfwLightSensor::enable_light_events()
 
 void repowerd::SensorfwLightSensor::disable_light_events()
 {
+	log->log(log_tag, "disable_light_events begin"); 
     dbus_event_loop.enqueue(
         [this]
         {
@@ -66,8 +70,12 @@ void repowerd::SensorfwLightSensor::disable_light_events()
 void repowerd::SensorfwLightSensor::data_recived_impl()
 {
     QVector<TimedUnsigned> values;
-    if(!m_socket->read<TimedUnsigned>(values))
+	
+	log->log(log_tag, "data_recived_impl begin"); 
+    if(!m_socket->read<TimedUnsigned>(values)) {
+		log->log(log_tag, "data_recived_impl no valid data");
         return;
-
+    }
+	log->log(log_tag, "data_recived_impl sending value %d", values[0].value_); 
     handler(values[0].value_);
 }

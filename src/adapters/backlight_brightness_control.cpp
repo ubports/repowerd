@@ -130,7 +130,10 @@ void repowerd::BacklightBrightnessControl::disable_autobrightness()
 
 void repowerd::BacklightBrightnessControl::enable_autobrightness()
 {
-    if (!ab_supported) return;
+    if (!ab_supported) {
+		log->log(log_tag, "enable_autobrightness: Auto brightness is not supported!");
+    	//return;	
+	}
 
     event_loop.enqueue(
         [this]
