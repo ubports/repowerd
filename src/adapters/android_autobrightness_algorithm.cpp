@@ -54,7 +54,7 @@ std::vector<int> parse_int_array(std::string const& str)
 }
 
 std::unique_ptr<repowerd::MonotoneSpline>
-create_brightness_spline(repowerd::DeviceConfig const& device_config)
+create_brightness_spline(repowerd::DeviceConfig const& device_config, std::shared_ptr<repowerd::Log> const& log)
 try
 {
     auto const ab_light_levels_str = device_config.get("autoBrightnessLevels", "");
@@ -62,14 +62,14 @@ try
     if (ab_brightness_levels_str == "")
         ab_brightness_levels_str = device_config.get("screenBrightnessBacklight", "");
     if (ab_brightness_levels_str == "")
-        throw std::runtime_error{"Autobrightness not supported"};
+        throw std::runtime_error{"Autobrightness not supported - Missing values"};
     auto ab_light_levels = parse_int_array(ab_light_levels_str);
     auto const ab_brightness_levels = parse_int_array(ab_brightness_levels_str);
 
     if (ab_light_levels.size() == 0 || ab_brightness_levels.size() == 0 ||
         ab_brightness_levels.size() != ab_light_levels.size() + 1)
     {
-        throw std::runtime_error{"Autobrightness not supported"};
+        throw std::runtime_error{"Autobrightness not supported - Values in config are not valid"};
     }
 
     ab_light_levels.insert(ab_light_levels.begin(), 0);
@@ -86,8 +86,9 @@ try
 
     return std::make_unique<repowerd::MonotoneSpline>(points);
 }
-catch (...)
+catch (std::exception e)
 {
+    log->log(log_tag, "%s", e.what());
     return {};
 }
 
@@ -108,7 +109,7 @@ double exponential_smoothing(
 repowerd::AndroidAutobrightnessAlgorithm::AndroidAutobrightnessAlgorithm(
     DeviceConfig const& device_config,
     std::shared_ptr<Log> const& log)
-    : brightness_spline{create_brightness_spline(device_config)},
+    : brightness_spline{create_brightness_spline(device_config, log)},
       max_brightness{get_max_brightness(device_config)},
       log{log},
       started{false},
