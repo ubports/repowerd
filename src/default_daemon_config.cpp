@@ -623,7 +623,7 @@ repowerd::DefaultDaemonConfig::the_wakeup_service()
     }
 
     if (!wakeup_service)
-        wakeup_service = std::make_shared<TimerfdWakeupService>();
+        wakeup_service = std::make_shared<TimerfdWakeupService>(the_log());
 
     return wakeup_service;
 }

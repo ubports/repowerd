@@ -28,10 +28,11 @@
 namespace repowerd
 {
 
+class Log;
 class TimerfdWakeupService : public WakeupService
 {
 public:
-    TimerfdWakeupService();
+    TimerfdWakeupService(std::shared_ptr<Log> const& log);
 
     std::string schedule_wakeup_at(std::chrono::system_clock::time_point tp) override;
     void cancel_wakeup(std::string const& cookie) override;
