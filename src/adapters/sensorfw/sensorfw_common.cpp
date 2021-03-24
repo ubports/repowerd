@@ -95,6 +95,7 @@ const char* repowerd::Sensorfw::plugin_path() const
 bool repowerd::Sensorfw::load_plugin()
 {
     int constexpr timeout_default = 100;
+    g_autoptr(GError) err = NULL;
     auto const result =  g_dbus_connection_call_sync(
             dbus_connection,
             dbus_sensorfw_name,
@@ -106,11 +107,12 @@ bool repowerd::Sensorfw::load_plugin()
             G_DBUS_CALL_FLAGS_NONE,
             timeout_default,
             NULL,
-            NULL);
+            &err);
 
-    if (!result)
+    if (err != NULL)
     {
-        log->log(log_tag, "failed to call load_plugin");
+        log->log(log_tag, "failed to call load_plugin: %s", err->message);
+        g_variant_unref(result);
         return false;
     }
 
