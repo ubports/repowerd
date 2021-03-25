@@ -42,7 +42,7 @@ char const* const dbus_session_interface = "org.freedesktop.login1.Session";
 repowerd::SessionType logind_session_type_to_repowerd_type(
     std::string const& logind_session_type)
 {
-    if (logind_session_type == "mir")
+    if (logind_session_type == "mir" || logind_session_type == "wayland")
         return repowerd::SessionType::RepowerdCompatible;
     else
         return repowerd::SessionType::RepowerdIncompatible;
