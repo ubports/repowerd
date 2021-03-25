@@ -446,6 +446,11 @@ void repowerd::UPowerPowerSourceAndLid::change_upower(
             else
                 lid_handler(LidState::open);
         }
+        else if (key_str == "OnBattery")
+        {
+            log->log(log_tag, "change_upower(), on_battery");
+            power_source_change_handler();
+        }
 
         g_variant_unref(value);
     }
