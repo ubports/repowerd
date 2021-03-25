@@ -435,6 +435,7 @@ void repowerd::UPowerPowerSourceAndLid::change_upower(
     while (g_variant_iter_next(properties_iter, "{&sv}", &key_cstr, &value))
     {
         auto const key_str = std::string{key_cstr};
+        log->log(log_tag, "change_upower(%s)", key_cstr);
 
         if (key_str == "LidIsClosed")
         {
