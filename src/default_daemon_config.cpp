@@ -359,29 +359,51 @@ repowerd::DefaultDaemonConfig::the_voice_call_service()
 std::shared_ptr<repowerd::Backlight>
 repowerd::DefaultDaemonConfig::the_backlight()
 {
-    if (!backlight)
+    auto create_android_backlight = [&]() -> std::shared_ptr<repowerd::Backlight>
     {
+        the_log()->log(log_tag, "Trying to create AndroidBacklight");
         try
         {
-            backlight = std::make_shared<AndroidBacklight>();
+            return std::make_shared<AndroidBacklight>();
         }
         catch (std::exception const& e)
         {
             the_log()->log(log_tag, "Failed to create AndroidBacklight: %s", e.what());
-            the_log()->log(log_tag, "Trying SysfsBacklight");
+            return nullptr;
         }
-
+    };
+    auto create_sysfs_backlight = [&]() -> std::shared_ptr<repowerd::Backlight>
+    {
+        the_log()->log(log_tag, "Trying to create SysfsBacklight");
         try
         {
-            if (!backlight)
-            {
-                backlight = std::make_shared<SysfsBacklight>(
+            return std::make_shared<SysfsBacklight>(
                     the_log(), the_filesystem());
-            }
         }
         catch (std::exception const& e)
         {
-            the_log()->log(log_tag, "Failed to create SyfsBacklight: %s", e.what());
+            the_log()->log(log_tag, "Failed to create SysfsBacklight: %s", e.what());
+            return nullptr;
+        }
+    };
+
+    if (!backlight)
+    {
+        auto const backlight_env_cstr = getenv("REPOWERD_BACKLIGHT_BACKEND");
+        std::string const backlight_env{backlight_env_cstr ? backlight_env_cstr : ""};
+        if (backlight_env == "android")
+            backlight = create_android_backlight();
+        else if (backlight_env == "sysfs")
+            backlight = create_sysfs_backlight();
+        else
+        {
+            backlight =create_android_backlight();
+            if (!backlight)
+                backlight =create_sysfs_backlight();
+        }
+
+        if (!backlight)
+        {
             throw std::runtime_error("Failed to create backlight");
         }
     }
