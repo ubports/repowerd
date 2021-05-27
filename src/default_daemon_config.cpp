@@ -19,6 +19,7 @@
 #include "default_daemon_config.h"
 #include "core/default_state_machine_factory.h"
 #include "src/core/performance_booster.h"
+#include "src/core/proximity_sensor.h"
 
 #include "adapters/android_autobrightness_algorithm.h"
 #include "adapters/android_device_config.h"
@@ -28,6 +29,7 @@
 #include "adapters/default_state_machine_options.h"
 #include "adapters/event_loop_timer.h"
 #include "adapters/libsuspend_system_power_control.h"
+#include "adapters/light_sensor.h"
 #include "adapters/logind_session_tracker.h"
 #include "adapters/logind_system_power_control.h"
 #include "adapters/null_log.h"
