@@ -14,6 +14,17 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+if (REPOWERD_ENABLE_HYBRIS)
+    set(REPOWERD_ADAPTER_TEST_HYBRIS_SRCS
+        fake_libhardware.cpp
+
+        test_android_backlight.cpp
+        test_dev_alarm_wakeup_service.cpp
+        test_ubuntu_light_sensor.cpp
+        test_ubuntu_proximity_sensor.cpp
+    )
+endif()
+
 add_executable(
     repowerd-adapter-tests
 
@@ -26,7 +37,6 @@ add_executable(
     fake_device_config.cpp
     fake_device_quirks.cpp
     fake_filesystem.cpp
-    fake_libhardware.cpp
     fake_logind.cpp
     fake_ofono.cpp
     fake_upower.cpp
@@ -37,7 +47,6 @@ add_executable(
     temporary_file.cpp
     unity_screen_dbus_client.cpp
 
-    test_android_backlight.cpp
     test_android_autobrightness_algorithm.cpp
     test_android_device_config.cpp
     test_android_device_quirks.cpp
@@ -45,7 +54,6 @@ add_executable(
     test_brightness_params.cpp
     test_dbus_event_loop.cpp
     test_default_state_machine_options.cpp
-    test_dev_alarm_wakeup_service.cpp
     test_event_loop.cpp
     test_event_loop_timer.cpp
     test_fd.cpp
@@ -61,14 +69,14 @@ add_executable(
     test_repowerd_service.cpp
     test_sysfs_backlight.cpp
     test_timerfd_wakeup_service.cpp
-    test_ubuntu_light_sensor.cpp
-    test_ubuntu_proximity_sensor.cpp
     test_unique_random_pool.cpp
     test_unity_display.cpp
     test_unity_power_button.cpp
     test_unity_screen_service.cpp
     test_unity_user_activity.cpp
     test_upower_power_source_and_lid.cpp
+
+    ${REPOWERD_ADAPTER_TEST_HYBRIS_SRCS}
 )
 
 target_link_libraries(
